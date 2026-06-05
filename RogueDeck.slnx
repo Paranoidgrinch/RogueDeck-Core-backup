@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RogueDeck.ConsoleSandbox/RogueDeck.ConsoleSandbox.csproj" />
+    <Project Path="src/RogueDeck.Core/RogueDeck.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RogueDeck.Core.Tests/RogueDeck.Core.Tests.csproj" />
+  </Folder>
+</Solution>
