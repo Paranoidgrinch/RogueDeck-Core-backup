@@ -55,3 +55,7 @@ public readonly record struct CounterId(string value)
         public override string ToString() => value;
 }
 
+public readonly record struct PackageId(string value)
+{
+        public override string ToString() => value;
+}
