@@ -13,6 +13,8 @@ public sealed class CombatState
     public int RandomSeed { get; }
     public int RandomStep { get; private set; }
 
+    public int NextStatusInstanceNumber { get; private set; } = 1;
+
     public List<CombatantState> Combatants { get; } = new();
     public List<CombatantId> TurnOrder { get; } = new();
 
@@ -82,6 +84,13 @@ public sealed class CombatState
     public void AdvanceRandomStep()
     {
         RandomStep++;
+    }
+
+    public StatusInstanceId CreateNextStatusInstanceId()
+    {
+        var id = new StatusInstanceId($"status_{NextStatusInstanceNumber:000000}");
+        NextStatusInstanceNumber++;
+        return id;
     }
 
     public void AddLogEntry(string type, string message)

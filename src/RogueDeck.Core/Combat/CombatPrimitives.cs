@@ -33,6 +33,12 @@ public enum StatusPolarity
     Neutral
 }
 
+public enum StatusStackingBehavior
+{
+    CreateSeparateInstance,
+    MergeWithExistingInstance
+}
+
 public interface IEffectRequest
 {
 }

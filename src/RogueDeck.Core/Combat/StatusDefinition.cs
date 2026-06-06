@@ -19,6 +19,8 @@ public sealed class StatusDefinition
     public bool ShowDurationInUi { get; }
     public bool ShowChargesInUi { get; }
 
+    public StatusStackingBehavior StackingBehavior { get; }
+
     public HashSet<TagId> Tags { get; } = new();
 
     public StatusDefinition(
@@ -33,7 +35,8 @@ public sealed class StatusDefinition
         bool usesCharges = false,
         bool showStacksInUi = false,
         bool showDurationInUi = false,
-        bool showChargesInUi = false)
+        bool showChargesInUi = false,
+        StatusStackingBehavior stackingBehavior = StatusStackingBehavior.CreateSeparateInstance)
     {
         if (string.IsNullOrWhiteSpace(displayNameKey))
             throw new ArgumentException("Display name key cannot be empty.", nameof(displayNameKey));
@@ -53,5 +56,6 @@ public sealed class StatusDefinition
         ShowStacksInUi = showStacksInUi;
         ShowDurationInUi = showDurationInUi;
         ShowChargesInUi = showChargesInUi;
+        StackingBehavior = stackingBehavior;
     }
 }

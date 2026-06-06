@@ -28,7 +28,8 @@ public sealed class StandardCombatPackage : ICombatPackage
             descriptionKey: "status.standard.poison.description",
             polarity: StatusPolarity.Debuff,
             usesStacks: true,
-            showStacksInUi: true);
+            showStacksInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
 
         definition.Tags.Add(new TagId("debuff"));
         definition.Tags.Add(new TagId("damage_over_time"));
@@ -45,7 +46,8 @@ public sealed class StandardCombatPackage : ICombatPackage
             descriptionKey: "status.standard.weak.description",
             polarity: StatusPolarity.Debuff,
             usesDuration: true,
-            showDurationInUi: true);
+            showDurationInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
 
         definition.Tags.Add(new TagId("debuff"));
         definition.Tags.Add(new TagId("damage_modifier"));
@@ -62,7 +64,8 @@ public sealed class StandardCombatPackage : ICombatPackage
             descriptionKey: "status.standard.strength.description",
             polarity: StatusPolarity.Buff,
             usesStacks: true,
-            showStacksInUi: true);
+            showStacksInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
 
         definition.Tags.Add(new TagId("buff"));
         definition.Tags.Add(new TagId("damage_modifier"));
@@ -79,7 +82,8 @@ public sealed class StandardCombatPackage : ICombatPackage
             descriptionKey: "status.standard.thorns.description",
             polarity: StatusPolarity.Buff,
             usesStacks: true,
-            showStacksInUi: true);
+            showStacksInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
 
         definition.Tags.Add(new TagId("buff"));
         definition.Tags.Add(new TagId("triggered_damage"));
@@ -96,7 +100,8 @@ public sealed class StandardCombatPackage : ICombatPackage
             descriptionKey: "status.standard.stun.description",
             polarity: StatusPolarity.Debuff,
             usesDuration: true,
-            showDurationInUi: true);
+            showDurationInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
 
         definition.Tags.Add(new TagId("debuff"));
         definition.Tags.Add(new TagId("control"));
