@@ -13,7 +13,7 @@ public sealed class CombatTurnProcessor
         ArgumentNullException.ThrowIfNull(registry);
 
         EnsureCombatIsOngoing(combat);
-        EnsureActiveCombatant(combat);
+        EnsureActiveCombatantCanStartTurn(combat);
 
         combat.MarkTurnStarted();
 
@@ -42,7 +42,7 @@ public sealed class CombatTurnProcessor
         ArgumentNullException.ThrowIfNull(registry);
 
         EnsureCombatIsOngoing(combat);
-        EnsureActiveCombatant(combat);
+        EnsureActiveCombatantExistsInTurnOrder(combat);
 
         combat.MarkTurnEnded();
 
@@ -87,25 +87,52 @@ public sealed class CombatTurnProcessor
                 $"Cannot process turns because combat result is '{combat.Result}'.");
     }
 
-    private static void EnsureActiveCombatant(CombatState combat)
+    private static void EnsureActiveCombatantCanStartTurn(CombatState combat)
+    {
+        EnsureActiveCombatantExistsInTurnOrder(combat);
+
+        var activeCombatantId = combat.ActiveCombatantId!.Value;
+        var activeCombatant = combat.GetCombatant(activeCombatantId);
+
+        if (!activeCombatant.IsAlive)
+            throw new InvalidOperationException(
+                $"Cannot start turn because active combatant '{activeCombatantId}' is not alive.");
+    }
+
+    private static void EnsureActiveCombatantExistsInTurnOrder(CombatState combat)
     {
         if (combat.TurnOrder.Count == 0)
             throw new InvalidOperationException("Cannot use turn processor because the combat has no turn order.");
 
         if (combat.ActiveCombatantId is null)
         {
-            combat.SetActiveCombatant(combat.TurnOrder[0]);
-            return;
+            foreach (var combatantId in combat.TurnOrder)
+            {
+                if (!combat.TryGetCombatant(combatantId, out var combatant))
+                    continue;
+
+                if (!combatant!.IsAlive)
+                    continue;
+
+                combat.SetActiveCombatant(combatantId);
+                return;
+            }
+
+            throw new InvalidOperationException("Cannot use turn processor because there are no living combatants in the turn order.");
         }
 
         if (!combat.TurnOrder.Contains(combat.ActiveCombatantId.Value))
             throw new InvalidOperationException(
                 $"Active combatant '{combat.ActiveCombatantId}' is not part of the turn order.");
+
+        if (!combat.TryGetCombatant(combat.ActiveCombatantId.Value, out _))
+            throw new InvalidOperationException(
+                $"Active combatant '{combat.ActiveCombatantId}' does not exist.");
     }
 
     private static void AdvanceToNextCombatant(CombatState combat)
     {
-        EnsureActiveCombatant(combat);
+        EnsureActiveCombatantExistsInTurnOrder(combat);
 
         var currentIndex = combat.TurnOrder.IndexOf(combat.ActiveCombatantId!.Value);
 
@@ -136,5 +163,3 @@ public sealed class CombatTurnProcessor
         throw new InvalidOperationException("Cannot advance turn because there are no living combatants in the turn order.");
     }
 }
-
-

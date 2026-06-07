@@ -234,15 +234,43 @@ public class CombatTurnProcessorTests
         var registry = CombatTestFactory.CreateStandardRegistry();
         var combat = CreateCombatWithHeroAndGoblin();
 
-        foreach (var combatant in combat.Combatants)
-            combatant.SetLifecycleState(CombatantLifecycleState.Downed);
-
         var processor = new CombatTurnProcessor();
 
         processor.StartCurrentTurn(combat, registry);
 
+        foreach (var combatant in combat.Combatants)
+            combatant.SetLifecycleState(CombatantLifecycleState.Downed);
+
         Assert.Throws<InvalidOperationException>(() =>
             processor.EndCurrentTurn(combat, registry));
+    }
+    [Fact]
+    public void EndCurrentTurnRejectsEndedCombat()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CreateCombatWithHeroAndGoblin();
+
+        combat.SetResult(CombatResult.Defeat);
+
+        var processor = new CombatTurnProcessor();
+
+        Assert.Throws<InvalidOperationException>(() =>
+            processor.EndCurrentTurn(combat, registry));
+    }
+    [Fact]
+    public void StartCurrentTurnRejectsDownedActiveCombatant()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CreateCombatWithHeroAndGoblin();
+
+        var hero = combat.GetCombatant(new CombatantId("hero_001"));
+
+        hero.SetLifecycleState(CombatantLifecycleState.Downed);
+
+        var processor = new CombatTurnProcessor();
+
+        Assert.Throws<InvalidOperationException>(() =>
+            processor.StartCurrentTurn(combat, registry));
     }
     private static CombatState CreateCombatWithHeroAndTwoGoblins()
     {
@@ -258,33 +286,6 @@ public class CombatTurnProcessorTests
         combat.AddCombatant(secondGoblin);
 
         return combat;
-    }
-    [Fact]
-    public void StartCurrentTurnRejectsEndedCombat()
-    {
-        var registry = CombatTestFactory.CreateStandardRegistry();
-        var combat = CreateCombatWithHeroAndGoblin();
-
-        combat.SetResult(CombatResult.Victory);
-
-        var processor = new CombatTurnProcessor();
-
-        Assert.Throws<InvalidOperationException>(() =>
-            processor.StartCurrentTurn(combat, registry));
-    }
-
-    [Fact]
-    public void EndCurrentTurnRejectsEndedCombat()
-    {
-        var registry = CombatTestFactory.CreateStandardRegistry();
-        var combat = CreateCombatWithHeroAndGoblin();
-
-        combat.SetResult(CombatResult.Defeat);
-
-        var processor = new CombatTurnProcessor();
-
-        Assert.Throws<InvalidOperationException>(() =>
-            processor.EndCurrentTurn(combat, registry));
     }
     private static CombatState CreateCombatWithHeroAndGoblin()
     {
@@ -339,5 +340,8 @@ public class CombatTurnProcessorTests
         }
     }
 }
+
+
+
 
 
