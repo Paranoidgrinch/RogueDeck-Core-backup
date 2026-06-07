@@ -46,6 +46,22 @@ public sealed class CombatTurnProcessor
         AdvanceToNextCombatant(combat);
     }
 
+    public void EndCurrentTurnAndStartNextTurn(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        int maxEffectsToResolve = 1024)
+    {
+        EndCurrentTurn(
+            combat,
+            registry,
+            maxEffectsToResolve);
+
+        StartCurrentTurn(
+            combat,
+            registry,
+            maxEffectsToResolve);
+    }
+
     private static void EnsureActiveCombatant(CombatState combat)
     {
         if (combat.TurnOrder.Count == 0)

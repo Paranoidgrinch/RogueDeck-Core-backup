@@ -115,6 +115,44 @@ public class CombatTurnProcessorTests
     }
 
     [Fact]
+    public void EndCurrentTurnAndStartNextTurnEndsCurrentTurnThenStartsNextTurn()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CreateCombatWithHeroAndGoblin();
+
+        var processor = new CombatTurnProcessor();
+
+        processor.EndCurrentTurnAndStartNextTurn(combat, registry);
+
+        Assert.Equal(new CombatantId("goblin_001"), combat.ActiveCombatantId);
+        Assert.Equal(1, combat.CurrentRound);
+        Assert.Equal(2, combat.CurrentTurn);
+        Assert.Equal(2, combat.CombatLog.Count);
+        Assert.Equal("TurnEnded", combat.CombatLog[0].Type);
+        Assert.Equal("TurnStarted", combat.CombatLog[1].Type);
+    }
+
+    [Fact]
+    public void EndCurrentTurnAndStartNextTurnCanAdvanceRound()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CreateCombatWithHeroAndGoblin();
+
+        combat.SetActiveCombatant(new CombatantId("goblin_001"));
+
+        var processor = new CombatTurnProcessor();
+
+        processor.EndCurrentTurnAndStartNextTurn(combat, registry);
+
+        Assert.Equal(new CombatantId("hero_001"), combat.ActiveCombatantId);
+        Assert.Equal(2, combat.CurrentRound);
+        Assert.Equal(1, combat.CurrentTurn);
+        Assert.Equal(2, combat.CombatLog.Count);
+        Assert.Equal("TurnEnded", combat.CombatLog[0].Type);
+        Assert.Equal("TurnStarted", combat.CombatLog[1].Type);
+    }
+
+    [Fact]
     public void StartCurrentTurnRejectsCombatWithoutTurnOrder()
     {
         var registry = CombatTestFactory.CreateStandardRegistry();
