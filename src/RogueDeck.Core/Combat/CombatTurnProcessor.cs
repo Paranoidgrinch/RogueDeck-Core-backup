@@ -2,7 +2,7 @@ namespace RogueDeck.Core.Combat;
 
 public sealed class CombatTurnProcessor
 {
-    private readonly CombatEffectQueueProcessor _effectQueueProcessor = new();
+    private readonly CombatQueueProcessor _queueProcessor = new();
 
     public void StartCurrentTurn(
         CombatState combat,
@@ -26,7 +26,7 @@ public sealed class CombatTurnProcessor
                 combat.CurrentRound,
                 combat.CurrentTurn));
 
-        _effectQueueProcessor.ResolvePendingEffects(
+        _queueProcessor.ResolvePendingQueues(
             combat,
             registry,
             maxEffectsToResolve);
@@ -54,7 +54,7 @@ public sealed class CombatTurnProcessor
                 combat.CurrentRound,
                 combat.CurrentTurn));
 
-        _effectQueueProcessor.ResolvePendingEffects(
+        _queueProcessor.ResolvePendingQueues(
             combat,
             registry,
             maxEffectsToResolve);
@@ -112,4 +112,3 @@ public sealed class CombatTurnProcessor
         combat.SetActiveCombatant(combat.TurnOrder[nextIndex]);
     }
 }
-
