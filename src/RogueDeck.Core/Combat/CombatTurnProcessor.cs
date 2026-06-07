@@ -61,7 +61,15 @@ public sealed class CombatTurnProcessor
             registry,
             maxEffectsToResolve);
 
+        if (combat.Result != CombatResult.Ongoing)
+            return;
+
         AdvanceToNextCombatant(combat);
+
+        _queueProcessor.ResolvePendingQueues(
+            combat,
+            registry,
+            maxEffectsToResolve);
     }
 
     public void EndCurrentTurnAndStartNextTurn(
@@ -149,7 +157,13 @@ public sealed class CombatTurnProcessor
 
             if (nextIndex <= currentIndex)
             {
+                combat.EnqueueEvent(
+                    new RoundEndedCombatEvent(combat.CurrentRound));
+
                 combat.AdvanceRound();
+
+                combat.EnqueueEvent(
+                    new RoundStartedCombatEvent(combat.CurrentRound));
             }
             else
             {
@@ -163,3 +177,4 @@ public sealed class CombatTurnProcessor
         throw new InvalidOperationException("Cannot advance turn because there are no living combatants in the turn order.");
     }
 }
+

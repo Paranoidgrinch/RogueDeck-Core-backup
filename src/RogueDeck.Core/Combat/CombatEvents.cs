@@ -64,3 +64,11 @@ public sealed record StatusExpiredCombatEvent(
     StatusInstanceId StatusInstanceId,
     StatusDefinitionId StatusDefinitionId
 ) : ICombatEvent;
+
+public sealed record RoundStartedCombatEvent(
+    int Round
+) : ICombatEvent;
+
+public sealed record RoundEndedCombatEvent(
+    int Round
+) : ICombatEvent;
