@@ -179,7 +179,7 @@ public sealed class DecreaseTimedStatusDurationsOnTurnEndedHandler : CombatEvent
 
 public sealed class DamageOverTimeOnTurnStartedHandler : CombatEventHandler<TurnStartedCombatEvent>
 {
-    private static readonly TagId DamageOverTimeTag = new("damage_over_time");
+    
 
     protected override void Handle(
         CombatState combat,
@@ -191,7 +191,7 @@ public sealed class DamageOverTimeOnTurnStartedHandler : CombatEventHandler<Turn
 
         foreach (var status in combatant!.Statuses.ToArray())
         {
-            if (!status.Tags.Contains(DamageOverTimeTag))
+            if (!status.Tags.Contains(StandardCombatIds.DamageOverTimeTag))
                 continue;
 
             if (status.Stacks <= 0)
@@ -209,7 +209,7 @@ public sealed class DamageOverTimeOnTurnStartedHandler : CombatEventHandler<Turn
 
 public sealed class TriggeredDamageOnDamageDealtHandler : CombatEventHandler<DamageDealtCombatEvent>
 {
-    private static readonly TagId TriggeredDamageTag = new("triggered_damage");
+    
 
     protected override void Handle(
         CombatState combat,
@@ -233,7 +233,7 @@ public sealed class TriggeredDamageOnDamageDealtHandler : CombatEventHandler<Dam
 
         foreach (var status in damagedCombatant!.Statuses.ToArray())
         {
-            if (!status.Tags.Contains(TriggeredDamageTag))
+            if (!status.Tags.Contains(StandardCombatIds.TriggeredDamageTag))
                 continue;
 
             if (status.Stacks <= 0)
@@ -249,4 +249,5 @@ public sealed class TriggeredDamageOnDamageDealtHandler : CombatEventHandler<Dam
         }
     }
 }
+
 

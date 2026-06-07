@@ -39,7 +39,7 @@ public sealed class StandardCombatPackage : ICombatPackage
     private StatusDefinition CreatePoison()
     {
         var definition = new StatusDefinition(
-            new StatusDefinitionId("standard.poison"),
+            StandardCombatIds.PoisonStatus,
             Id,
             displayNameKey: "status.standard.poison.name",
             descriptionKey: "status.standard.poison.description",
@@ -48,8 +48,8 @@ public sealed class StandardCombatPackage : ICombatPackage
             showStacksInUi: true,
             stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
 
-        definition.Tags.Add(new TagId("debuff"));
-        definition.Tags.Add(new TagId("damage_over_time"));
+        definition.Tags.Add(StandardCombatIds.DebuffTag);
+        definition.Tags.Add(StandardCombatIds.DamageOverTimeTag);
 
         return definition;
     }
@@ -57,7 +57,7 @@ public sealed class StandardCombatPackage : ICombatPackage
     private StatusDefinition CreateWeak()
     {
         var definition = new StatusDefinition(
-            new StatusDefinitionId("standard.weak"),
+            StandardCombatIds.WeakStatus,
             Id,
             displayNameKey: "status.standard.weak.name",
             descriptionKey: "status.standard.weak.description",
@@ -66,8 +66,8 @@ public sealed class StandardCombatPackage : ICombatPackage
             showDurationInUi: true,
             stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
 
-        definition.Tags.Add(new TagId("debuff"));
-        definition.Tags.Add(new TagId("damage_modifier"));
+        definition.Tags.Add(StandardCombatIds.DebuffTag);
+        definition.Tags.Add(StandardCombatIds.DamageModifierTag);
 
         return definition;
     }
@@ -75,7 +75,7 @@ public sealed class StandardCombatPackage : ICombatPackage
     private StatusDefinition CreateStrength()
     {
         var definition = new StatusDefinition(
-            new StatusDefinitionId("standard.strength"),
+            StandardCombatIds.StrengthStatus,
             Id,
             displayNameKey: "status.standard.strength.name",
             descriptionKey: "status.standard.strength.description",
@@ -84,8 +84,8 @@ public sealed class StandardCombatPackage : ICombatPackage
             showStacksInUi: true,
             stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
 
-        definition.Tags.Add(new TagId("buff"));
-        definition.Tags.Add(new TagId("damage_modifier"));
+        definition.Tags.Add(StandardCombatIds.BuffTag);
+        definition.Tags.Add(StandardCombatIds.DamageModifierTag);
 
         return definition;
     }
@@ -93,7 +93,7 @@ public sealed class StandardCombatPackage : ICombatPackage
     private StatusDefinition CreateThorns()
     {
         var definition = new StatusDefinition(
-            new StatusDefinitionId("standard.thorns"),
+            StandardCombatIds.ThornsStatus,
             Id,
             displayNameKey: "status.standard.thorns.name",
             descriptionKey: "status.standard.thorns.description",
@@ -102,8 +102,8 @@ public sealed class StandardCombatPackage : ICombatPackage
             showStacksInUi: true,
             stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
 
-        definition.Tags.Add(new TagId("buff"));
-        definition.Tags.Add(new TagId("triggered_damage"));
+        definition.Tags.Add(StandardCombatIds.BuffTag);
+        definition.Tags.Add(StandardCombatIds.TriggeredDamageTag);
 
         return definition;
     }
@@ -111,7 +111,7 @@ public sealed class StandardCombatPackage : ICombatPackage
     private StatusDefinition CreateStun()
     {
         var definition = new StatusDefinition(
-            new StatusDefinitionId("standard.stun"),
+            StandardCombatIds.StunStatus,
             Id,
             displayNameKey: "status.standard.stun.name",
             descriptionKey: "status.standard.stun.description",
@@ -120,12 +120,13 @@ public sealed class StandardCombatPackage : ICombatPackage
             showDurationInUi: true,
             stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
 
-        definition.Tags.Add(new TagId("debuff"));
-        definition.Tags.Add(new TagId("control"));
+        definition.Tags.Add(StandardCombatIds.DebuffTag);
+        definition.Tags.Add(StandardCombatIds.ControlTag);
 
         return definition;
     }
 }
+
 
 
 
