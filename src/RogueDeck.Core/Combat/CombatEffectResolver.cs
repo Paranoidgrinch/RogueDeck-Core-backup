@@ -2,6 +2,8 @@ namespace RogueDeck.Core.Combat;
 
 public sealed class CombatEffectResolver
 {
+    private static readonly DefensivePoolId StandardBlockPoolId = new("standard.block");
+
     public void Resolve(
         CombatState combat,
         CombatDefinitionRegistry registry,
@@ -97,13 +99,24 @@ public sealed class CombatEffectResolver
 
         var target = combat.GetCombatant(request.TargetCombatantId);
 
-        var newHealth = Math.Max(0, target.Health.Current - request.Amount);
-        var dealtDamage = target.Health.Current - newHealth;
+        var remainingDamage = request.Amount;
+        var blockedDamage = 0;
+
+        if (target.DefensivePools.TryGetValue(StandardBlockPoolId, out var block) && block.Current > 0)
+        {
+            blockedDamage = Math.Min(block.Current, remainingDamage);
+            block.SetCurrent(block.Current - blockedDamage);
+            remainingDamage -= blockedDamage;
+        }
+
+        var healthBeforeDamage = target.Health.Current;
+        var newHealth = Math.Max(0, healthBeforeDamage - remainingDamage);
+        var healthDamage = healthBeforeDamage - newHealth;
 
         target.Health.SetCurrent(newHealth);
 
         combat.AddLogEntry(
             "DamageDealt",
-            $"Dealt {dealtDamage} damage to '{request.TargetCombatantId}'.");
+            $"Dealt {healthDamage} damage to '{request.TargetCombatantId}' and blocked {blockedDamage} damage.");
     }
 }
