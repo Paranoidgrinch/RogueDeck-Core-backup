@@ -1,5 +1,12 @@
 namespace RogueDeck.Core.Combat;
 
+public sealed record DealDamageEffectRequest(
+    CombatantId TargetCombatantId,
+    int Amount,
+    CombatantId? SourceCombatantId = null,
+    CardDefinitionId? SourceCardId = null
+) : IEffectRequest;
+
 public sealed class DealDamageEffectHandler : EffectRequestHandler<DealDamageEffectRequest>
 {
     protected override void Resolve(
@@ -31,5 +38,37 @@ public sealed class DealDamageEffectHandler : EffectRequestHandler<DealDamageEff
         combat.AddLogEntry(
             "DamageDealt",
             $"Dealt {healthDamage} damage to '{dealDamage.TargetCombatantId}' and blocked {blockedDamage} damage.");
+    }
+}
+
+public sealed record HealEffectRequest(
+    CombatantId TargetCombatantId,
+    int Amount,
+    CombatantId? SourceCombatantId = null,
+    CardDefinitionId? SourceCardId = null
+) : IEffectRequest;
+
+public sealed class HealEffectHandler : EffectRequestHandler<HealEffectRequest>
+{
+    protected override void Resolve(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        HealEffectRequest heal)
+    {
+        if (heal.Amount < 0)
+            throw new ArgumentOutOfRangeException(nameof(heal.Amount), "Heal amount cannot be negative.");
+
+        var target = combat.GetCombatant(heal.TargetCombatantId);
+
+        var healthBeforeHealing = target.Health.Current;
+        var requestedHealth = (long)healthBeforeHealing + heal.Amount;
+        var newHealth = (int)Math.Min(target.Health.Max, requestedHealth);
+        var healedAmount = newHealth - healthBeforeHealing;
+
+        target.Health.SetCurrent(newHealth);
+
+        combat.AddLogEntry(
+            "Healed",
+            $"Healed '{heal.TargetCombatantId}' for {healedAmount} HP.");
     }
 }

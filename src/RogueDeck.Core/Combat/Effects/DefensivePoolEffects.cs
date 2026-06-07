@@ -1,5 +1,12 @@
 namespace RogueDeck.Core.Combat;
 
+public sealed record GainBlockEffectRequest(
+    CombatantId TargetCombatantId,
+    int Amount,
+    CombatantId? SourceCombatantId = null,
+    CardDefinitionId? SourceCardId = null
+) : IEffectRequest;
+
 public sealed class GainBlockEffectHandler : EffectRequestHandler<GainBlockEffectRequest>
 {
     protected override void Resolve(
@@ -33,5 +40,38 @@ public sealed class GainBlockEffectHandler : EffectRequestHandler<GainBlockEffec
         combat.AddLogEntry(
             "BlockGained",
             $"Gained {gainBlock.Amount} block on '{gainBlock.TargetCombatantId}'.");
+    }
+}
+
+public sealed record ClearDefensivePoolEffectRequest(
+    CombatantId TargetCombatantId,
+    DefensivePoolId PoolId
+) : IEffectRequest;
+
+public sealed class ClearDefensivePoolEffectHandler : EffectRequestHandler<ClearDefensivePoolEffectRequest>
+{
+    protected override void Resolve(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        ClearDefensivePoolEffectRequest clearPool)
+    {
+        var target = combat.GetCombatant(clearPool.TargetCombatantId);
+
+        if (!target.DefensivePools.TryGetValue(clearPool.PoolId, out var pool))
+        {
+            combat.AddLogEntry(
+                "DefensivePoolCleared",
+                $"Cleared 0 from defensive pool '{clearPool.PoolId}' on '{clearPool.TargetCombatantId}'.");
+
+            return;
+        }
+
+        var clearedAmount = pool.Current;
+
+        pool.SetCurrent(0);
+
+        combat.AddLogEntry(
+            "DefensivePoolCleared",
+            $"Cleared {clearedAmount} from defensive pool '{clearPool.PoolId}' on '{clearPool.TargetCombatantId}'.");
     }
 }
