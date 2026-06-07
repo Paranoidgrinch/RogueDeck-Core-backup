@@ -2,8 +2,6 @@ namespace RogueDeck.Core.Combat;
 
 public sealed class GainBlockEffectHandler : IEffectRequestHandler
 {
-    private static readonly DefensivePoolId StandardBlockPoolId = new("standard.block");
-
     public Type RequestType => typeof(GainBlockEffectRequest);
 
     public void Resolve(
@@ -21,10 +19,10 @@ public sealed class GainBlockEffectHandler : IEffectRequestHandler
 
         var target = combat.GetCombatant(gainBlock.TargetCombatantId);
 
-        if (!target.DefensivePools.TryGetValue(StandardBlockPoolId, out var block))
+        if (!target.DefensivePools.TryGetValue(StandardCombatIds.BlockDefensivePool, out var block))
         {
             target.DefensivePools.Add(
-                StandardBlockPoolId,
+                StandardCombatIds.BlockDefensivePool,
                 new ValuePoolState(current: gainBlock.Amount));
 
             combat.AddLogEntry(

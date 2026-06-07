@@ -2,8 +2,6 @@ namespace RogueDeck.Core.Combat;
 
 public sealed class DealDamageEffectHandler : IEffectRequestHandler
 {
-    private static readonly DefensivePoolId StandardBlockPoolId = new("standard.block");
-
     public Type RequestType => typeof(DealDamageEffectRequest);
 
     public void Resolve(
@@ -24,7 +22,7 @@ public sealed class DealDamageEffectHandler : IEffectRequestHandler
         var remainingDamage = dealDamage.Amount;
         var blockedDamage = 0;
 
-        if (target.DefensivePools.TryGetValue(StandardBlockPoolId, out var block) && block.Current > 0)
+        if (target.DefensivePools.TryGetValue(StandardCombatIds.BlockDefensivePool, out var block) && block.Current > 0)
         {
             blockedDamage = Math.Min(block.Current, remainingDamage);
             block.SetCurrent(block.Current - blockedDamage);
