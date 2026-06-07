@@ -23,6 +23,10 @@ public sealed class CombatEffectResolver
                 ResolveDealDamage(combat, dealDamage);
                 break;
 
+            case HealEffectRequest heal:
+                ResolveHeal(combat, heal);
+                break;
+
             default:
                 throw new InvalidOperationException(
                     $"Unsupported effect request type '{request.GetType().Name}'.");
@@ -118,5 +122,26 @@ public sealed class CombatEffectResolver
         combat.AddLogEntry(
             "DamageDealt",
             $"Dealt {healthDamage} damage to '{request.TargetCombatantId}' and blocked {blockedDamage} damage.");
+    }
+
+    private void ResolveHeal(
+        CombatState combat,
+        HealEffectRequest request)
+    {
+        if (request.Amount < 0)
+            throw new ArgumentOutOfRangeException(nameof(request.Amount), "Heal amount cannot be negative.");
+
+        var target = combat.GetCombatant(request.TargetCombatantId);
+
+        var healthBeforeHealing = target.Health.Current;
+        var requestedHealth = (long)healthBeforeHealing + request.Amount;
+        var newHealth = (int)Math.Min(target.Health.Max, requestedHealth);
+        var healedAmount = newHealth - healthBeforeHealing;
+
+        target.Health.SetCurrent(newHealth);
+
+        combat.AddLogEntry(
+            "Healed",
+            $"Healed '{request.TargetCombatantId}' for {healedAmount} HP.");
     }
 }
