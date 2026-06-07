@@ -28,6 +28,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterCombatEventHandler(new ClearBlockOnTurnStartedHandler());
         registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedHandler());
         registry.RegisterCombatEventHandler(new DamageOverTimeOnTurnStartedHandler());
+        registry.RegisterCombatEventHandler(new TriggeredDamageOnDamageDealtHandler());
     
     }   
 
@@ -121,5 +122,6 @@ public sealed class StandardCombatPackage : ICombatPackage
         return definition;
     }
 }
+
 
 

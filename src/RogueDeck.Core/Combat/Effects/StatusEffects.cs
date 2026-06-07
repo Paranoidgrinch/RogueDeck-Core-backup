@@ -178,3 +178,46 @@ public sealed class DamageOverTimeOnTurnStartedHandler : CombatEventHandler<Turn
         }
     }
 }
+
+public sealed class TriggeredDamageOnDamageDealtHandler : CombatEventHandler<DamageDealtCombatEvent>
+{
+    private static readonly TagId TriggeredDamageTag = new("triggered_damage");
+
+    protected override void Handle(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        DamageDealtCombatEvent combatEvent)
+    {
+        if (combatEvent.Kind == DamageKind.Reflected)
+            return;
+
+        if (combatEvent.HealthDamage <= 0)
+            return;
+
+        if (combatEvent.SourceCombatantId is null)
+            return;
+
+        if (combatEvent.SourceCombatantId.Value == combatEvent.TargetCombatantId)
+            return;
+
+        if (!combat.TryGetCombatant(combatEvent.TargetCombatantId, out var damagedCombatant))
+            return;
+
+        foreach (var status in damagedCombatant!.Statuses.ToArray())
+        {
+            if (!status.Tags.Contains(TriggeredDamageTag))
+                continue;
+
+            if (status.Stacks <= 0)
+                continue;
+
+            combat.EnqueueEffect(
+                new DealDamageEffectRequest(
+                    TargetCombatantId: combatEvent.SourceCombatantId.Value,
+                    Amount: status.Stacks,
+                    SourceCombatantId: combatEvent.TargetCombatantId,
+                    SourceCardId: status.SourceCardId,
+                    Kind: DamageKind.Reflected));
+        }
+    }
+}

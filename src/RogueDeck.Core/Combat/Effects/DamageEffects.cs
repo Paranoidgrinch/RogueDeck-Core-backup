@@ -4,7 +4,8 @@ public sealed record DealDamageEffectRequest(
     CombatantId TargetCombatantId,
     int Amount,
     CombatantId? SourceCombatantId = null,
-    CardDefinitionId? SourceCardId = null
+    CardDefinitionId? SourceCardId = null,
+    DamageKind Kind = DamageKind.Direct
 ) : IEffectRequest;
 
 public sealed class DealDamageEffectHandler : EffectRequestHandler<DealDamageEffectRequest>
@@ -45,6 +46,7 @@ public sealed class DealDamageEffectHandler : EffectRequestHandler<DealDamageEff
                 HealthDamage: healthDamage,
                 BlockedDamage: blockedDamage,
                 RequestedAmount: dealDamage.Amount,
+                Kind: dealDamage.Kind,
                 SourceCombatantId: dealDamage.SourceCombatantId,
                 SourceCardId: dealDamage.SourceCardId));
     }
@@ -81,4 +83,5 @@ public sealed class HealEffectHandler : EffectRequestHandler<HealEffectRequest>
             $"Healed '{heal.TargetCombatantId}' for {healedAmount} HP.");
     }
 }
+
 

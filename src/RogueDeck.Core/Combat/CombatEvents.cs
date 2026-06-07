@@ -17,6 +17,8 @@ public sealed record DamageDealtCombatEvent(
     int HealthDamage,
     int BlockedDamage,
     int RequestedAmount,
+    DamageKind Kind = DamageKind.Direct,
     CombatantId? SourceCombatantId = null,
     CardDefinitionId? SourceCardId = null
 ) : ICombatEvent;
+

@@ -15,6 +15,13 @@ public enum CombatTurnPhase
     TurnInProgress
 }
 
+public enum DamageKind
+{
+    Direct,
+    DamageOverTime,
+    Reflected
+}
+
 public enum CombatantLifecycleState
 {
     Alive,
@@ -147,3 +154,4 @@ public sealed class ValuePoolState
             Current = Max.Value;
     }
 }
+
