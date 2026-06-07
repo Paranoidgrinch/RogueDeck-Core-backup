@@ -17,6 +17,10 @@ public sealed class CombatEffectResolver
                 ResolveApplyStatus(combat, registry, applyStatus);
                 break;
 
+            case DealDamageEffectRequest dealDamage:
+                ResolveDealDamage(combat, dealDamage);
+                break;
+
             default:
                 throw new InvalidOperationException(
                     $"Unsupported effect request type '{request.GetType().Name}'.");
@@ -38,6 +42,7 @@ public sealed class CombatEffectResolver
             throw new ArgumentOutOfRangeException(nameof(request.Charges), "Charges cannot be negative.");
 
         var target = combat.GetCombatant(request.TargetCombatantId);
+
         var definition = registry.GetStatus(request.StatusDefinitionId);
 
         if (definition.StackingBehavior == StatusStackingBehavior.MergeWithExistingInstance)
@@ -81,5 +86,24 @@ public sealed class CombatEffectResolver
         combat.AddLogEntry(
             "StatusApplied",
             $"Applied status '{request.StatusDefinitionId}' to '{request.TargetCombatantId}'.");
+    }
+
+    private void ResolveDealDamage(
+        CombatState combat,
+        DealDamageEffectRequest request)
+    {
+        if (request.Amount < 0)
+            throw new ArgumentOutOfRangeException(nameof(request.Amount), "Damage amount cannot be negative.");
+
+        var target = combat.GetCombatant(request.TargetCombatantId);
+
+        var newHealth = Math.Max(0, target.Health.Current - request.Amount);
+        var dealtDamage = target.Health.Current - newHealth;
+
+        target.Health.SetCurrent(newHealth);
+
+        combat.AddLogEntry(
+            "DamageDealt",
+            $"Dealt {dealtDamage} damage to '{request.TargetCombatantId}'.");
     }
 }
