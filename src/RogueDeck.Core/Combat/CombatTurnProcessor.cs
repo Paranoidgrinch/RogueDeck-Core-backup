@@ -12,6 +12,7 @@ public sealed class CombatTurnProcessor
         ArgumentNullException.ThrowIfNull(combat);
         ArgumentNullException.ThrowIfNull(registry);
 
+        EnsureCombatIsOngoing(combat);
         EnsureActiveCombatant(combat);
 
         combat.MarkTurnStarted();
@@ -40,6 +41,7 @@ public sealed class CombatTurnProcessor
         ArgumentNullException.ThrowIfNull(combat);
         ArgumentNullException.ThrowIfNull(registry);
 
+        EnsureCombatIsOngoing(combat);
         EnsureActiveCombatant(combat);
 
         combat.MarkTurnEnded();
@@ -76,6 +78,13 @@ public sealed class CombatTurnProcessor
             combat,
             registry,
             maxEffectsToResolve);
+    }
+
+    private static void EnsureCombatIsOngoing(CombatState combat)
+    {
+        if (combat.Result != CombatResult.Ongoing)
+            throw new InvalidOperationException(
+                $"Cannot process turns because combat result is '{combat.Result}'.");
     }
 
     private static void EnsureActiveCombatant(CombatState combat)
@@ -127,4 +136,5 @@ public sealed class CombatTurnProcessor
         throw new InvalidOperationException("Cannot advance turn because there are no living combatants in the turn order.");
     }
 }
+
 

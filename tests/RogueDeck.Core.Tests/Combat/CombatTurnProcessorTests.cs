@@ -259,6 +259,33 @@ public class CombatTurnProcessorTests
 
         return combat;
     }
+    [Fact]
+    public void StartCurrentTurnRejectsEndedCombat()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CreateCombatWithHeroAndGoblin();
+
+        combat.SetResult(CombatResult.Victory);
+
+        var processor = new CombatTurnProcessor();
+
+        Assert.Throws<InvalidOperationException>(() =>
+            processor.StartCurrentTurn(combat, registry));
+    }
+
+    [Fact]
+    public void EndCurrentTurnRejectsEndedCombat()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CreateCombatWithHeroAndGoblin();
+
+        combat.SetResult(CombatResult.Defeat);
+
+        var processor = new CombatTurnProcessor();
+
+        Assert.Throws<InvalidOperationException>(() =>
+            processor.EndCurrentTurn(combat, registry));
+    }
     private static CombatState CreateCombatWithHeroAndGoblin()
     {
         var combat = new CombatState(
@@ -312,4 +339,5 @@ public class CombatTurnProcessorTests
         }
     }
 }
+
 
