@@ -19,13 +19,13 @@ public sealed class CombatEffectQueueProcessor
 
         var resolvedEffects = 0;
 
-        while (combat.PendingEffects.Count > 0)
+        while (combat.HasPendingEffects)
         {
             if (resolvedEffects >= maxEffectsToResolve)
                 throw new InvalidOperationException(
                     $"Stopped resolving pending effects after reaching the limit of {maxEffectsToResolve} effects.");
 
-            var request = combat.PendingEffects.Dequeue();
+            var request = combat.DequeueNextEffect();
 
             _resolver.Resolve(combat, registry, request);
 

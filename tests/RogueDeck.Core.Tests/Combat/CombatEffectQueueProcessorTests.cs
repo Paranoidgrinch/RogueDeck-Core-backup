@@ -24,12 +24,12 @@ public class CombatEffectQueueProcessorTests
 
         combat.AddCombatant(hero);
 
-        combat.PendingEffects.Enqueue(
+        combat.EnqueueEffect(
             new GainBlockEffectRequest(
                 TargetCombatantId: heroId,
                 Amount: 6));
 
-        combat.PendingEffects.Enqueue(
+        combat.EnqueueEffect(
             new DealDamageEffectRequest(
                 TargetCombatantId: heroId,
                 Amount: 10));
@@ -61,7 +61,7 @@ public class CombatEffectQueueProcessorTests
             new CombatId("combat_001"),
             randomSeed: 12345);
 
-        combat.PendingEffects.Enqueue(new EnqueueFollowUpEffectRequest());
+        combat.EnqueueEffect(new EnqueueFollowUpEffectRequest());
 
         var processor = new CombatEffectQueueProcessor();
 
@@ -83,7 +83,7 @@ public class CombatEffectQueueProcessorTests
             new CombatId("combat_001"),
             randomSeed: 12345);
 
-        combat.PendingEffects.Enqueue(new EndlessEffectRequest());
+        combat.EnqueueEffect(new EndlessEffectRequest());
 
         var processor = new CombatEffectQueueProcessor();
 
@@ -103,7 +103,7 @@ public class CombatEffectQueueProcessorTests
             CombatDefinitionRegistry registry,
             EnqueueFollowUpEffectRequest request)
         {
-            combat.PendingEffects.Enqueue(new AddTestLogEffectRequest());
+            combat.EnqueueEffect(new AddTestLogEffectRequest());
         }
     }
 
@@ -131,7 +131,7 @@ public class CombatEffectQueueProcessorTests
             CombatDefinitionRegistry registry,
             EndlessEffectRequest request)
         {
-            combat.PendingEffects.Enqueue(new EndlessEffectRequest());
+            combat.EnqueueEffect(new EndlessEffectRequest());
         }
     }
 }

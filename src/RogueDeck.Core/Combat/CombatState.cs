@@ -5,25 +5,32 @@ public sealed class CombatState
     public CombatId Id { get; }
 
     public int CurrentRound { get; private set; }
+
     public int CurrentTurn { get; private set; }
 
     public CombatantId? ActiveCombatantId { get; private set; }
+
     public CombatResult Result { get; private set; }
 
     public int RandomSeed { get; }
+
     public int RandomStep { get; private set; }
 
     public int NextStatusInstanceNumber { get; private set; } = 1;
 
     public List<CombatantState> Combatants { get; } = new();
+
     public List<CombatantId> TurnOrder { get; } = new();
 
     public List<StatusInstance> GlobalStatuses { get; } = new();
 
     public Queue<IEffectRequest> PendingEffects { get; } = new();
+
     public Queue<ICombatEvent> PendingEvents { get; } = new();
 
     public List<CombatLogEntry> CombatLog { get; } = new();
+
+    public bool HasPendingEffects => PendingEffects.Count > 0;
 
     public CombatState(CombatId id, int randomSeed)
     {
@@ -54,6 +61,7 @@ public sealed class CombatState
     public bool TryGetCombatant(CombatantId id, out CombatantState? combatant)
     {
         combatant = Combatants.FirstOrDefault(existing => existing.Id == id);
+
         return combatant is not null;
     }
 
@@ -68,6 +76,21 @@ public sealed class CombatState
     public void SetResult(CombatResult result)
     {
         Result = result;
+    }
+
+    public void EnqueueEffect(IEffectRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        PendingEffects.Enqueue(request);
+    }
+
+    public IEffectRequest DequeueNextEffect()
+    {
+        if (PendingEffects.Count == 0)
+            throw new InvalidOperationException("Cannot dequeue an effect because there are no pending effects.");
+
+        return PendingEffects.Dequeue();
     }
 
     public void AdvanceTurn()
@@ -89,7 +112,9 @@ public sealed class CombatState
     public StatusInstanceId CreateNextStatusInstanceId()
     {
         var id = new StatusInstanceId($"status_{NextStatusInstanceNumber:000000}");
+
         NextStatusInstanceNumber++;
+
         return id;
     }
 

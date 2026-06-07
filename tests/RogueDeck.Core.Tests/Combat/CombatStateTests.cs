@@ -56,4 +56,48 @@ public class CombatStateTests
         Assert.Equal(5, storedGoblin.Statuses[0].Stacks);
         Assert.True(storedGoblin.DefensivePools.ContainsKey(new DefensivePoolId("standard.block")));
     }
+
+
+    [Fact]
+    public void CombatStateCanEnqueueAndDequeueEffect()
+    {
+        var combat = new CombatState(
+            new CombatId("combat_001"),
+            randomSeed: 12345);
+
+        var request = new TestEffectRequest();
+
+        combat.EnqueueEffect(request);
+
+        Assert.True(combat.HasPendingEffects);
+
+        var dequeuedRequest = combat.DequeueNextEffect();
+
+        Assert.Same(request, dequeuedRequest);
+        Assert.False(combat.HasPendingEffects);
+    }
+
+    [Fact]
+    public void CombatStateRejectsNullEffectRequest()
+    {
+        var combat = new CombatState(
+            new CombatId("combat_001"),
+            randomSeed: 12345);
+
+        Assert.Throws<ArgumentNullException>(() =>
+            combat.EnqueueEffect(null!));
+    }
+
+    [Fact]
+    public void CombatStateThrowsWhenDequeuingWithoutPendingEffects()
+    {
+        var combat = new CombatState(
+            new CombatId("combat_001"),
+            randomSeed: 12345);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            combat.DequeueNextEffect());
+    }
+
+    private sealed record TestEffectRequest : IEffectRequest;
 }
