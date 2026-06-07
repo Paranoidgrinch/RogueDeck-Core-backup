@@ -28,3 +28,11 @@ public sealed record CombatantLifecycleChangedCombatEvent(
     CombatantLifecycleState OldState,
     CombatantLifecycleState NewState
 ) : ICombatEvent;
+
+public sealed record HealedCombatEvent(
+    CombatantId TargetCombatantId,
+    int HealedAmount,
+    int RequestedAmount,
+    CombatantId? SourceCombatantId = null,
+    CardDefinitionId? SourceCardId = null
+) : ICombatEvent;

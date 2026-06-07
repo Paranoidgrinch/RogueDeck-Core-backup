@@ -81,7 +81,16 @@ public sealed class HealEffectHandler : EffectRequestHandler<HealEffectRequest>
         combat.AddLogEntry(
             "Healed",
             $"Healed '{heal.TargetCombatantId}' for {healedAmount} HP.");
+
+        combat.EnqueueEvent(
+            new HealedCombatEvent(
+                TargetCombatantId: heal.TargetCombatantId,
+                HealedAmount: healedAmount,
+                RequestedAmount: heal.Amount,
+                SourceCombatantId: heal.SourceCombatantId,
+                SourceCardId: heal.SourceCardId));
     }
 }
+
 
 
