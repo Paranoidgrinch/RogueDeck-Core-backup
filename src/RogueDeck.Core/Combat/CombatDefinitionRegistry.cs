@@ -4,6 +4,7 @@ public sealed class CombatDefinitionRegistry
 {
     private readonly Dictionary<StatusDefinitionId, StatusDefinition> _statusDefinitions = new();
     private readonly Dictionary<Type, IEffectRequestHandler> _effectRequestHandlers = new();
+    private readonly Dictionary<Type, List<ICombatEventHandler>> _combatEventHandlers = new();
 
     public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitions => _statusDefinitions;
 
@@ -61,5 +62,32 @@ public sealed class CombatDefinitionRegistry
         ArgumentNullException.ThrowIfNull(requestType);
 
         return _effectRequestHandlers.TryGetValue(requestType, out handler);
+    }
+
+    public void RegisterCombatEventHandler(ICombatEventHandler handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+
+        if (!_combatEventHandlers.TryGetValue(handler.EventType, out var handlers))
+        {
+            handlers = new List<ICombatEventHandler>();
+            _combatEventHandlers.Add(handler.EventType, handlers);
+        }
+
+        if (handlers.Any(existing => existing.GetType() == handler.GetType()))
+            throw new InvalidOperationException(
+                $"Combat event handler '{handler.GetType().Name}' for event '{handler.EventType.Name}' is already registered.");
+
+        handlers.Add(handler);
+    }
+
+    public IReadOnlyCollection<ICombatEventHandler> GetCombatEventHandlers(Type eventType)
+    {
+        ArgumentNullException.ThrowIfNull(eventType);
+
+        if (!_combatEventHandlers.TryGetValue(eventType, out var handlers))
+            return Array.Empty<ICombatEventHandler>();
+
+        return handlers;
     }
 }
