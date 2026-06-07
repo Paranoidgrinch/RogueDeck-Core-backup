@@ -207,6 +207,58 @@ public class CombatTurnProcessorTests
             processor.StartCurrentTurn(combat, registry));
     }
 
+    [Fact]
+    public void EndCurrentTurnSkipsDownedCombatantsInTurnOrder()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CreateCombatWithHeroAndTwoGoblins();
+
+        var firstGoblin = combat.GetCombatant(new CombatantId("goblin_001"));
+
+        firstGoblin.SetLifecycleState(CombatantLifecycleState.Downed);
+
+        var processor = new CombatTurnProcessor();
+
+        processor.StartCurrentTurn(combat, registry);
+        processor.EndCurrentTurn(combat, registry);
+
+        Assert.Equal(new CombatantId("goblin_002"), combat.ActiveCombatantId);
+        Assert.Equal(1, combat.CurrentRound);
+        Assert.Equal(2, combat.CurrentTurn);
+        Assert.Equal(CombatTurnPhase.WaitingToStartTurn, combat.TurnPhase);
+    }
+
+    [Fact]
+    public void EndCurrentTurnThrowsWhenNoLivingCombatantsRemainInTurnOrder()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CreateCombatWithHeroAndGoblin();
+
+        foreach (var combatant in combat.Combatants)
+            combatant.SetLifecycleState(CombatantLifecycleState.Downed);
+
+        var processor = new CombatTurnProcessor();
+
+        processor.StartCurrentTurn(combat, registry);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            processor.EndCurrentTurn(combat, registry));
+    }
+    private static CombatState CreateCombatWithHeroAndTwoGoblins()
+    {
+        var combat = CreateCombatWithHeroAndGoblin();
+
+        var secondGoblin = new CombatantState(
+            new CombatantId("goblin_002"),
+            new CombatantDefinitionId("standard.goblin"),
+            "combatant.goblin",
+            new TeamId("enemy"),
+            new HealthState(current: 12, max: 12));
+
+        combat.AddCombatant(secondGoblin);
+
+        return combat;
+    }
     private static CombatState CreateCombatWithHeroAndGoblin()
     {
         var combat = new CombatState(
@@ -260,3 +312,4 @@ public class CombatTurnProcessorTests
         }
     }
 }
+

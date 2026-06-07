@@ -99,16 +99,32 @@ public sealed class CombatTurnProcessor
         EnsureActiveCombatant(combat);
 
         var currentIndex = combat.TurnOrder.IndexOf(combat.ActiveCombatantId!.Value);
-        var nextIndex = currentIndex + 1;
 
-        if (nextIndex >= combat.TurnOrder.Count)
+        for (var offset = 1; offset <= combat.TurnOrder.Count; offset++)
         {
-            combat.AdvanceRound();
-            combat.SetActiveCombatant(combat.TurnOrder[0]);
+            var nextIndex = (currentIndex + offset) % combat.TurnOrder.Count;
+            var nextCombatantId = combat.TurnOrder[nextIndex];
+
+            if (!combat.TryGetCombatant(nextCombatantId, out var nextCombatant))
+                continue;
+
+            if (!nextCombatant!.IsAlive)
+                continue;
+
+            if (nextIndex <= currentIndex)
+            {
+                combat.AdvanceRound();
+            }
+            else
+            {
+                combat.AdvanceTurn();
+            }
+
+            combat.SetActiveCombatant(nextCombatantId);
             return;
         }
 
-        combat.AdvanceTurn();
-        combat.SetActiveCombatant(combat.TurnOrder[nextIndex]);
+        throw new InvalidOperationException("Cannot advance turn because there are no living combatants in the turn order.");
     }
 }
+
