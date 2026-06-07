@@ -100,4 +100,18 @@ public class CombatStateTests
     }
 
     private sealed record TestEffectRequest : IEffectRequest;
+
+
+    [Fact]
+    public void PendingEffectsExposeReadOnlyView()
+    {
+        var combat = new CombatState(
+            new CombatId("combat_001"),
+            randomSeed: 12345);
+
+        combat.EnqueueEffect(new TestEffectRequest());
+
+        Assert.Equal(1, combat.PendingEffectCount);
+        Assert.Single(combat.PendingEffects);
+    }
 }

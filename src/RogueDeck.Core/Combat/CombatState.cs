@@ -2,6 +2,8 @@ namespace RogueDeck.Core.Combat;
 
 public sealed class CombatState
 {
+    private readonly Queue<IEffectRequest> _pendingEffects = new();
+
     public CombatId Id { get; }
 
     public int CurrentRound { get; private set; }
@@ -24,13 +26,15 @@ public sealed class CombatState
 
     public List<StatusInstance> GlobalStatuses { get; } = new();
 
-    public Queue<IEffectRequest> PendingEffects { get; } = new();
+    public IReadOnlyCollection<IEffectRequest> PendingEffects => _pendingEffects;
 
     public Queue<ICombatEvent> PendingEvents { get; } = new();
 
     public List<CombatLogEntry> CombatLog { get; } = new();
 
-    public bool HasPendingEffects => PendingEffects.Count > 0;
+    public bool HasPendingEffects => _pendingEffects.Count > 0;
+
+    public int PendingEffectCount => _pendingEffects.Count;
 
     public CombatState(CombatId id, int randomSeed)
     {
@@ -82,15 +86,15 @@ public sealed class CombatState
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        PendingEffects.Enqueue(request);
+        _pendingEffects.Enqueue(request);
     }
 
     public IEffectRequest DequeueNextEffect()
     {
-        if (PendingEffects.Count == 0)
+        if (_pendingEffects.Count == 0)
             throw new InvalidOperationException("Cannot dequeue an effect because there are no pending effects.");
 
-        return PendingEffects.Dequeue();
+        return _pendingEffects.Dequeue();
     }
 
     public void AdvanceTurn()
