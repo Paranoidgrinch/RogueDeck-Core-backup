@@ -19,12 +19,14 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreateStun());
 
         registry.RegisterEffectRequestHandler(new ApplyStatusEffectHandler());
+        registry.RegisterEffectRequestHandler(new DecreaseStatusDurationEffectHandler());
         registry.RegisterEffectRequestHandler(new DealDamageEffectHandler());
     
         registry.RegisterEffectRequestHandler(new HealEffectHandler());
         registry.RegisterEffectRequestHandler(new GainBlockEffectHandler());
         registry.RegisterEffectRequestHandler(new ClearDefensivePoolEffectHandler());
         registry.RegisterCombatEventHandler(new ClearBlockOnTurnStartedHandler());
+        registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedHandler());
     
     }   
 
@@ -118,3 +120,4 @@ public sealed class StandardCombatPackage : ICombatPackage
         return definition;
     }
 }
+

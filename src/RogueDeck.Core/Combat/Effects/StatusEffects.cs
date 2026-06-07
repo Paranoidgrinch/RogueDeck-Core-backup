@@ -73,3 +73,78 @@ public sealed class ApplyStatusEffectHandler : EffectRequestHandler<ApplyStatusE
             $"Applied status '{applyStatus.StatusDefinitionId}' to '{applyStatus.TargetCombatantId}'.");
     }
 }
+
+public sealed record DecreaseStatusDurationEffectRequest(
+    CombatantId TargetCombatantId,
+    StatusInstanceId StatusInstanceId,
+    int Amount = 1
+) : IEffectRequest;
+
+public sealed class DecreaseStatusDurationEffectHandler : EffectRequestHandler<DecreaseStatusDurationEffectRequest>
+{
+    protected override void Resolve(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        DecreaseStatusDurationEffectRequest decreaseDuration)
+    {
+        if (decreaseDuration.Amount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(decreaseDuration.Amount), "Duration decrease amount must be greater than zero.");
+
+        var target = combat.GetCombatant(decreaseDuration.TargetCombatantId);
+
+        var status = target.Statuses.FirstOrDefault(
+            existing => existing.Id == decreaseDuration.StatusInstanceId);
+
+        if (status is null)
+            return;
+
+        if (status.DurationTurns <= 0)
+            return;
+
+        var oldDuration = status.DurationTurns;
+        var newDuration = Math.Max(0, oldDuration - decreaseDuration.Amount);
+
+        status.SetDurationTurns(newDuration);
+
+        combat.AddLogEntry(
+            "StatusDurationReduced",
+            $"Reduced status '{status.DefinitionId}' duration on '{target.Id}' from {oldDuration} to {newDuration}.");
+
+        if (newDuration > 0)
+            return;
+
+        target.Statuses.Remove(status);
+
+        combat.AddLogEntry(
+            "StatusExpired",
+            $"Status '{status.DefinitionId}' expired on '{target.Id}'.");
+    }
+}
+
+public sealed class DecreaseTimedStatusDurationsOnTurnEndedHandler : CombatEventHandler<TurnEndedCombatEvent>
+{
+    protected override void Handle(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        TurnEndedCombatEvent combatEvent)
+    {
+        if (!combat.TryGetCombatant(combatEvent.CombatantId, out var combatant))
+            return;
+
+        foreach (var status in combatant!.Statuses.ToArray())
+        {
+            var definition = registry.GetStatus(status.DefinitionId);
+
+            if (!definition.UsesDuration)
+                continue;
+
+            if (status.DurationTurns <= 0)
+                continue;
+
+            combat.EnqueueEffect(
+                new DecreaseStatusDurationEffectRequest(
+                    TargetCombatantId: combatEvent.CombatantId,
+                    StatusInstanceId: status.Id));
+        }
+    }
+}
