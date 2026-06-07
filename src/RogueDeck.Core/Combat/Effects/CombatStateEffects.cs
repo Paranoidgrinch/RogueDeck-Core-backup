@@ -27,9 +27,6 @@ public sealed class SetCombatResultEffectHandler : EffectRequestHandler<SetComba
 public sealed class UpdateStandardCombatResultOnLifecycleChangedHandler
     : CombatEventHandler<CombatantLifecycleChangedCombatEvent>
 {
-    private static readonly TeamId PlayerTeamId = new("player");
-    private static readonly TeamId EnemyTeamId = new("enemy");
-
     protected override void Handle(
         CombatState combat,
         CombatDefinitionRegistry registry,
@@ -38,9 +35,9 @@ public sealed class UpdateStandardCombatResultOnLifecycleChangedHandler
         if (combat.Result != CombatResult.Ongoing)
             return;
 
-        var hasLivingPlayer = combat.HasLivingCombatantsOnTeam(PlayerTeamId);
+        var hasLivingPlayer = combat.HasLivingCombatantsOnTeam(StandardCombatIds.PlayerTeam);
 
-        var hasLivingEnemy = combat.HasLivingCombatantsOnTeam(EnemyTeamId);
+        var hasLivingEnemy = combat.HasLivingCombatantsOnTeam(StandardCombatIds.EnemyTeam);
 
         if (!hasLivingPlayer && !hasLivingEnemy)
         {
@@ -60,4 +57,5 @@ public sealed class UpdateStandardCombatResultOnLifecycleChangedHandler
         }
     }
 }
+
 
