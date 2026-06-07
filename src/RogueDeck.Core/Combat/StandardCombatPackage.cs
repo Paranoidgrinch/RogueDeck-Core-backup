@@ -24,6 +24,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterEffectRequestHandler(new HealEffectHandler());
         registry.RegisterEffectRequestHandler(new GainBlockEffectHandler());
         registry.RegisterEffectRequestHandler(new ClearDefensivePoolEffectHandler());
+        registry.RegisterCombatEventHandler(new ClearBlockOnTurnStartedHandler());
     
     }   
 

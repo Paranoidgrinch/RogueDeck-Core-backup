@@ -75,3 +75,26 @@ public sealed class ClearDefensivePoolEffectHandler : EffectRequestHandler<Clear
             $"Cleared {clearedAmount} from defensive pool '{clearPool.PoolId}' on '{clearPool.TargetCombatantId}'.");
     }
 }
+
+public sealed class ClearBlockOnTurnStartedHandler : CombatEventHandler<TurnStartedCombatEvent>
+{
+    protected override void Handle(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        TurnStartedCombatEvent combatEvent)
+    {
+        if (!combat.TryGetCombatant(combatEvent.CombatantId, out var combatant))
+            return;
+
+        if (!combatant!.DefensivePools.TryGetValue(StandardCombatIds.BlockDefensivePool, out var block))
+            return;
+
+        if (block.Current <= 0)
+            return;
+
+        combat.EnqueueEffect(
+            new ClearDefensivePoolEffectRequest(
+                TargetCombatantId: combatEvent.CombatantId,
+                PoolId: StandardCombatIds.BlockDefensivePool));
+    }
+}
