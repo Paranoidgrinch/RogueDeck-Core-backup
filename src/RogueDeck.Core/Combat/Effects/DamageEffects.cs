@@ -38,6 +38,15 @@ public sealed class DealDamageEffectHandler : EffectRequestHandler<DealDamageEff
         combat.AddLogEntry(
             "DamageDealt",
             $"Dealt {healthDamage} damage to '{dealDamage.TargetCombatantId}' and blocked {blockedDamage} damage.");
+
+        combat.EnqueueEvent(
+            new DamageDealtCombatEvent(
+                TargetCombatantId: dealDamage.TargetCombatantId,
+                HealthDamage: healthDamage,
+                BlockedDamage: blockedDamage,
+                RequestedAmount: dealDamage.Amount,
+                SourceCombatantId: dealDamage.SourceCombatantId,
+                SourceCardId: dealDamage.SourceCardId));
     }
 }
 
@@ -72,3 +81,4 @@ public sealed class HealEffectHandler : EffectRequestHandler<HealEffectRequest>
             $"Healed '{heal.TargetCombatantId}' for {healedAmount} HP.");
     }
 }
+
