@@ -20,9 +20,10 @@ public sealed class StandardCombatPackage : ICombatPackage
 
         registry.RegisterEffectRequestHandler(new ApplyStatusEffectHandler());
         registry.RegisterEffectRequestHandler(new DealDamageEffectHandler());
-
+    
         registry.RegisterEffectRequestHandler(new HealEffectHandler());
-    }
+        registry.RegisterEffectRequestHandler(new GainBlockEffectHandler());
+    }   
 
     private StatusDefinition CreatePoison()
     {

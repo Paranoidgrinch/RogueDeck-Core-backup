@@ -20,6 +20,7 @@ public class CombatPackageTests
         Assert.True(registry.TryGetEffectRequestHandler(typeof(ApplyStatusEffectRequest), out _));
         Assert.True(registry.TryGetEffectRequestHandler(typeof(DealDamageEffectRequest), out _));
         Assert.True(registry.TryGetEffectRequestHandler(typeof(HealEffectRequest), out _));
+        Assert.True(registry.TryGetEffectRequestHandler(typeof(GainBlockEffectRequest), out _));
         Assert.Equal(StatusPolarity.Debuff, poison!.Polarity);
         Assert.True(poison.UsesStacks);
         Assert.True(poison.ShowStacksInUi);
