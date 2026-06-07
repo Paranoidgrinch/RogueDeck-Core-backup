@@ -67,3 +67,46 @@ public sealed class CombatEventQueueProcessor
         }
     }
 }
+
+public sealed class CombatQueueProcessor
+{
+    private readonly CombatEffectQueueProcessor _effectQueueProcessor = new();
+    private readonly CombatEventQueueProcessor _eventQueueProcessor = new();
+
+    public void ResolvePendingQueues(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        int maxCyclesToResolve = 1024,
+        int maxEffectsPerCycle = 1024,
+        int maxEventsPerCycle = 1024)
+    {
+        ArgumentNullException.ThrowIfNull(combat);
+        ArgumentNullException.ThrowIfNull(registry);
+
+        if (maxCyclesToResolve <= 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(maxCyclesToResolve),
+                "Maximum cycles to resolve must be greater than zero.");
+
+        var resolvedCycles = 0;
+
+        while (combat.HasPendingEffects || combat.HasPendingEvents)
+        {
+            if (resolvedCycles >= maxCyclesToResolve)
+                throw new InvalidOperationException(
+                    $"Stopped resolving pending queues after reaching the limit of {maxCyclesToResolve} cycles.");
+
+            _effectQueueProcessor.ResolvePendingEffects(
+                combat,
+                registry,
+                maxEffectsPerCycle);
+
+            _eventQueueProcessor.ResolvePendingEvents(
+                combat,
+                registry,
+                maxEventsPerCycle);
+
+            resolvedCycles++;
+        }
+    }
+}
