@@ -1,19 +1,12 @@
 namespace RogueDeck.Core.Combat;
 
-public sealed class GainBlockEffectHandler : IEffectRequestHandler
+public sealed class GainBlockEffectHandler : EffectRequestHandler<GainBlockEffectRequest>
 {
-    public Type RequestType => typeof(GainBlockEffectRequest);
-
-    public void Resolve(
+    protected override void Resolve(
         CombatState combat,
         CombatDefinitionRegistry registry,
-        IEffectRequest request)
+        GainBlockEffectRequest gainBlock)
     {
-        var gainBlock = request as GainBlockEffectRequest
-            ?? throw new ArgumentException(
-                $"Expected request type '{nameof(GainBlockEffectRequest)}'.",
-                nameof(request));
-
         if (gainBlock.Amount < 0)
             throw new ArgumentOutOfRangeException(nameof(gainBlock.Amount), "Block amount cannot be negative.");
 

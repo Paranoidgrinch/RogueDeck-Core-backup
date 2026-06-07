@@ -1,19 +1,12 @@
 namespace RogueDeck.Core.Combat;
 
-public sealed class HealEffectHandler : IEffectRequestHandler
+public sealed class HealEffectHandler : EffectRequestHandler<HealEffectRequest>
 {
-    public Type RequestType => typeof(HealEffectRequest);
-
-    public void Resolve(
+    protected override void Resolve(
         CombatState combat,
         CombatDefinitionRegistry registry,
-        IEffectRequest request)
+        HealEffectRequest heal)
     {
-        var heal = request as HealEffectRequest
-            ?? throw new ArgumentException(
-                $"Expected request type '{nameof(HealEffectRequest)}'.",
-                nameof(request));
-
         if (heal.Amount < 0)
             throw new ArgumentOutOfRangeException(nameof(heal.Amount), "Heal amount cannot be negative.");
 

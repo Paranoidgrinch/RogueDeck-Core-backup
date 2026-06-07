@@ -1,19 +1,12 @@
 namespace RogueDeck.Core.Combat;
 
-public sealed class ApplyStatusEffectHandler : IEffectRequestHandler
+public sealed class ApplyStatusEffectHandler : EffectRequestHandler<ApplyStatusEffectRequest>
 {
-    public Type RequestType => typeof(ApplyStatusEffectRequest);
-
-    public void Resolve(
+    protected override void Resolve(
         CombatState combat,
         CombatDefinitionRegistry registry,
-        IEffectRequest request)
+        ApplyStatusEffectRequest applyStatus)
     {
-        var applyStatus = request as ApplyStatusEffectRequest
-            ?? throw new ArgumentException(
-                $"Expected request type '{nameof(ApplyStatusEffectRequest)}'.",
-                nameof(request));
-
         if (applyStatus.Stacks < 0)
             throw new ArgumentOutOfRangeException(nameof(applyStatus.Stacks), "Stacks cannot be negative.");
 

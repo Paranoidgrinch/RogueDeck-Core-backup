@@ -1,19 +1,12 @@
 namespace RogueDeck.Core.Combat;
 
-public sealed class DealDamageEffectHandler : IEffectRequestHandler
+public sealed class DealDamageEffectHandler : EffectRequestHandler<DealDamageEffectRequest>
 {
-    public Type RequestType => typeof(DealDamageEffectRequest);
-
-    public void Resolve(
+    protected override void Resolve(
         CombatState combat,
         CombatDefinitionRegistry registry,
-        IEffectRequest request)
+        DealDamageEffectRequest dealDamage)
     {
-        var dealDamage = request as DealDamageEffectRequest
-            ?? throw new ArgumentException(
-                $"Expected request type '{nameof(DealDamageEffectRequest)}'.",
-                nameof(request));
-
         if (dealDamage.Amount < 0)
             throw new ArgumentOutOfRangeException(nameof(dealDamage.Amount), "Damage amount cannot be negative.");
 
