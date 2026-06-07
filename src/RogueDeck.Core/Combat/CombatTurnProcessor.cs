@@ -4,6 +4,26 @@ public sealed class CombatTurnProcessor
 {
     private readonly CombatEffectQueueProcessor _effectQueueProcessor = new();
 
+    public void StartCurrentTurn(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        int maxEffectsToResolve = 1024)
+    {
+        ArgumentNullException.ThrowIfNull(combat);
+        ArgumentNullException.ThrowIfNull(registry);
+
+        EnsureActiveCombatant(combat);
+
+        combat.AddLogEntry(
+            "TurnStarted",
+            $"Started turn for '{combat.ActiveCombatantId}'.");
+
+        _effectQueueProcessor.ResolvePendingEffects(
+            combat,
+            registry,
+            maxEffectsToResolve);
+    }
+
     public void EndCurrentTurn(
         CombatState combat,
         CombatDefinitionRegistry registry,
@@ -11,6 +31,12 @@ public sealed class CombatTurnProcessor
     {
         ArgumentNullException.ThrowIfNull(combat);
         ArgumentNullException.ThrowIfNull(registry);
+
+        EnsureActiveCombatant(combat);
+
+        combat.AddLogEntry(
+            "TurnEnded",
+            $"Ended turn for '{combat.ActiveCombatantId}'.");
 
         _effectQueueProcessor.ResolvePendingEffects(
             combat,
@@ -20,10 +46,10 @@ public sealed class CombatTurnProcessor
         AdvanceToNextCombatant(combat);
     }
 
-    private static void AdvanceToNextCombatant(CombatState combat)
+    private static void EnsureActiveCombatant(CombatState combat)
     {
         if (combat.TurnOrder.Count == 0)
-            throw new InvalidOperationException("Cannot advance turn because the combat has no turn order.");
+            throw new InvalidOperationException("Cannot use turn processor because the combat has no turn order.");
 
         if (combat.ActiveCombatantId is null)
         {
@@ -31,12 +57,16 @@ public sealed class CombatTurnProcessor
             return;
         }
 
-        var currentIndex = combat.TurnOrder.IndexOf(combat.ActiveCombatantId.Value);
-
-        if (currentIndex < 0)
+        if (!combat.TurnOrder.Contains(combat.ActiveCombatantId.Value))
             throw new InvalidOperationException(
                 $"Active combatant '{combat.ActiveCombatantId}' is not part of the turn order.");
+    }
 
+    private static void AdvanceToNextCombatant(CombatState combat)
+    {
+        EnsureActiveCombatant(combat);
+
+        var currentIndex = combat.TurnOrder.IndexOf(combat.ActiveCombatantId!.Value);
         var nextIndex = currentIndex + 1;
 
         if (nextIndex >= combat.TurnOrder.Count)
