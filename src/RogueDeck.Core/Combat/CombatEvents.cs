@@ -36,3 +36,31 @@ public sealed record HealedCombatEvent(
     CombatantId? SourceCombatantId = null,
     CardDefinitionId? SourceCardId = null
 ) : ICombatEvent;
+
+public sealed record StatusAppliedCombatEvent(
+    CombatantId TargetCombatantId,
+    StatusInstanceId StatusInstanceId,
+    StatusDefinitionId StatusDefinitionId,
+    int Stacks,
+    int DurationTurns,
+    int Charges,
+    CombatantId? SourceCombatantId = null,
+    CardDefinitionId? SourceCardId = null
+) : ICombatEvent;
+
+public sealed record StatusMergedCombatEvent(
+    CombatantId TargetCombatantId,
+    StatusInstanceId StatusInstanceId,
+    StatusDefinitionId StatusDefinitionId,
+    int Stacks,
+    int DurationTurns,
+    int Charges,
+    CombatantId? SourceCombatantId = null,
+    CardDefinitionId? SourceCardId = null
+) : ICombatEvent;
+
+public sealed record StatusExpiredCombatEvent(
+    CombatantId TargetCombatantId,
+    StatusInstanceId StatusInstanceId,
+    StatusDefinitionId StatusDefinitionId
+) : ICombatEvent;

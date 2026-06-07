@@ -45,6 +45,17 @@ public sealed class ApplyStatusEffectHandler : EffectRequestHandler<ApplyStatusE
                     "StatusMerged",
                     $"Merged status '{applyStatus.StatusDefinitionId}' on '{applyStatus.TargetCombatantId}'.");
 
+                combat.EnqueueEvent(
+                    new StatusMergedCombatEvent(
+                        TargetCombatantId: applyStatus.TargetCombatantId,
+                        StatusInstanceId: existingStatus.Id,
+                        StatusDefinitionId: existingStatus.DefinitionId,
+                        Stacks: existingStatus.Stacks,
+                        DurationTurns: existingStatus.DurationTurns,
+                        Charges: existingStatus.Charges,
+                        SourceCombatantId: existingStatus.SourceCombatantId,
+                        SourceCardId: existingStatus.SourceCardId));
+
                 return;
             }
         }
@@ -71,6 +82,17 @@ public sealed class ApplyStatusEffectHandler : EffectRequestHandler<ApplyStatusE
         combat.AddLogEntry(
             "StatusApplied",
             $"Applied status '{applyStatus.StatusDefinitionId}' to '{applyStatus.TargetCombatantId}'.");
+
+        combat.EnqueueEvent(
+            new StatusAppliedCombatEvent(
+                TargetCombatantId: applyStatus.TargetCombatantId,
+                StatusInstanceId: newStatus.Id,
+                StatusDefinitionId: newStatus.DefinitionId,
+                Stacks: newStatus.Stacks,
+                DurationTurns: newStatus.DurationTurns,
+                Charges: newStatus.Charges,
+                SourceCombatantId: newStatus.SourceCombatantId,
+                SourceCardId: newStatus.SourceCardId));
     }
 }
 
@@ -118,6 +140,12 @@ public sealed class DecreaseStatusDurationEffectHandler : EffectRequestHandler<D
         combat.AddLogEntry(
             "StatusExpired",
             $"Status '{status.DefinitionId}' expired on '{target.Id}'.");
+
+        combat.EnqueueEvent(
+            new StatusExpiredCombatEvent(
+                TargetCombatantId: target.Id,
+                StatusInstanceId: status.Id,
+                StatusDefinitionId: status.DefinitionId));
     }
 }
 
@@ -221,3 +249,4 @@ public sealed class TriggeredDamageOnDamageDealtHandler : CombatEventHandler<Dam
         }
     }
 }
+
