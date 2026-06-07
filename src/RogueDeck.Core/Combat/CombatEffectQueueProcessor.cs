@@ -19,7 +19,7 @@ public sealed class CombatEffectQueueProcessor
 
         var resolvedEffects = 0;
 
-        while (combat.HasPendingEffects)
+        while (combat.HasPendingEffects && combat.Result == CombatResult.Ongoing)
         {
             if (resolvedEffects >= maxEffectsToResolve)
                 throw new InvalidOperationException(

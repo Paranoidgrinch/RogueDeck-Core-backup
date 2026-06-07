@@ -51,7 +51,7 @@ public sealed class CombatEventQueueProcessor
 
         var resolvedEvents = 0;
 
-        while (combat.HasPendingEvents)
+        while (combat.HasPendingEvents && combat.Result == CombatResult.Ongoing)
         {
             if (resolvedEvents >= maxEventsToResolve)
                 throw new InvalidOperationException(
@@ -90,7 +90,7 @@ public sealed class CombatQueueProcessor
 
         var resolvedCycles = 0;
 
-        while (combat.HasPendingEffects || combat.HasPendingEvents)
+        while ((combat.HasPendingEffects || combat.HasPendingEvents) && combat.Result == CombatResult.Ongoing)
         {
             if (resolvedCycles >= maxCyclesToResolve)
                 throw new InvalidOperationException(
@@ -110,3 +110,4 @@ public sealed class CombatQueueProcessor
         }
     }
 }
+
