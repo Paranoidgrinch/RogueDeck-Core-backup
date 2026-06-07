@@ -148,3 +148,33 @@ public sealed class DecreaseTimedStatusDurationsOnTurnEndedHandler : CombatEvent
         }
     }
 }
+
+public sealed class DamageOverTimeOnTurnStartedHandler : CombatEventHandler<TurnStartedCombatEvent>
+{
+    private static readonly TagId DamageOverTimeTag = new("damage_over_time");
+
+    protected override void Handle(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        TurnStartedCombatEvent combatEvent)
+    {
+        if (!combat.TryGetCombatant(combatEvent.CombatantId, out var combatant))
+            return;
+
+        foreach (var status in combatant!.Statuses.ToArray())
+        {
+            if (!status.Tags.Contains(DamageOverTimeTag))
+                continue;
+
+            if (status.Stacks <= 0)
+                continue;
+
+            combat.EnqueueEffect(
+                new DealDamageEffectRequest(
+                    TargetCombatantId: combatEvent.CombatantId,
+                    Amount: status.Stacks,
+                    SourceCombatantId: status.SourceCombatantId,
+                    SourceCardId: status.SourceCardId));
+        }
+    }
+}
