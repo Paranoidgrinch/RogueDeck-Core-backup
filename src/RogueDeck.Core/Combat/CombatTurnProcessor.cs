@@ -20,6 +20,12 @@ public sealed class CombatTurnProcessor
             "TurnStarted",
             $"Started turn for '{combat.ActiveCombatantId}'.");
 
+        combat.EnqueueEvent(
+            new TurnStartedCombatEvent(
+                combat.ActiveCombatantId!.Value,
+                combat.CurrentRound,
+                combat.CurrentTurn));
+
         _effectQueueProcessor.ResolvePendingEffects(
             combat,
             registry,
@@ -41,6 +47,12 @@ public sealed class CombatTurnProcessor
         combat.AddLogEntry(
             "TurnEnded",
             $"Ended turn for '{combat.ActiveCombatantId}'.");
+
+        combat.EnqueueEvent(
+            new TurnEndedCombatEvent(
+                combat.ActiveCombatantId!.Value,
+                combat.CurrentRound,
+                combat.CurrentTurn));
 
         _effectQueueProcessor.ResolvePendingEffects(
             combat,
@@ -100,3 +112,4 @@ public sealed class CombatTurnProcessor
         combat.SetActiveCombatant(combat.TurnOrder[nextIndex]);
     }
 }
+

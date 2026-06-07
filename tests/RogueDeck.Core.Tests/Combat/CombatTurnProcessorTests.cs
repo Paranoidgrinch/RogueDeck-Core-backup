@@ -156,6 +156,47 @@ public class CombatTurnProcessorTests
             processor.StartCurrentTurn(combat, registry));
     }
 
+    [Fact]
+    public void StartCurrentTurnEnqueuesTurnStartedEvent()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CreateCombatWithHeroAndGoblin();
+
+        var processor = new CombatTurnProcessor();
+
+        processor.StartCurrentTurn(combat, registry);
+
+        var combatEvent = Assert.Single(combat.PendingEvents);
+        var turnStarted = Assert.IsType<TurnStartedCombatEvent>(combatEvent);
+
+        Assert.Equal(new CombatantId("hero_001"), turnStarted.CombatantId);
+        Assert.Equal(1, turnStarted.Round);
+        Assert.Equal(1, turnStarted.Turn);
+    }
+
+    [Fact]
+    public void EndCurrentTurnEnqueuesTurnEndedEvent()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CreateCombatWithHeroAndGoblin();
+
+        var processor = new CombatTurnProcessor();
+
+        processor.StartCurrentTurn(combat, registry);
+        processor.EndCurrentTurn(combat, registry);
+
+        var events = combat.PendingEvents.ToArray();
+
+        Assert.Equal(2, events.Length);
+
+        var turnStarted = Assert.IsType<TurnStartedCombatEvent>(events[0]);
+        var turnEnded = Assert.IsType<TurnEndedCombatEvent>(events[1]);
+
+        Assert.Equal(new CombatantId("hero_001"), turnStarted.CombatantId);
+        Assert.Equal(new CombatantId("hero_001"), turnEnded.CombatantId);
+        Assert.Equal(1, turnEnded.Round);
+        Assert.Equal(1, turnEnded.Turn);
+    }
     private static CombatState CreateCombatWithHeroAndGoblin()
     {
         var combat = new CombatState(
@@ -182,4 +223,5 @@ public class CombatTurnProcessorTests
         return combat;
     }
 }
+
 
