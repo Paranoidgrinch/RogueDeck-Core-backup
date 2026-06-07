@@ -7,7 +7,7 @@ public class DealDamageEffectTests
     [Fact]
     public void DealDamageReducesTargetHealth()
     {
-        var registry = new CombatDefinitionRegistry();
+        var registry = CombatTestFactory.CreateStandardRegistry();
 
         var combat = new CombatState(
             new CombatId("combat_001"),
@@ -43,7 +43,7 @@ public class DealDamageEffectTests
     [Fact]
     public void DealDamageCannotReduceHealthBelowZero()
     {
-        var registry = new CombatDefinitionRegistry();
+        var registry = CombatTestFactory.CreateStandardRegistry();
 
         var combat = new CombatState(
             new CombatId("combat_001"),
@@ -79,7 +79,7 @@ public class DealDamageEffectTests
     [Fact]
     public void DealDamageRejectsNegativeAmount()
     {
-        var registry = new CombatDefinitionRegistry();
+        var registry = CombatTestFactory.CreateStandardRegistry();
 
         var combat = new CombatState(
             new CombatId("combat_001"),
@@ -110,7 +110,7 @@ public class DealDamageEffectTests
     [Fact]
     public void DealDamageConsumesBlockBeforeHealth()
     {
-        var registry = new CombatDefinitionRegistry();
+        var registry = CombatTestFactory.CreateStandardRegistry();
 
         var combat = new CombatState(
             new CombatId("combat_001"),
@@ -152,7 +152,7 @@ public class DealDamageEffectTests
     [Fact]
     public void DealDamageOnlyConsumesBlockWhenBlockIsEnough()
     {
-        var registry = new CombatDefinitionRegistry();
+        var registry = CombatTestFactory.CreateStandardRegistry();
 
         var combat = new CombatState(
             new CombatId("combat_001"),

@@ -7,9 +7,7 @@ public class ApplyStatusEffectTests
     [Fact]
     public void ApplyStatusCreatesStatusInstanceOnTargetCombatant()
     {
-        var registry = new CombatDefinitionRegistry();
-        var package = new StandardCombatPackage();
-        package.RegisterDefinitions(registry);
+        var registry = CombatTestFactory.CreateStandardRegistry();
 
         var combat = new CombatState(
             new CombatId("combat_001"),
@@ -62,9 +60,7 @@ public class ApplyStatusEffectTests
     [Fact]
     public void ApplyStatusMergesWithExistingStatusWhenDefinitionUsesMergeBehavior()
     {
-        var registry = new CombatDefinitionRegistry();
-        var package = new StandardCombatPackage();
-        package.RegisterDefinitions(registry);
+        var registry = CombatTestFactory.CreateStandardRegistry();
 
         var combat = new CombatState(
             new CombatId("combat_001"),

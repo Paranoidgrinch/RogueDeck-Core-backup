@@ -17,6 +17,11 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreateStrength());
         registry.RegisterStatus(CreateThorns());
         registry.RegisterStatus(CreateStun());
+
+        registry.RegisterEffectRequestHandler(new ApplyStatusEffectHandler());
+        registry.RegisterEffectRequestHandler(new DealDamageEffectHandler());
+
+        registry.RegisterEffectRequestHandler(new HealEffectHandler());
     }
 
     private StatusDefinition CreatePoison()

@@ -7,7 +7,7 @@ public class HealEffectTests
     [Fact]
     public void HealIncreasesTargetHealth()
     {
-        var registry = new CombatDefinitionRegistry();
+        var registry = CombatTestFactory.CreateStandardRegistry();
 
         var combat = new CombatState(
             new CombatId("combat_001"),
@@ -43,7 +43,7 @@ public class HealEffectTests
     [Fact]
     public void HealCannotIncreaseHealthAboveMax()
     {
-        var registry = new CombatDefinitionRegistry();
+        var registry = CombatTestFactory.CreateStandardRegistry();
 
         var combat = new CombatState(
             new CombatId("combat_001"),
@@ -79,7 +79,7 @@ public class HealEffectTests
     [Fact]
     public void HealRejectsNegativeAmount()
     {
-        var registry = new CombatDefinitionRegistry();
+        var registry = CombatTestFactory.CreateStandardRegistry();
 
         var combat = new CombatState(
             new CombatId("combat_001"),

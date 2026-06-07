@@ -17,7 +17,9 @@ public class CombatPackageTests
         Assert.True(registry.TryGetStatus(new StatusDefinitionId("standard.strength"), out var strength));
         Assert.True(registry.TryGetStatus(new StatusDefinitionId("standard.thorns"), out var thorns));
         Assert.True(registry.TryGetStatus(new StatusDefinitionId("standard.stun"), out var stun));
-
+        Assert.True(registry.TryGetEffectRequestHandler(typeof(ApplyStatusEffectRequest), out _));
+        Assert.True(registry.TryGetEffectRequestHandler(typeof(DealDamageEffectRequest), out _));
+        Assert.True(registry.TryGetEffectRequestHandler(typeof(HealEffectRequest), out _));
         Assert.Equal(StatusPolarity.Debuff, poison!.Polarity);
         Assert.True(poison.UsesStacks);
         Assert.True(poison.ShowStacksInUi);
