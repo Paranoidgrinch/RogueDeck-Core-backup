@@ -77,6 +77,18 @@ public sealed class CombatState
         return combatant is not null;
     }
 
+    public IReadOnlyCollection<CombatantState> GetLivingCombatantsOnTeam(TeamId teamId)
+    {
+        return Combatants
+            .Where(combatant => combatant.TeamId == teamId && combatant.IsAlive)
+            .ToArray();
+    }
+
+    public bool HasLivingCombatantsOnTeam(TeamId teamId)
+    {
+        return Combatants.Any(combatant => combatant.TeamId == teamId && combatant.IsAlive);
+    }
+
     public void SetActiveCombatant(CombatantId combatantId)
     {
         if (!Combatants.Any(combatant => combatant.Id == combatantId))
@@ -166,3 +178,4 @@ public sealed class CombatState
         CombatLog.Add(new CombatLogEntry(CurrentRound, CurrentTurn, type, message));
     }
 }
+

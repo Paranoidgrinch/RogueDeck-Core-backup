@@ -38,11 +38,9 @@ public sealed class UpdateStandardCombatResultOnLifecycleChangedHandler
         if (combat.Result != CombatResult.Ongoing)
             return;
 
-        var hasLivingPlayer = combat.Combatants.Any(
-            combatant => combatant.TeamId == PlayerTeamId && combatant.IsAlive);
+        var hasLivingPlayer = combat.HasLivingCombatantsOnTeam(PlayerTeamId);
 
-        var hasLivingEnemy = combat.Combatants.Any(
-            combatant => combatant.TeamId == EnemyTeamId && combatant.IsAlive);
+        var hasLivingEnemy = combat.HasLivingCombatantsOnTeam(EnemyTeamId);
 
         if (!hasLivingPlayer && !hasLivingEnemy)
         {
@@ -62,3 +60,4 @@ public sealed class UpdateStandardCombatResultOnLifecycleChangedHandler
         }
     }
 }
+
