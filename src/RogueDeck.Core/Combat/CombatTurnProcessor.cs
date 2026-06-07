@@ -18,7 +18,7 @@ public sealed class CombatTurnProcessor
         combat.MarkTurnStarted();
 
         combat.AddLogEntry(
-            "TurnStarted",
+            StandardCombatLogTypes.TurnStarted,
             $"Started turn for '{combat.ActiveCombatantId}'.");
 
         combat.EnqueueEvent(
@@ -47,7 +47,7 @@ public sealed class CombatTurnProcessor
         combat.MarkTurnEnded();
 
         combat.AddLogEntry(
-            "TurnEnded",
+            StandardCombatLogTypes.TurnEnded,
             $"Ended turn for '{combat.ActiveCombatantId}'.");
 
         combat.EnqueueEvent(
@@ -177,4 +177,5 @@ public sealed class CombatTurnProcessor
         throw new InvalidOperationException("Cannot advance turn because there are no living combatants in the turn order.");
     }
 }
+
 

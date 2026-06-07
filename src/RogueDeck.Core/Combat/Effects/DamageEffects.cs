@@ -37,7 +37,7 @@ public sealed class DealDamageEffectHandler : EffectRequestHandler<DealDamageEff
         target.Health.SetCurrent(newHealth);
 
         combat.AddLogEntry(
-            "DamageDealt",
+            StandardCombatLogTypes.DamageDealt,
             $"Dealt {healthDamage} damage to '{dealDamage.TargetCombatantId}' and blocked {blockedDamage} damage.");
 
         combat.EnqueueEvent(
@@ -79,7 +79,7 @@ public sealed class HealEffectHandler : EffectRequestHandler<HealEffectRequest>
         target.Health.SetCurrent(newHealth);
 
         combat.AddLogEntry(
-            "Healed",
+            StandardCombatLogTypes.Healed,
             $"Healed '{heal.TargetCombatantId}' for {healedAmount} HP.");
 
         combat.EnqueueEvent(
@@ -91,6 +91,7 @@ public sealed class HealEffectHandler : EffectRequestHandler<HealEffectRequest>
                 SourceCardId: heal.SourceCardId));
     }
 }
+
 
 
 

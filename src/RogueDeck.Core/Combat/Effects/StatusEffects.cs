@@ -42,7 +42,7 @@ public sealed class ApplyStatusEffectHandler : EffectRequestHandler<ApplyStatusE
                 existingStatus.SetCharges(existingStatus.Charges + applyStatus.Charges);
 
                 combat.AddLogEntry(
-                    "StatusMerged",
+                    StandardCombatLogTypes.StatusMerged,
                     $"Merged status '{applyStatus.StatusDefinitionId}' on '{applyStatus.TargetCombatantId}'.");
 
                 combat.EnqueueEvent(
@@ -80,7 +80,7 @@ public sealed class ApplyStatusEffectHandler : EffectRequestHandler<ApplyStatusE
         target.Statuses.Add(newStatus);
 
         combat.AddLogEntry(
-            "StatusApplied",
+            StandardCombatLogTypes.StatusApplied,
             $"Applied status '{applyStatus.StatusDefinitionId}' to '{applyStatus.TargetCombatantId}'.");
 
         combat.EnqueueEvent(
@@ -129,7 +129,7 @@ public sealed class DecreaseStatusDurationEffectHandler : EffectRequestHandler<D
         status.SetDurationTurns(newDuration);
 
         combat.AddLogEntry(
-            "StatusDurationReduced",
+            StandardCombatLogTypes.StatusDurationReduced,
             $"Reduced status '{status.DefinitionId}' duration on '{target.Id}' from {oldDuration} to {newDuration}.");
 
         if (newDuration > 0)
@@ -138,7 +138,7 @@ public sealed class DecreaseStatusDurationEffectHandler : EffectRequestHandler<D
         target.Statuses.Remove(status);
 
         combat.AddLogEntry(
-            "StatusExpired",
+            StandardCombatLogTypes.StatusExpired,
             $"Status '{status.DefinitionId}' expired on '{target.Id}'.");
 
         combat.EnqueueEvent(
@@ -249,5 +249,6 @@ public sealed class TriggeredDamageOnDamageDealtHandler : CombatEventHandler<Dam
         }
     }
 }
+
 
 

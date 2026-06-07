@@ -26,7 +26,7 @@ public sealed class GainBlockEffectHandler : EffectRequestHandler<GainBlockEffec
                 new ValuePoolState(current: gainBlock.Amount));
 
             combat.AddLogEntry(
-                "BlockGained",
+                StandardCombatLogTypes.BlockGained,
                 $"Gained {gainBlock.Amount} block on '{gainBlock.TargetCombatantId}'.");
 
             return;
@@ -38,7 +38,7 @@ public sealed class GainBlockEffectHandler : EffectRequestHandler<GainBlockEffec
         block.SetCurrent(newBlock);
 
         combat.AddLogEntry(
-            "BlockGained",
+            StandardCombatLogTypes.BlockGained,
             $"Gained {gainBlock.Amount} block on '{gainBlock.TargetCombatantId}'.");
     }
 }
@@ -60,7 +60,7 @@ public sealed class ClearDefensivePoolEffectHandler : EffectRequestHandler<Clear
         if (!target.DefensivePools.TryGetValue(clearPool.PoolId, out var pool))
         {
             combat.AddLogEntry(
-                "DefensivePoolCleared",
+                StandardCombatLogTypes.DefensivePoolCleared,
                 $"Cleared 0 from defensive pool '{clearPool.PoolId}' on '{clearPool.TargetCombatantId}'.");
 
             return;
@@ -71,7 +71,7 @@ public sealed class ClearDefensivePoolEffectHandler : EffectRequestHandler<Clear
         pool.SetCurrent(0);
 
         combat.AddLogEntry(
-            "DefensivePoolCleared",
+            StandardCombatLogTypes.DefensivePoolCleared,
             $"Cleared {clearedAmount} from defensive pool '{clearPool.PoolId}' on '{clearPool.TargetCombatantId}'.");
     }
 }
@@ -98,3 +98,4 @@ public sealed class ClearBlockOnTurnStartedHandler : CombatEventHandler<TurnStar
                 PoolId: StandardCombatIds.BlockDefensivePool));
     }
 }
+

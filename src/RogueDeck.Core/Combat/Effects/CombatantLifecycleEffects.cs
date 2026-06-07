@@ -23,7 +23,7 @@ public sealed class SetCombatantLifecycleStateEffectHandler
         combatant.SetLifecycleState(request.LifecycleState);
 
         combat.AddLogEntry(
-            "CombatantLifecycleChanged",
+            StandardCombatLogTypes.CombatantLifecycleChanged,
             $"Changed lifecycle state of '{request.CombatantId}' from '{oldState}' to '{request.LifecycleState}'.");
 
         combat.EnqueueEvent(
@@ -59,4 +59,5 @@ public sealed class MarkCombatantDownedOnZeroHealthHandler : CombatEventHandler<
                 LifecycleState: CombatantLifecycleState.Downed));
     }
 }
+
 

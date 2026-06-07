@@ -19,7 +19,7 @@ public sealed class SetCombatResultEffectHandler : EffectRequestHandler<SetComba
         combat.SetResult(request.Result);
 
         combat.AddLogEntry(
-            "CombatResultChanged",
+            StandardCombatLogTypes.CombatResultChanged,
             $"Changed combat result from '{oldResult}' to '{request.Result}'.");
     }
 }
@@ -57,5 +57,6 @@ public sealed class UpdateStandardCombatResultOnLifecycleChangedHandler
         }
     }
 }
+
 
 
