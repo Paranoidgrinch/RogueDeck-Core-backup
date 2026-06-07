@@ -14,6 +14,8 @@ public sealed class CombatTurnProcessor
 
         EnsureActiveCombatant(combat);
 
+        combat.MarkTurnStarted();
+
         combat.AddLogEntry(
             "TurnStarted",
             $"Started turn for '{combat.ActiveCombatantId}'.");
@@ -33,6 +35,8 @@ public sealed class CombatTurnProcessor
         ArgumentNullException.ThrowIfNull(registry);
 
         EnsureActiveCombatant(combat);
+
+        combat.MarkTurnEnded();
 
         combat.AddLogEntry(
             "TurnEnded",

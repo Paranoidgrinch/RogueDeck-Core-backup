@@ -9,6 +9,12 @@ public enum CombatResult
     Aborted
 }
 
+public enum CombatTurnPhase
+{
+    WaitingToStartTurn,
+    TurnInProgress
+}
+
 public enum CombatantLifecycleState
 {
     Alive,

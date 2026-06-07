@@ -3,12 +3,15 @@ namespace RogueDeck.Core.Combat;
 public sealed class CombatState
 {
     private readonly Queue<IEffectRequest> _pendingEffects = new();
+    private readonly Queue<ICombatEvent> _pendingEvents = new();
 
     public CombatId Id { get; }
 
     public int CurrentRound { get; private set; }
 
     public int CurrentTurn { get; private set; }
+
+    public CombatTurnPhase TurnPhase { get; private set; }
 
     public CombatantId? ActiveCombatantId { get; private set; }
 
@@ -28,7 +31,7 @@ public sealed class CombatState
 
     public IReadOnlyCollection<IEffectRequest> PendingEffects => _pendingEffects;
 
-    public Queue<ICombatEvent> PendingEvents { get; } = new();
+    public IReadOnlyCollection<ICombatEvent> PendingEvents => _pendingEvents;
 
     public List<CombatLogEntry> CombatLog { get; } = new();
 
@@ -36,12 +39,17 @@ public sealed class CombatState
 
     public int PendingEffectCount => _pendingEffects.Count;
 
+    public bool HasPendingEvents => _pendingEvents.Count > 0;
+
+    public int PendingEventCount => _pendingEvents.Count;
+
     public CombatState(CombatId id, int randomSeed)
     {
         Id = id;
         RandomSeed = randomSeed;
         CurrentRound = 1;
         CurrentTurn = 1;
+        TurnPhase = CombatTurnPhase.WaitingToStartTurn;
         Result = CombatResult.Ongoing;
     }
 
@@ -77,6 +85,22 @@ public sealed class CombatState
         ActiveCombatantId = combatantId;
     }
 
+    public void MarkTurnStarted()
+    {
+        if (TurnPhase != CombatTurnPhase.WaitingToStartTurn)
+            throw new InvalidOperationException("Cannot start the current turn because a turn is already in progress.");
+
+        TurnPhase = CombatTurnPhase.TurnInProgress;
+    }
+
+    public void MarkTurnEnded()
+    {
+        if (TurnPhase != CombatTurnPhase.TurnInProgress)
+            throw new InvalidOperationException("Cannot end the current turn because no turn is currently in progress.");
+
+        TurnPhase = CombatTurnPhase.WaitingToStartTurn;
+    }
+
     public void SetResult(CombatResult result)
     {
         Result = result;
@@ -95,6 +119,21 @@ public sealed class CombatState
             throw new InvalidOperationException("Cannot dequeue an effect because there are no pending effects.");
 
         return _pendingEffects.Dequeue();
+    }
+
+    public void EnqueueEvent(ICombatEvent combatEvent)
+    {
+        ArgumentNullException.ThrowIfNull(combatEvent);
+
+        _pendingEvents.Enqueue(combatEvent);
+    }
+
+    public ICombatEvent DequeueNextEvent()
+    {
+        if (_pendingEvents.Count == 0)
+            throw new InvalidOperationException("Cannot dequeue an event because there are no pending events.");
+
+        return _pendingEvents.Dequeue();
     }
 
     public void AdvanceTurn()
