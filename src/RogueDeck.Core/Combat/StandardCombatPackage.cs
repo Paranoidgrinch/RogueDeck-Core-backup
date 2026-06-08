@@ -18,6 +18,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreateThorns());
         registry.RegisterStatus(CreateStun());
         registry.RegisterStatus(CreateFreeNextCard());
+        registry.RegisterStatus(CreateSkillCostReduction());
 
         registry.RegisterDamageAmountModifier(new StrengthDamageAmountModifier());
         registry.RegisterDamageAmountModifier(new WeakDamageAmountModifier());
@@ -25,6 +26,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterCardPlayValidator(new StunCardPlayValidator());
 
         registry.RegisterCardCostModifier(new FreeNextCardCostModifier());
+        registry.RegisterCardCostModifier(new SkillCostReductionCostModifier());
 
         registry.RegisterCard(CreateStrike());
         registry.RegisterCard(CreateDefend());
@@ -158,6 +160,25 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
 
         return definition;
     }
+    private StatusDefinition CreateSkillCostReduction()
+    {
+        var definition = new StatusDefinition(
+            StandardCombatIds.SkillCostReductionStatus,
+            Id,
+            displayNameKey: "status.standard.skill_cost_reduction.name",
+            descriptionKey: "status.standard.skill_cost_reduction.description",
+            polarity: StatusPolarity.Buff,
+            usesStacks: true,
+            usesDuration: true,
+            showStacksInUi: true,
+            showDurationInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
+
+        definition.Tags.Add(StandardCombatIds.BuffTag);
+        definition.Tags.Add(StandardCombatIds.CostModifierTag);
+
+        return definition;
+    }
     private StatusDefinition CreateFreeNextCard()
     {
         var definition = new StatusDefinition(
@@ -206,6 +227,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         return definition;
     }
 }
+
 
 
 
