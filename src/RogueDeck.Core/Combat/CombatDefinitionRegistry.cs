@@ -11,7 +11,9 @@ public sealed class CombatDefinitionRegistry
     private readonly List<ICardPlayValidator> _cardPlayValidators = new();
     private readonly List<ICardCostModifier> _cardCostModifiers = new();
 
-    public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitions => _statusDefinitions;
+    
+    private readonly List<IStatusApplicationInterceptor> _statusApplicationInterceptors = new();
+public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitions => _statusDefinitions;
     public IReadOnlyDictionary<CardDefinitionId, CardDefinition> CardDefinitions => _cardDefinitions;
     public IReadOnlyDictionary<Type, ICardEffectDefinitionHandler> CardEffectDefinitionHandlers => _cardEffectDefinitionHandlers;
     public IReadOnlyDictionary<Type, IEffectRequestHandler> EffectRequestHandlers => _effectRequestHandlers;
@@ -178,7 +180,34 @@ public sealed class CombatDefinitionRegistry
     public IReadOnlyList<ICardCostModifier> GetCardCostModifiers()
     {
         return _cardCostModifiers.ToArray();
+    }    public void RegisterStatusApplicationInterceptor(IStatusApplicationInterceptor interceptor)
+    {
+        ArgumentNullException.ThrowIfNull(interceptor);
+
+        if (_statusApplicationInterceptors.Any(existing => existing.GetType() == interceptor.GetType()))
+            throw new InvalidOperationException(
+                $"Status application interceptor '{interceptor.GetType().Name}' is already registered.");
+
+        _statusApplicationInterceptors.Add(interceptor);
+        _statusApplicationInterceptors.Sort(static (left, right) =>
+        {
+            var priorityComparison = left.Priority.CompareTo(right.Priority);
+
+            if (priorityComparison != 0)
+                return priorityComparison;
+
+            return string.Compare(
+                left.GetType().FullName,
+                right.GetType().FullName,
+                StringComparison.Ordinal);
+        });
     }
+
+    public IReadOnlyList<IStatusApplicationInterceptor> GetStatusApplicationInterceptors()
+    {
+        return _statusApplicationInterceptors.ToArray();
+    }
+
 
     public void RegisterEffectRequestHandler(IEffectRequestHandler handler)
     {
@@ -238,3 +267,4 @@ public sealed class CombatDefinitionRegistry
         return handlers;
     }
 }
+

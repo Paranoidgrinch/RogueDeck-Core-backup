@@ -14,6 +14,7 @@ public static class StandardCombatIds
 
     public static readonly StatusDefinitionId WeakStatus = new("standard.weak");
     public static readonly StatusDefinitionId VulnerableStatus = new("standard.vulnerable");
+    public static readonly StatusDefinitionId ArtifactStatus = new("standard.artifact");
 
     public static readonly StatusDefinitionId StrengthStatus = new("standard.strength");
 
@@ -38,12 +39,14 @@ public static class StandardCombatIds
     public static readonly TagId TriggeredDamageTag = new("triggered_damage");
 
     public static readonly TagId ControlTag = new("control");
+    public static readonly TagId StatusApplicationInterceptorTag = new("status_application_interceptor");
     public static readonly TagId CostModifierTag = new("cost_modifier");
 
     public static readonly TagId AttackCardTag = new("attack");
 
     public static readonly TagId SkillCardTag = new("skill");
 }
+
 
 
 

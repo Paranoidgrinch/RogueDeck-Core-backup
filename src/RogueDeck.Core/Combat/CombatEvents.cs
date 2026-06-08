@@ -94,6 +94,12 @@ public sealed record HealedCombatEvent(
     CardDefinitionId? SourceCardId = null
 ) : ICombatEvent;
 
+public sealed record StatusApplicationBlockedCombatEvent(
+    CombatantId TargetCombatantId,
+    StatusDefinitionId BlockedStatusDefinitionId,
+    StatusInstanceId BlockingStatusInstanceId,
+    StatusDefinitionId BlockingStatusDefinitionId
+) : ICombatEvent;
 public sealed record StatusAppliedCombatEvent(
     CombatantId TargetCombatantId,
     StatusInstanceId StatusInstanceId,
@@ -139,6 +145,7 @@ public sealed record CombatantLifecycleChangedCombatEvent(
     CombatantLifecycleState OldState,
     CombatantLifecycleState NewState
 ) : ICombatEvent;
+
 
 
 

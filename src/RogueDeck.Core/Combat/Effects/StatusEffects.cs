@@ -27,8 +27,17 @@ public sealed class ApplyStatusEffectHandler : EffectRequestHandler<ApplyStatusE
             throw new ArgumentOutOfRangeException(nameof(applyStatus.Charges), "Charges cannot be negative.");
 
         var target = combat.GetCombatant(applyStatus.TargetCombatantId);
-
         var definition = registry.GetStatus(applyStatus.StatusDefinitionId);
+
+        if (IsStatusApplicationIntercepted(
+                combat,
+                registry,
+                applyStatus,
+                target,
+                definition))
+        {
+            return;
+        }
 
         if (definition.StackingBehavior == StatusStackingBehavior.MergeWithExistingInstance)
         {
@@ -94,6 +103,29 @@ public sealed class ApplyStatusEffectHandler : EffectRequestHandler<ApplyStatusE
                 SourceCombatantId: newStatus.SourceCombatantId,
                 SourceCardId: newStatus.SourceCardId));
     }
+
+    private static bool IsStatusApplicationIntercepted(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        ApplyStatusEffectRequest applyStatus,
+        CombatantState target,
+        StatusDefinition definition)
+    {
+        var context = new StatusApplicationInterceptionContext(
+            Combat: combat,
+            Registry: registry,
+            TargetCombatant: target,
+            StatusDefinition: definition,
+            Request: applyStatus);
+
+        foreach (var interceptor in registry.GetStatusApplicationInterceptors())
+        {
+            if (interceptor.TryIntercept(context))
+                return true;
+        }
+
+        return false;
+    }
 }
 
 public sealed record DecreaseStatusDurationEffectRequest(
@@ -113,7 +145,6 @@ public sealed class DecreaseStatusDurationEffectHandler : EffectRequestHandler<D
             throw new ArgumentOutOfRangeException(nameof(decreaseDuration.Amount), "Duration decrease amount must be greater than zero.");
 
         var target = combat.GetCombatant(decreaseDuration.TargetCombatantId);
-
         var status = target.Statuses.FirstOrDefault(
             existing => existing.Id == decreaseDuration.StatusInstanceId);
 
@@ -149,7 +180,8 @@ public sealed class DecreaseStatusDurationEffectHandler : EffectRequestHandler<D
     }
 }
 
-public sealed class DecreaseTimedStatusDurationsOnTurnEndedHandler : CombatEventHandler<TurnEndedCombatEvent>
+public sealed class DecreaseTimedStatusDurationsOnTurnEndedHandler
+    : CombatEventHandler<TurnEndedCombatEvent>
 {
     protected override void Handle(
         CombatState combat,
@@ -177,10 +209,9 @@ public sealed class DecreaseTimedStatusDurationsOnTurnEndedHandler : CombatEvent
     }
 }
 
-public sealed class DamageOverTimeOnTurnStartedHandler : CombatEventHandler<TurnStartedCombatEvent>
+public sealed class DamageOverTimeOnTurnStartedHandler
+    : CombatEventHandler<TurnStartedCombatEvent>
 {
-
-
     protected override void Handle(
         CombatState combat,
         CombatDefinitionRegistry registry,
@@ -202,15 +233,15 @@ public sealed class DamageOverTimeOnTurnStartedHandler : CombatEventHandler<Turn
                     TargetCombatantId: combatEvent.CombatantId,
                     Amount: status.Stacks,
                     SourceCombatantId: status.SourceCombatantId,
-                    SourceCardId: status.SourceCardId));
+                    SourceCardId: status.SourceCardId,
+                    Kind: DamageKind.DamageOverTime));
         }
     }
 }
 
-public sealed class TriggeredDamageOnDamageDealtHandler : CombatEventHandler<DamageDealtCombatEvent>
+public sealed class TriggeredDamageOnDamageDealtHandler
+    : CombatEventHandler<DamageDealtCombatEvent>
 {
-
-
     protected override void Handle(
         CombatState combat,
         CombatDefinitionRegistry registry,
@@ -348,4 +379,3 @@ public sealed class DecreaseStatusChargesEffectHandler
             StatusDefinitionId: status.DefinitionId));
     }
 }
-

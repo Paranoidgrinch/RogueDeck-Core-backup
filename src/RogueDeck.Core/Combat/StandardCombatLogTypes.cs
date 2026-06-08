@@ -24,6 +24,7 @@ public const string CardPlayed = "CardPlayed";
     public const string DefensivePoolCleared = "DefensivePoolCleared";
 
     public const string StatusApplied = "StatusApplied";
+    public const string StatusApplicationBlocked = "StatusApplicationBlocked";
     public const string StatusMerged = "StatusMerged";
     public const string StatusDurationReduced = "StatusDurationReduced";
     public const string StatusChargesReduced = "StatusChargesReduced";
@@ -33,6 +34,7 @@ public const string CardPlayed = "CardPlayed";
     public const string CombatantLifecycleChanged = "CombatantLifecycleChanged";
     public const string CombatResultChanged = "CombatResultChanged";
 }
+
 
 
 

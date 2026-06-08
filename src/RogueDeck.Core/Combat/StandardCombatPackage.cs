@@ -15,6 +15,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreatePoison());
         registry.RegisterStatus(CreateWeak());
         registry.RegisterStatus(CreateVulnerable());
+        registry.RegisterStatus(CreateArtifact());
         registry.RegisterStatus(CreateStrength());
         registry.RegisterStatus(CreateThorns());
         registry.RegisterStatus(CreateStun());
@@ -29,6 +30,8 @@ public sealed class StandardCombatPackage : ICombatPackage
 
         registry.RegisterCardCostModifier(new FreeNextCardCostModifier());
         registry.RegisterCardCostModifier(new SkillCostReductionCostModifier());
+
+        registry.RegisterStatusApplicationInterceptor(new ArtifactStatusApplicationInterceptor());
 
         registry.RegisterCard(CreateStrike());
         registry.RegisterCard(CreateDefend());
@@ -105,6 +108,23 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
 
         definition.Tags.Add(StandardCombatIds.DebuffTag);
         definition.Tags.Add(StandardCombatIds.DamageModifierTag);
+
+        return definition;
+    }
+    private StatusDefinition CreateArtifact()
+    {
+        var definition = new StatusDefinition(
+            StandardCombatIds.ArtifactStatus,
+            Id,
+            displayNameKey: "status.standard.artifact.name",
+            descriptionKey: "status.standard.artifact.description",
+            polarity: StatusPolarity.Buff,
+            usesCharges: true,
+            showChargesInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
+
+        definition.Tags.Add(StandardCombatIds.BuffTag);
+        definition.Tags.Add(StandardCombatIds.StatusApplicationInterceptorTag);
 
         return definition;
     }
@@ -246,6 +266,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         return definition;
     }
 }
+
 
 
 
