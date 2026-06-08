@@ -1,4 +1,4 @@
-using RogueDeck.Core.Combat;
+﻿using RogueDeck.Core.Combat;
 
 namespace RogueDeck.Core.Tests;
 
@@ -21,6 +21,7 @@ public class StandardCardDefinitionTests
         Assert.Equal(StandardCombatIds.EnergyResource, cost.ResourceId);
         Assert.Equal(1, cost.Amount);
         Assert.Contains(StandardCombatIds.AttackCardTag, strike.Tags);
+  Assert.Equal(CardZone.DiscardPile, strike.PlayedCardDestinationZone);
     }
 
     [Fact]
@@ -40,5 +41,7 @@ public class StandardCardDefinitionTests
         Assert.Equal(StandardCombatIds.EnergyResource, cost.ResourceId);
         Assert.Equal(1, cost.Amount);
         Assert.Contains(StandardCombatIds.SkillCardTag, defend.Tags);
+  Assert.Equal(CardZone.DiscardPile, defend.PlayedCardDestinationZone);
     }
 }
+

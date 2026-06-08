@@ -1,4 +1,4 @@
-namespace RogueDeck.Core.Combat;
+﻿namespace RogueDeck.Core.Combat;
 
 public sealed record CardPlayRequest(
     CardDefinitionId CardDefinitionId,
@@ -111,10 +111,12 @@ public sealed class CombatCardPlayProcessor
             combat.EnqueueEffect(effectRequest);
 
         if (cardInstanceId is not null)
-        {
-            var zones = combat.GetCardZones(sourceCombatantId);
-            zones.MoveCardToZone(cardInstanceId.Value, CardZone.DiscardPile);
-        }
+  {
+   combat.EnqueueEffect(new MoveCardToZoneEffectRequest(
+    sourceCombatantId,
+    cardInstanceId.Value,
+    card.PlayedCardDestinationZone));
+  }
 
         _queueProcessor.ResolvePendingQueues(
             combat,
@@ -247,3 +249,4 @@ public sealed class CombatCardPlayProcessor
         }
     }
 }
+

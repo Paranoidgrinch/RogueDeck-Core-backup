@@ -1,4 +1,4 @@
-namespace RogueDeck.Core.Combat;
+﻿namespace RogueDeck.Core.Combat;
 
 public sealed record ResourceCost(
     ResourceId ResourceId,
@@ -41,6 +41,8 @@ public sealed class CardDefinition
 
     public List<TagId> Tags { get; } = new();
 
+ public CardZone PlayedCardDestinationZone { get; set; } = CardZone.DiscardPile;
+
     public CardDefinition(
         CardDefinitionId id,
         PackageId packageId,
@@ -53,3 +55,4 @@ public sealed class CardDefinition
         DescriptionKey = descriptionKey;
     }
 }
+

@@ -1,4 +1,4 @@
-using RogueDeck.Core.Combat;
+﻿using RogueDeck.Core.Combat;
 
 namespace RogueDeck.Core.Tests;
 
@@ -186,6 +186,49 @@ public class CardInstancePlayTests
 
         CaptureCardPlayedEventHandler.HandledEvents.Clear();
     }
+ [Fact]
+ public void PlayCardInstanceMovesCardToConfiguredPlayedCardDestinationZone()
+ {
+  var registry = CombatTestFactory.CreateStandardRegistry();
+  var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+  var heroId = new CombatantId("hero_001");
+  var oneUseCardId = new CardDefinitionId("test.one_use");
+
+  var oneUseCard = new CardDefinition(
+   oneUseCardId,
+   new PackageId("test"),
+   displayNameKey: "card.test.one_use.name",
+   descriptionKey: "card.test.one_use.description")
+  {
+   PlayedCardDestinationZone = CardZone.BanishedPile
+  };
+
+  registry.RegisterCard(oneUseCard);
+
+  var zones = combat.GetCardZones(heroId);
+  var card = AddCardToHand(combat, heroId, oneUseCardId);
+
+  var processor = new CombatCardPlayProcessor();
+
+  processor.PlayCardInstance(
+   combat,
+   registry,
+   new CardInstancePlayRequest(
+    CardInstanceId: card.Id,
+    SourceCombatantId: heroId));
+
+  Assert.Empty(zones.Hand);
+  Assert.Empty(zones.DiscardPile);
+  Assert.Same(card, Assert.Single(zones.BanishedPile));
+  Assert.Equal(CardZone.BanishedPile, card.Zone);
+  Assert.Equal(0, combat.PendingEffectCount);
+  Assert.Equal(0, combat.PendingEventCount);
+
+  Assert.Contains(
+   combat.CombatLog,
+   entry => entry.Type == StandardCombatLogTypes.CardMovedToZone);
+ }
 
     private static CardInstance AddCardToHand(
         CombatState combat,
@@ -241,3 +284,4 @@ public class CardInstancePlayTests
         }
     }
 }
+
