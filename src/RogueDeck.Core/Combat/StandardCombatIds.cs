@@ -14,9 +14,11 @@ public static class StandardCombatIds
 
     public static readonly StatusDefinitionId WeakStatus = new("standard.weak");
     public static readonly StatusDefinitionId VulnerableStatus = new("standard.vulnerable");
+    public static readonly StatusDefinitionId FrailStatus = new("standard.frail");
     public static readonly StatusDefinitionId ArtifactStatus = new("standard.artifact");
 
     public static readonly StatusDefinitionId StrengthStatus = new("standard.strength");
+    public static readonly StatusDefinitionId DexterityStatus = new("standard.dexterity");
 
     public static readonly StatusDefinitionId ThornsStatus = new("standard.thorns");
 
@@ -35,6 +37,7 @@ public static class StandardCombatIds
     public static readonly TagId DamageOverTimeTag = new("damage_over_time");
 
     public static readonly TagId DamageModifierTag = new("damage_modifier");
+    public static readonly TagId BlockModifierTag = new("block_modifier");
 
     public static readonly TagId TriggeredDamageTag = new("triggered_damage");
 
@@ -46,6 +49,7 @@ public static class StandardCombatIds
 
     public static readonly TagId SkillCardTag = new("skill");
 }
+
 
 
 

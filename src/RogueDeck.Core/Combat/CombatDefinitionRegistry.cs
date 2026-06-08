@@ -13,6 +13,8 @@ public sealed class CombatDefinitionRegistry
 
     
     private readonly List<IStatusApplicationInterceptor> _statusApplicationInterceptors = new();
+
+    private readonly List<IBlockAmountModifier> _blockAmountModifiers = new();
 public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitions => _statusDefinitions;
     public IReadOnlyDictionary<CardDefinitionId, CardDefinition> CardDefinitions => _cardDefinitions;
     public IReadOnlyDictionary<Type, ICardEffectDefinitionHandler> CardEffectDefinitionHandlers => _cardEffectDefinitionHandlers;
@@ -206,7 +208,34 @@ public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitio
     public IReadOnlyList<IStatusApplicationInterceptor> GetStatusApplicationInterceptors()
     {
         return _statusApplicationInterceptors.ToArray();
+    }    public void RegisterBlockAmountModifier(IBlockAmountModifier modifier)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+
+        if (_blockAmountModifiers.Any(existing => existing.GetType() == modifier.GetType()))
+            throw new InvalidOperationException(
+                $"Block amount modifier '{modifier.GetType().Name}' is already registered.");
+
+        _blockAmountModifiers.Add(modifier);
+        _blockAmountModifiers.Sort(static (left, right) =>
+        {
+            var priorityComparison = left.Priority.CompareTo(right.Priority);
+
+            if (priorityComparison != 0)
+                return priorityComparison;
+
+            return string.Compare(
+                left.GetType().FullName,
+                right.GetType().FullName,
+                StringComparison.Ordinal);
+        });
     }
+
+    public IReadOnlyList<IBlockAmountModifier> GetBlockAmountModifiers()
+    {
+        return _blockAmountModifiers.ToArray();
+    }
+
 
 
     public void RegisterEffectRequestHandler(IEffectRequestHandler handler)
@@ -267,4 +296,5 @@ public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitio
         return handlers;
     }
 }
+
 

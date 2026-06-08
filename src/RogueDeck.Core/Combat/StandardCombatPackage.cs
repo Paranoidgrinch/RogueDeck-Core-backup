@@ -15,8 +15,10 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreatePoison());
         registry.RegisterStatus(CreateWeak());
         registry.RegisterStatus(CreateVulnerable());
+        registry.RegisterStatus(CreateFrail());
         registry.RegisterStatus(CreateArtifact());
         registry.RegisterStatus(CreateStrength());
+        registry.RegisterStatus(CreateDexterity());
         registry.RegisterStatus(CreateThorns());
         registry.RegisterStatus(CreateStun());
         registry.RegisterStatus(CreateFreeNextCard());
@@ -25,6 +27,9 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterDamageAmountModifier(new StrengthDamageAmountModifier());
         registry.RegisterDamageAmountModifier(new WeakDamageAmountModifier());
         registry.RegisterDamageAmountModifier(new VulnerableDamageAmountModifier());
+
+        registry.RegisterBlockAmountModifier(new DexterityBlockAmountModifier());
+        registry.RegisterBlockAmountModifier(new FrailBlockAmountModifier());
 
         registry.RegisterCardPlayValidator(new StunCardPlayValidator());
 
@@ -128,6 +133,23 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
 
         return definition;
     }
+    private StatusDefinition CreateFrail()
+    {
+        var definition = new StatusDefinition(
+            StandardCombatIds.FrailStatus,
+            Id,
+            displayNameKey: "status.standard.frail.name",
+            descriptionKey: "status.standard.frail.description",
+            polarity: StatusPolarity.Debuff,
+            usesDuration: true,
+            showDurationInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
+
+        definition.Tags.Add(StandardCombatIds.DebuffTag);
+        definition.Tags.Add(StandardCombatIds.BlockModifierTag);
+
+        return definition;
+    }
     private StatusDefinition CreateVulnerable()
     {
         var definition = new StatusDefinition(
@@ -142,6 +164,23 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
 
         definition.Tags.Add(StandardCombatIds.DebuffTag);
         definition.Tags.Add(StandardCombatIds.DamageModifierTag);
+
+        return definition;
+    }
+    private StatusDefinition CreateDexterity()
+    {
+        var definition = new StatusDefinition(
+            StandardCombatIds.DexterityStatus,
+            Id,
+            displayNameKey: "status.standard.dexterity.name",
+            descriptionKey: "status.standard.dexterity.description",
+            polarity: StatusPolarity.Buff,
+            usesStacks: true,
+            showStacksInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
+
+        definition.Tags.Add(StandardCombatIds.BuffTag);
+        definition.Tags.Add(StandardCombatIds.BlockModifierTag);
 
         return definition;
     }
@@ -266,6 +305,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         return definition;
     }
 }
+
 
 
 

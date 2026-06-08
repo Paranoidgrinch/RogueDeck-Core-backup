@@ -155,7 +155,26 @@ public class CombatArchitectureGuardTests
         Assert.DoesNotContain("StunStatus", source);
         Assert.DoesNotContain("ControlTag", source);
         Assert.Contains("GetCardPlayValidators", source);
+    }    [Fact]
+    public void GainBlockEffectHandlerMustNotKnowConcreteBlockModifierStatuses()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var defensivePoolEffectsPath = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "DefensivePoolEffects.cs");
+
+        var source = File.ReadAllText(defensivePoolEffectsPath);
+
+        Assert.DoesNotContain("DexterityStatus", source);
+        Assert.DoesNotContain("FrailStatus", source);
+        Assert.DoesNotContain("BlockModifierTag", source);
+        Assert.Contains("GetBlockAmountModifiers", source);
     }
+
     [Fact]
     public void DealDamageEffectHandlerMustNotKnowConcreteDamageModifierStatuses()
     {
@@ -225,6 +244,7 @@ public class CombatArchitectureGuardTests
         throw new InvalidOperationException("Could not find repository root.");
     }
 }
+
 
 
 

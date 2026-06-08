@@ -1,4 +1,4 @@
-namespace RogueDeck.Core.Combat;
+﻿namespace RogueDeck.Core.Combat;
 
 public sealed record GainBlockEffectRequest(
     CombatantId TargetCombatantId,
@@ -18,28 +18,62 @@ public sealed class GainBlockEffectHandler : EffectRequestHandler<GainBlockEffec
             throw new ArgumentOutOfRangeException(nameof(gainBlock.Amount), "Block amount cannot be negative.");
 
         var target = combat.GetCombatant(gainBlock.TargetCombatantId);
+        var modifiedAmount = ApplyBlockAmountModifiers(
+            combat,
+            registry,
+            gainBlock,
+            target);
 
         if (!target.DefensivePools.TryGetValue(StandardCombatIds.BlockDefensivePool, out var block))
         {
             target.DefensivePools.Add(
                 StandardCombatIds.BlockDefensivePool,
-                new ValuePoolState(current: gainBlock.Amount));
+                new ValuePoolState(current: modifiedAmount));
 
             combat.AddLogEntry(
                 StandardCombatLogTypes.BlockGained,
-                $"Gained {gainBlock.Amount} block on '{gainBlock.TargetCombatantId}'.");
+                $"Gained {modifiedAmount} block on '{gainBlock.TargetCombatantId}'.");
 
             return;
         }
 
-        var requestedBlock = (long)block.Current + gainBlock.Amount;
+        var requestedBlock = (long)block.Current + modifiedAmount;
         var newBlock = (int)Math.Min(int.MaxValue, requestedBlock);
-
         block.SetCurrent(newBlock);
 
         combat.AddLogEntry(
             StandardCombatLogTypes.BlockGained,
-            $"Gained {gainBlock.Amount} block on '{gainBlock.TargetCombatantId}'.");
+            $"Gained {modifiedAmount} block on '{gainBlock.TargetCombatantId}'.");
+    }
+
+    private static int ApplyBlockAmountModifiers(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        GainBlockEffectRequest gainBlock,
+        CombatantState target)
+    {
+        CombatantState? source = null;
+
+        if (gainBlock.SourceCombatantId is not null &&
+            combat.TryGetCombatant(gainBlock.SourceCombatantId.Value, out var foundSource))
+        {
+            source = foundSource;
+        }
+
+        var context = new BlockAmountModificationContext(
+            Combat: combat,
+            Registry: registry,
+            TargetCombatant: target,
+            SourceCombatant: source,
+            SourceCardId: gainBlock.SourceCardId,
+            RequestedAmount: gainBlock.Amount);
+
+        var currentAmount = gainBlock.Amount;
+
+        foreach (var modifier in registry.GetBlockAmountModifiers())
+            currentAmount = Math.Max(0, modifier.ModifyBlockAmount(context, currentAmount));
+
+        return currentAmount;
     }
 }
 
@@ -67,7 +101,6 @@ public sealed class ClearDefensivePoolEffectHandler : EffectRequestHandler<Clear
         }
 
         var clearedAmount = pool.Current;
-
         pool.SetCurrent(0);
 
         combat.AddLogEntry(
@@ -76,7 +109,8 @@ public sealed class ClearDefensivePoolEffectHandler : EffectRequestHandler<Clear
     }
 }
 
-public sealed class ClearBlockOnTurnStartedHandler : CombatEventHandler<TurnStartedCombatEvent>
+public sealed class ClearBlockOnTurnStartedHandler
+    : CombatEventHandler<TurnStartedCombatEvent>
 {
     protected override void Handle(
         CombatState combat,
@@ -98,4 +132,3 @@ public sealed class ClearBlockOnTurnStartedHandler : CombatEventHandler<TurnStar
                 PoolId: StandardCombatIds.BlockDefensivePool));
     }
 }
-
