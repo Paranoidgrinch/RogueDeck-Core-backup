@@ -45,6 +45,13 @@ public sealed record MoveAllCardsFromZoneCardEffectDefinition(
     CardZone ToZone,
     CardTargetMode TargetMode
 ) : ICardEffectDefinition;
+public sealed record ApplyStatusCardEffectDefinition(
+    StatusDefinitionId StatusDefinitionId,
+    int Stacks,
+    int DurationTurns,
+    int Charges,
+    CardTargetMode TargetMode
+) : ICardEffectDefinition;
 public sealed class CardDefinition
 {
     public CardDefinitionId Id { get; }
@@ -70,5 +77,6 @@ public sealed class CardDefinition
         DescriptionKey = descriptionKey;
     }
 }
+
 
 

@@ -186,3 +186,26 @@ public sealed class MoveAllCardsFromZoneCardEffectDefinitionHandler
     }
 }
 
+public sealed class ApplyStatusCardEffectDefinitionHandler
+    : CardEffectDefinitionHandler<ApplyStatusCardEffectDefinition>
+{
+    protected override IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+        CardEffectContext context,
+        ApplyStatusCardEffectDefinition definition)
+    {
+        var targetId = context.ResolveTarget(definition.TargetMode);
+
+        return new IEffectRequest[]
+        {
+            new ApplyStatusEffectRequest(
+                TargetCombatantId: targetId,
+                StatusDefinitionId: definition.StatusDefinitionId,
+                SourceCombatantId: context.Source.Id,
+                SourceCardId: context.Card.Id,
+                Stacks: definition.Stacks,
+                DurationTurns: definition.DurationTurns,
+                Charges: definition.Charges)
+        };
+    }
+}
+
