@@ -253,3 +253,22 @@ public sealed class GainResourceCardEffectDefinitionHandler
             .ToArray();
     }
 }
+
+public sealed class HealCardEffectDefinitionHandler
+    : CardEffectDefinitionHandler<HealCardEffectDefinition>
+{
+    protected override IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+        CardEffectContext context,
+        HealCardEffectDefinition definition)
+    {
+        return context.ResolveTargets(definition.TargetMode)
+            .Select(targetId => new HealEffectRequest(
+                TargetCombatantId: targetId,
+                Amount: definition.Amount,
+                SourceCombatantId: context.Source.Id,
+                SourceCardId: context.Card.Id))
+            .Cast<IEffectRequest>()
+            .ToArray();
+    }
+}
+

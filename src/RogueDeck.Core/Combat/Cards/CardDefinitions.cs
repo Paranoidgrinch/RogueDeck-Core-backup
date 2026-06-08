@@ -64,6 +64,10 @@ public sealed record GainResourceCardEffectDefinition(
     CardTargetMode TargetMode,
     int? DefaultMax = null
 ) : ICardEffectDefinition;
+public sealed record HealCardEffectDefinition(
+    int Amount,
+    CardTargetMode TargetMode
+) : ICardEffectDefinition;
 public sealed class CardDefinition
 {
     public CardDefinitionId Id { get; }
@@ -89,6 +93,7 @@ public sealed class CardDefinition
         DescriptionKey = descriptionKey;
     }
 }
+
 
 
 
