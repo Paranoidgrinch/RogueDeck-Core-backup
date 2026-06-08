@@ -179,7 +179,7 @@ public sealed class DecreaseTimedStatusDurationsOnTurnEndedHandler : CombatEvent
 
 public sealed class DamageOverTimeOnTurnStartedHandler : CombatEventHandler<TurnStartedCombatEvent>
 {
-    
+
 
     protected override void Handle(
         CombatState combat,
@@ -209,7 +209,7 @@ public sealed class DamageOverTimeOnTurnStartedHandler : CombatEventHandler<Turn
 
 public sealed class TriggeredDamageOnDamageDealtHandler : CombatEventHandler<DamageDealtCombatEvent>
 {
-    
+
 
     protected override void Handle(
         CombatState combat,

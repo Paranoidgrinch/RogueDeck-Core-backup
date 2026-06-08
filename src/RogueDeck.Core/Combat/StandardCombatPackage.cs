@@ -21,7 +21,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterEffectRequestHandler(new ApplyStatusEffectHandler());
         registry.RegisterEffectRequestHandler(new DecreaseStatusDurationEffectHandler());
         registry.RegisterEffectRequestHandler(new DealDamageEffectHandler());
-    
+
         registry.RegisterEffectRequestHandler(new HealEffectHandler());
         registry.RegisterEffectRequestHandler(new GainBlockEffectHandler());
         registry.RegisterEffectRequestHandler(new ClearDefensivePoolEffectHandler());
@@ -33,8 +33,8 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterCombatEventHandler(new TriggeredDamageOnDamageDealtHandler());
         registry.RegisterCombatEventHandler(new MarkCombatantDownedOnZeroHealthHandler());
         registry.RegisterCombatEventHandler(new UpdateStandardCombatResultOnLifecycleChangedHandler());
-    
-    }   
+
+    }
 
     private StatusDefinition CreatePoison()
     {
