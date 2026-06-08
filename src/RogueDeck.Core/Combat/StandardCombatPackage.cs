@@ -37,8 +37,10 @@ registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatantLifecycleStateEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatResultEffectHandler());
 
-        registry.RegisterCombatEventHandler(new ClearBlockOnTurnStartedHandler());
-        registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedHandler());
+                registry.RegisterCombatEventHandler(new DrawCardsOnTurnStartedHandler());
+registry.RegisterCombatEventHandler(new ClearBlockOnTurnStartedHandler());
+                registry.RegisterCombatEventHandler(new DiscardHandOnTurnEndedHandler());
+registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedHandler());
         registry.RegisterCombatEventHandler(new DamageOverTimeOnTurnStartedHandler());
         registry.RegisterCombatEventHandler(new TriggeredDamageOnDamageDealtHandler());
         registry.RegisterCombatEventHandler(new MarkCombatantDownedOnZeroHealthHandler());
@@ -165,6 +167,7 @@ registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         return definition;
     }
 }
+
 
 
 

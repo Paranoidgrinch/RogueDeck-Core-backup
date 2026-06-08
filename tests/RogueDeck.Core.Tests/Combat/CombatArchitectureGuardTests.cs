@@ -65,7 +65,28 @@ public class CombatArchitectureGuardTests
         Assert.DoesNotContain("Unsupported card effect definition type", source);
         Assert.DoesNotContain("switch", source, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("GetCardEffectDefinitionHandler", source);
+    }    [Fact]
+    public void CombatTurnProcessorMustNotKnowCardZoneLifecycleMechanics()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var turnProcessorPath = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "CombatTurnProcessor.cs");
+
+        var source = File.ReadAllText(turnProcessorPath);
+
+        Assert.DoesNotContain("DrawCardsEffectRequest", source);
+        Assert.DoesNotContain("DiscardHandEffectRequest", source);
+        Assert.DoesNotContain("DrawCards", source);
+        Assert.DoesNotContain("DiscardHand", source);
+        Assert.DoesNotContain("CardZone", source);
+        Assert.DoesNotContain("BanishedPile", source);
+        Assert.DoesNotContain("ExhaustPile", source);
     }
+
 
 
     [Fact]
@@ -113,4 +134,5 @@ public class CombatArchitectureGuardTests
         throw new InvalidOperationException("Could not find repository root.");
     }
 }
+
 
