@@ -13,6 +13,7 @@ public static class StandardCombatIds
     public static readonly StatusDefinitionId PoisonStatus = new("standard.poison");
 
     public static readonly StatusDefinitionId WeakStatus = new("standard.weak");
+    public static readonly StatusDefinitionId VulnerableStatus = new("standard.vulnerable");
 
     public static readonly StatusDefinitionId StrengthStatus = new("standard.strength");
 
@@ -43,5 +44,6 @@ public static class StandardCombatIds
 
     public static readonly TagId SkillCardTag = new("skill");
 }
+
 
 

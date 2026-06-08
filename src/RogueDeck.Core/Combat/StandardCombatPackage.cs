@@ -14,6 +14,7 @@ public sealed class StandardCombatPackage : ICombatPackage
 
         registry.RegisterStatus(CreatePoison());
         registry.RegisterStatus(CreateWeak());
+        registry.RegisterStatus(CreateVulnerable());
         registry.RegisterStatus(CreateStrength());
         registry.RegisterStatus(CreateThorns());
         registry.RegisterStatus(CreateStun());
@@ -22,6 +23,7 @@ public sealed class StandardCombatPackage : ICombatPackage
 
         registry.RegisterDamageAmountModifier(new StrengthDamageAmountModifier());
         registry.RegisterDamageAmountModifier(new WeakDamageAmountModifier());
+        registry.RegisterDamageAmountModifier(new VulnerableDamageAmountModifier());
 
         registry.RegisterCardPlayValidator(new StunCardPlayValidator());
 
@@ -96,6 +98,23 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
             Id,
             displayNameKey: "status.standard.weak.name",
             descriptionKey: "status.standard.weak.description",
+            polarity: StatusPolarity.Debuff,
+            usesDuration: true,
+            showDurationInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
+
+        definition.Tags.Add(StandardCombatIds.DebuffTag);
+        definition.Tags.Add(StandardCombatIds.DamageModifierTag);
+
+        return definition;
+    }
+    private StatusDefinition CreateVulnerable()
+    {
+        var definition = new StatusDefinition(
+            StandardCombatIds.VulnerableStatus,
+            Id,
+            displayNameKey: "status.standard.vulnerable.name",
+            descriptionKey: "status.standard.vulnerable.description",
             polarity: StatusPolarity.Debuff,
             usesDuration: true,
             showDurationInUi: true,
@@ -227,6 +246,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         return definition;
     }
 }
+
 
 
 

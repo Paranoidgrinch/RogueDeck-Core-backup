@@ -76,3 +76,30 @@ public sealed class WeakDamageAmountModifier : IDamageAmountModifier
         return currentAmount * 75 / 100;
     }
 }
+
+public sealed class VulnerableDamageAmountModifier : IDamageAmountModifier
+{
+    public int Priority => 300;
+
+    public int ModifyDamageAmount(
+        DamageAmountModificationContext context,
+        int currentAmount)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        if (currentAmount <= 0)
+            return currentAmount;
+
+        if (context.Kind != DamageKind.Direct)
+            return currentAmount;
+
+        var hasVulnerable = context.TargetCombatant.Statuses
+            .Any(status => status.DefinitionId == StandardCombatIds.VulnerableStatus);
+
+        if (!hasVulnerable)
+            return currentAmount;
+
+        return currentAmount * 150 / 100;
+    }
+}
+
