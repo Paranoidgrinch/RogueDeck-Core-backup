@@ -4,11 +4,12 @@ public static class StandardCombatLogTypes
 {
     public const string TurnStarted = "TurnStarted";
     public const string TurnEnded = "TurnEnded";
-
     public const string RoundStarted = "RoundStarted";
     public const string RoundEnded = "RoundEnded";
 
     public const string CardPlayed = "CardPlayed";
+    public const string CardsDrawn = "CardsDrawn";
+    public const string HandDiscarded = "HandDiscarded";
     public const string CardMovedToZone = "CardMovedToZone";
 
     public const string DamageDealt = "DamageDealt";
@@ -25,4 +26,3 @@ public static class StandardCombatLogTypes
     public const string CombatantLifecycleChanged = "CombatantLifecycleChanged";
     public const string CombatResultChanged = "CombatResultChanged";
 }
-

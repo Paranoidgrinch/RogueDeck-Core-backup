@@ -22,13 +22,17 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterCard(CreateDefend());
         registry.RegisterCardEffectDefinitionHandler(new DealDamageCardEffectDefinitionHandler());
         registry.RegisterCardEffectDefinitionHandler(new GainBlockCardEffectDefinitionHandler());
+        registry.RegisterCardEffectDefinitionHandler(new DrawCardsCardEffectDefinitionHandler());
+        registry.RegisterCardEffectDefinitionHandler(new DiscardHandCardEffectDefinitionHandler());
 
         registry.RegisterEffectRequestHandler(new ApplyStatusEffectHandler());
         registry.RegisterEffectRequestHandler(new DecreaseStatusDurationEffectHandler());
         registry.RegisterEffectRequestHandler(new DealDamageEffectHandler());
         registry.RegisterEffectRequestHandler(new HealEffectHandler());
         registry.RegisterEffectRequestHandler(new GainBlockEffectHandler());
-        registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
+                registry.RegisterEffectRequestHandler(new DrawCardsEffectHandler());
+        registry.RegisterEffectRequestHandler(new DiscardHandEffectHandler());
+registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterEffectRequestHandler(new ClearDefensivePoolEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatantLifecycleStateEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatResultEffectHandler());
@@ -161,6 +165,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         return definition;
     }
 }
+
 
 
 

@@ -25,23 +25,27 @@ public sealed record GainBlockCardEffectDefinition(
     CardTargetMode TargetMode
 ) : ICardEffectDefinition;
 
+public sealed record DrawCardsCardEffectDefinition(
+    int Count,
+    CardTargetMode TargetMode
+) : ICardEffectDefinition;
+
+public sealed record DiscardHandCardEffectDefinition(
+    CardTargetMode TargetMode
+) : ICardEffectDefinition;
+
 public sealed class CardDefinition
 {
     public CardDefinitionId Id { get; }
-
     public PackageId PackageId { get; }
-
     public string DisplayNameKey { get; }
-
     public string DescriptionKey { get; }
 
     public List<ResourceCost> Costs { get; } = new();
-
     public List<ICardEffectDefinition> Effects { get; } = new();
-
     public List<TagId> Tags { get; } = new();
 
- public CardZone PlayedCardDestinationZone { get; set; } = CardZone.DiscardPile;
+    public CardZone PlayedCardDestinationZone { get; set; } = CardZone.DiscardPile;
 
     public CardDefinition(
         CardDefinitionId id,
@@ -55,4 +59,3 @@ public sealed class CardDefinition
         DescriptionKey = descriptionKey;
     }
 }
-

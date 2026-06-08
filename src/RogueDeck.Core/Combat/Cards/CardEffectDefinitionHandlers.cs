@@ -111,3 +111,38 @@ public sealed class GainBlockCardEffectDefinitionHandler
         };
     }
 }
+
+public sealed class DrawCardsCardEffectDefinitionHandler
+    : CardEffectDefinitionHandler<DrawCardsCardEffectDefinition>
+{
+    protected override IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+        CardEffectContext context,
+        DrawCardsCardEffectDefinition definition)
+    {
+        var targetId = context.ResolveTarget(definition.TargetMode);
+
+        return new IEffectRequest[]
+        {
+            new DrawCardsEffectRequest(
+                CombatantId: targetId,
+                Count: definition.Count)
+        };
+    }
+}
+
+public sealed class DiscardHandCardEffectDefinitionHandler
+    : CardEffectDefinitionHandler<DiscardHandCardEffectDefinition>
+{
+    protected override IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+        CardEffectContext context,
+        DiscardHandCardEffectDefinition definition)
+    {
+        var targetId = context.ResolveTarget(definition.TargetMode);
+
+        return new IEffectRequest[]
+        {
+            new DiscardHandEffectRequest(
+                CombatantId: targetId)
+        };
+    }
+}
