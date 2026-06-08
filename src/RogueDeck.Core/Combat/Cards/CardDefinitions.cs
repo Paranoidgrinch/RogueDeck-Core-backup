@@ -34,7 +34,8 @@ public sealed record DrawCardsCardEffectDefinition(
 ) : ICardEffectDefinition;
 
 public sealed record DiscardHandCardEffectDefinition(
-    CardTargetMode TargetMode
+    CardTargetMode TargetMode,
+    bool IncludeRetainedCards = true
 ) : ICardEffectDefinition;
 
 public sealed record CreateCardInstanceCardEffectDefinition(
@@ -80,6 +81,8 @@ public sealed class CardDefinition
     public List<ICardEffectDefinition> Effects { get; } = new();
     public List<TagId> Tags { get; } = new();
 
+        public bool RetainInHandOnTurnEnd { get; set; } = false;
+
     public CardZone PlayedCardDestinationZone { get; set; } = CardZone.DiscardPile;
 
     public CardDefinition(
@@ -94,6 +97,7 @@ public sealed class CardDefinition
         DescriptionKey = descriptionKey;
     }
 }
+
 
 
 

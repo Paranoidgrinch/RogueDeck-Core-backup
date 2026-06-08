@@ -175,7 +175,8 @@ public sealed class DiscardHandCardEffectDefinitionHandler
     {
         return context.ResolveTargets(definition.TargetMode)
             .Select(targetId => new DiscardHandEffectRequest(
-                CombatantId: targetId))
+                CombatantId: targetId,
+                IncludeRetainedCards: definition.IncludeRetainedCards))
             .Cast<IEffectRequest>()
             .ToArray();
     }
@@ -288,5 +289,6 @@ public sealed class HealCardEffectDefinitionHandler
             .ToArray();
     }
 }
+
 
 

@@ -74,7 +74,8 @@ public sealed class DrawCardsEffectHandler : EffectRequestHandler<DrawCardsEffec
 }
 
 public sealed record DiscardHandEffectRequest(
-    CombatantId CombatantId
+    CombatantId CombatantId,
+    bool IncludeRetainedCards = true
 ) : IEffectRequest;
 
 public sealed class DiscardHandEffectHandler : EffectRequestHandler<DiscardHandEffectRequest>
@@ -85,14 +86,20 @@ public sealed class DiscardHandEffectHandler : EffectRequestHandler<DiscardHandE
         DiscardHandEffectRequest request)
     {
         var zones = combat.GetCardZones(request.CombatantId);
-        var discardedCardIds = zones.Hand
-            .Select(card => card.Id)
+
+        var cardsToDiscard = zones.Hand
+            .Where(card => request.IncludeRetainedCards || !IsRetainedInHandOnTurnEnd(registry, card))
             .ToArray();
 
-        if (discardedCardIds.Length == 0)
+        if (cardsToDiscard.Length == 0)
             return;
 
-        zones.DiscardHand();
+        foreach (var card in cardsToDiscard)
+            zones.MoveCardToZone(card.Id, CardZone.DiscardPile);
+
+        var discardedCardIds = cardsToDiscard
+            .Select(card => card.Id)
+            .ToArray();
 
         combat.AddLogEntry(
             StandardCombatLogTypes.HandDiscarded,
@@ -101,6 +108,15 @@ public sealed class DiscardHandEffectHandler : EffectRequestHandler<DiscardHandE
         combat.EnqueueEvent(new HandDiscardedCombatEvent(
             request.CombatantId,
             discardedCardIds));
+    }
+
+    private static bool IsRetainedInHandOnTurnEnd(
+        CombatDefinitionRegistry registry,
+        CardInstance card)
+    {
+        var definition = registry.GetCard(card.DefinitionId);
+
+        return definition.RetainInHandOnTurnEnd;
     }
 }
 

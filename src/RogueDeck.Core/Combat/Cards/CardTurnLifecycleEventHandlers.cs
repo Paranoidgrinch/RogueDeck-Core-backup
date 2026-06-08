@@ -34,6 +34,8 @@ public sealed class DiscardHandOnTurnEndedHandler : CombatEventHandler<TurnEnded
         TurnEndedCombatEvent combatEvent)
     {
         combat.EnqueueEffect(new DiscardHandEffectRequest(
-            combatEvent.CombatantId));
+            combatEvent.CombatantId,
+            IncludeRetainedCards: false));
     }
 }
+
