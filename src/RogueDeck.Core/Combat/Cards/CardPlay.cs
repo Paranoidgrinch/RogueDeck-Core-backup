@@ -46,12 +46,16 @@ public sealed class CombatCardPlayProcessor
         var cardInstance = zones.GetCard(request.CardInstanceId);
 
         if (cardInstance.OwnerId != request.SourceCombatantId)
+        {
             throw new InvalidOperationException(
                 $"Card instance '{request.CardInstanceId}' is not owned by combatant '{request.SourceCombatantId}'.");
+        }
 
         if (cardInstance.Zone != CardZone.Hand)
+        {
             throw new InvalidOperationException(
                 $"Card instance '{request.CardInstanceId}' cannot be played because it is in zone '{cardInstance.Zone}'.");
+        }
 
         PlayCardCore(
             combat,
@@ -76,18 +80,21 @@ public sealed class CombatCardPlayProcessor
         ArgumentNullException.ThrowIfNull(registry);
 
         if (combat.Result != CombatResult.Ongoing)
+        {
             throw new InvalidOperationException(
                 $"Cannot play card because combat result is '{combat.Result}'.");
+        }
 
         var source = combat.GetCombatant(sourceCombatantId);
 
         if (!source.IsAlive)
+        {
             throw new InvalidOperationException(
                 $"Combatant '{sourceCombatantId}' cannot play cards because it is not alive.");
+        }
 
         var card = registry.GetCard(cardDefinitionId);
 
-        
         ValidateCardPlay(
             combat,
             registry,
@@ -103,8 +110,16 @@ public sealed class CombatCardPlayProcessor
             source,
             targetCombatantId);
 
-        EnsureCostsCanBePaid(source, card);
-        PayCosts(source, card);
+        var costsToPay = CalculateCosts(
+            combat,
+            registry,
+            card,
+            source,
+            targetCombatantId,
+            cardInstanceId);
+
+        EnsureCostsCanBePaid(source, card, costsToPay);
+        PayCosts(source, costsToPay);
 
         combat.AddLogEntry(
             StandardCombatLogTypes.CardPlayed,
@@ -121,18 +136,20 @@ public sealed class CombatCardPlayProcessor
             combat.EnqueueEffect(effectRequest);
 
         if (cardInstanceId is not null)
-  {
-   combat.EnqueueEffect(new MoveCardToZoneEffectRequest(
-    sourceCombatantId,
-    cardInstanceId.Value,
-    card.PlayedCardDestinationZone));
-  }
+        {
+            combat.EnqueueEffect(new MoveCardToZoneEffectRequest(
+                sourceCombatantId,
+                cardInstanceId.Value,
+                card.PlayedCardDestinationZone));
+        }
 
         _queueProcessor.ResolvePendingQueues(
             combat,
             registry,
             maxQueueCyclesToResolve);
-    }    private static void ValidateCardPlay(
+    }
+
+    private static void ValidateCardPlay(
         CombatState combat,
         CombatDefinitionRegistry registry,
         CardDefinition card,
@@ -151,7 +168,6 @@ public sealed class CombatCardPlayProcessor
         foreach (var validator in registry.GetCardPlayValidators())
             validator.Validate(context);
     }
-
 
     private static List<IEffectRequest> BuildEffectRequests(
         CombatState combat,
@@ -176,39 +192,79 @@ public sealed class CombatCardPlayProcessor
         return requests;
     }
 
-    private static void EnsureCostsCanBePaid(
+    private static IReadOnlyList<CalculatedResourceCost> CalculateCosts(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        CardDefinition card,
         CombatantState source,
-        CardDefinition card)
+        CombatantId? requestedTargetId,
+        CardInstanceId? cardInstanceId)
     {
+        var totalCosts = new Dictionary<ResourceId, int>();
+
         foreach (var cost in card.Costs)
         {
             if (cost.Amount < 0)
+            {
                 throw new InvalidOperationException(
                     $"Card '{card.Id}' has a negative cost for resource '{cost.ResourceId}'.");
+            }
 
+            var context = new CardCostModificationContext(
+                Combat: combat,
+                Registry: registry,
+                Card: card,
+                Source: source,
+                Cost: cost,
+                RequestedTargetId: requestedTargetId,
+                CardInstanceId: cardInstanceId);
+
+            var modifiedAmount = cost.Amount;
+
+            foreach (var modifier in registry.GetCardCostModifiers())
+                modifiedAmount = Math.Max(0, modifier.ModifyCostAmount(context, modifiedAmount));
+
+            if (modifiedAmount == 0)
+                continue;
+
+            if (!totalCosts.TryAdd(cost.ResourceId, modifiedAmount))
+                totalCosts[cost.ResourceId] = checked(totalCosts[cost.ResourceId] + modifiedAmount);
+        }
+
+        return totalCosts
+            .Select(pair => new CalculatedResourceCost(pair.Key, pair.Value))
+            .ToArray();
+    }
+
+    private static void EnsureCostsCanBePaid(
+        CombatantState source,
+        CardDefinition card,
+        IReadOnlyCollection<CalculatedResourceCost> costsToPay)
+    {
+        foreach (var cost in costsToPay)
+        {
             if (!source.Resources.TryGetValue(cost.ResourceId, out var resource))
+            {
                 throw new InvalidOperationException(
                     $"Combatant '{source.Id}' does not have resource '{cost.ResourceId}'.");
+            }
 
             if (resource.Current < cost.Amount)
+            {
                 throw new InvalidOperationException(
-                    $"Combatant '{source.Id}' cannot pay {cost.Amount} '{cost.ResourceId}'.");
+                    $"Combatant '{source.Id}' cannot pay {cost.Amount} '{cost.ResourceId}' for card '{card.Id}'.");
+            }
         }
     }
 
     private static void PayCosts(
         CombatantState source,
-        CardDefinition card)
+        IReadOnlyCollection<CalculatedResourceCost> costsToPay)
     {
-        foreach (var cost in card.Costs)
+        foreach (var cost in costsToPay)
         {
             var resource = source.Resources[cost.ResourceId];
-
             resource.SetCurrent(resource.Current - cost.Amount);
         }
     }
 }
-
-
-
-

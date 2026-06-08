@@ -8,14 +8,16 @@ public sealed class CombatDefinitionRegistry
     private readonly Dictionary<Type, IEffectRequestHandler> _effectRequestHandlers = new();
     private readonly Dictionary<Type, List<ICombatEventHandler>> _combatEventHandlers = new();
     private readonly List<IDamageAmountModifier> _damageAmountModifiers = new();
-
-    
     private readonly List<ICardPlayValidator> _cardPlayValidators = new();
-public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitions => _statusDefinitions;
+    private readonly List<ICardCostModifier> _cardCostModifiers = new();
+
+    public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitions => _statusDefinitions;
     public IReadOnlyDictionary<CardDefinitionId, CardDefinition> CardDefinitions => _cardDefinitions;
     public IReadOnlyDictionary<Type, ICardEffectDefinitionHandler> CardEffectDefinitionHandlers => _cardEffectDefinitionHandlers;
     public IReadOnlyDictionary<Type, IEffectRequestHandler> EffectRequestHandlers => _effectRequestHandlers;
     public IReadOnlyCollection<IDamageAmountModifier> DamageAmountModifiers => _damageAmountModifiers;
+    public IReadOnlyCollection<ICardPlayValidator> CardPlayValidators => _cardPlayValidators;
+    public IReadOnlyCollection<ICardCostModifier> CardCostModifiers => _cardCostModifiers;
 
     public void RegisterStatus(StatusDefinition definition)
     {
@@ -120,7 +122,9 @@ public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitio
     public IReadOnlyList<IDamageAmountModifier> GetDamageAmountModifiers()
     {
         return _damageAmountModifiers.ToArray();
-    }    public void RegisterCardPlayValidator(ICardPlayValidator validator)
+    }
+
+    public void RegisterCardPlayValidator(ICardPlayValidator validator)
     {
         ArgumentNullException.ThrowIfNull(validator);
 
@@ -148,6 +152,33 @@ public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitio
         return _cardPlayValidators.ToArray();
     }
 
+    public void RegisterCardCostModifier(ICardCostModifier modifier)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+
+        if (_cardCostModifiers.Any(existing => existing.GetType() == modifier.GetType()))
+            throw new InvalidOperationException(
+                $"Card cost modifier '{modifier.GetType().Name}' is already registered.");
+
+        _cardCostModifiers.Add(modifier);
+        _cardCostModifiers.Sort(static (left, right) =>
+        {
+            var priorityComparison = left.Priority.CompareTo(right.Priority);
+
+            if (priorityComparison != 0)
+                return priorityComparison;
+
+            return string.Compare(
+                left.GetType().FullName,
+                right.GetType().FullName,
+                StringComparison.Ordinal);
+        });
+    }
+
+    public IReadOnlyList<ICardCostModifier> GetCardCostModifiers()
+    {
+        return _cardCostModifiers.ToArray();
+    }
 
     public void RegisterEffectRequestHandler(IEffectRequestHandler handler)
     {
@@ -207,5 +238,3 @@ public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitio
         return handlers;
     }
 }
-
-
