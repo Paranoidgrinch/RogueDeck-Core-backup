@@ -8,7 +8,7 @@ public class CombatLifecycleIntegrationTests
     public void PoisonAtTurnStartCanDownEnemyAndSetVictory()
     {
         var registry = CombatTestFactory.CreateStandardRegistry();
-        var combat = CreateCombatWithHeroAndGoblin();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
 
         var goblinId = new CombatantId("goblin_001");
 
@@ -48,7 +48,7 @@ public class CombatLifecycleIntegrationTests
     public void DirectDamageCanTriggerThornsThenStillSetVictory()
     {
         var registry = CombatTestFactory.CreateStandardRegistry();
-        var combat = CreateCombatWithHeroAndGoblin();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
 
         var heroId = new CombatantId("hero_001");
         var goblinId = new CombatantId("goblin_001");
@@ -93,7 +93,7 @@ public class CombatLifecycleIntegrationTests
     public void TimedStatusExpiresAtTurnEndThroughLifecycleQueues()
     {
         var registry = CombatTestFactory.CreateStandardRegistry();
-        var combat = CreateCombatWithHeroAndGoblin();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
 
         var heroId = new CombatantId("hero_001");
 
@@ -124,30 +124,5 @@ public class CombatLifecycleIntegrationTests
         Assert.Contains(combat.CombatLog, entry => entry.Type == StandardCombatLogTypes.StatusDurationReduced);
         Assert.Contains(combat.CombatLog, entry => entry.Type == StandardCombatLogTypes.StatusExpired);
     }
-
-    private static CombatState CreateCombatWithHeroAndGoblin()
-    {
-        var combat = new CombatState(
-            new CombatId("combat_001"),
-            randomSeed: 12345);
-
-        var hero = new CombatantState(
-            new CombatantId("hero_001"),
-            new CombatantDefinitionId("standard.hero"),
-            "combatant.hero",
-            StandardCombatIds.PlayerTeam,
-            new HealthState(current: 20, max: 20));
-
-        var goblin = new CombatantState(
-            new CombatantId("goblin_001"),
-            new CombatantDefinitionId("standard.goblin"),
-            "combatant.goblin",
-            StandardCombatIds.EnemyTeam,
-            new HealthState(current: 12, max: 12));
-
-        combat.AddCombatant(hero);
-        combat.AddCombatant(goblin);
-
-        return combat;
-    }
 }
+
