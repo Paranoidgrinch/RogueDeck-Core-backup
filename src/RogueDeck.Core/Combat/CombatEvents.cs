@@ -122,6 +122,11 @@ public sealed record StatusMergedCombatEvent(
     CardDefinitionId? SourceCardId = null
 ) : ICombatEvent;
 
+public sealed record StatusesRemovedByPolarityCombatEvent(
+    CombatantId TargetCombatantId,
+    IReadOnlyCollection<StatusInstanceId> StatusInstanceIds,
+    StatusPolarity Polarity
+) : ICombatEvent;
 public sealed record StatusRemovedCombatEvent(
     CombatantId TargetCombatantId,
     IReadOnlyCollection<StatusInstanceId> StatusInstanceIds,
@@ -145,6 +150,7 @@ public sealed record CombatantLifecycleChangedCombatEvent(
     CombatantLifecycleState OldState,
     CombatantLifecycleState NewState
 ) : ICombatEvent;
+
 
 
 

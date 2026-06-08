@@ -290,5 +290,19 @@ public sealed class HealCardEffectDefinitionHandler
     }
 }
 
-
+public sealed class RemoveStatusesByPolarityCardEffectDefinitionHandler
+    : CardEffectDefinitionHandler<RemoveStatusesByPolarityCardEffectDefinition>
+{
+    protected override IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+        CardEffectContext context,
+        RemoveStatusesByPolarityCardEffectDefinition definition)
+    {
+        return context.ResolveTargets(definition.TargetMode)
+            .Select(targetId => new RemoveStatusesByPolarityEffectRequest(
+                TargetCombatantId: targetId,
+                Polarity: definition.Polarity))
+            .Cast<IEffectRequest>()
+            .ToArray();
+    }
+}
 

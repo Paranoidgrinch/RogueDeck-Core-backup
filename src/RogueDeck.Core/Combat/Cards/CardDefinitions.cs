@@ -70,6 +70,10 @@ public sealed record HealCardEffectDefinition(
     int Amount,
     CardTargetMode TargetMode
 ) : ICardEffectDefinition;
+public sealed record RemoveStatusesByPolarityCardEffectDefinition(
+    StatusPolarity Polarity,
+    CardTargetMode TargetMode
+) : ICardEffectDefinition;
 public sealed class CardDefinition
 {
     public CardDefinitionId Id { get; }
@@ -99,6 +103,7 @@ public sealed class CardDefinition
         DescriptionKey = descriptionKey;
     }
 }
+
 
 
 

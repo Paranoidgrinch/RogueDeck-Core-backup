@@ -379,3 +379,44 @@ public sealed class DecreaseStatusChargesEffectHandler
             StatusDefinitionId: status.DefinitionId));
     }
 }
+
+public sealed record RemoveStatusesByPolarityEffectRequest(
+    CombatantId TargetCombatantId,
+    StatusPolarity Polarity
+) : IEffectRequest;
+
+public sealed class RemoveStatusesByPolarityEffectHandler
+    : EffectRequestHandler<RemoveStatusesByPolarityEffectRequest>
+{
+    protected override void Resolve(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        RemoveStatusesByPolarityEffectRequest request)
+    {
+        var target = combat.GetCombatant(request.TargetCombatantId);
+
+        var statusesToRemove = target.Statuses
+            .Where(status => registry.GetStatus(status.DefinitionId).Polarity == request.Polarity)
+            .ToArray();
+
+        if (statusesToRemove.Length == 0)
+            return;
+
+        foreach (var status in statusesToRemove)
+            target.Statuses.Remove(status);
+
+        var removedStatusIds = statusesToRemove
+            .Select(status => status.Id)
+            .ToArray();
+
+        combat.AddLogEntry(
+            StandardCombatLogTypes.StatusesRemovedByPolarity,
+            $"Removed {removedStatusIds.Length} '{request.Polarity}' status(es) from '{request.TargetCombatantId}'.");
+
+        combat.EnqueueEvent(new StatusesRemovedByPolarityCombatEvent(
+            TargetCombatantId: request.TargetCombatantId,
+            StatusInstanceIds: removedStatusIds,
+            Polarity: request.Polarity));
+    }
+}
+
