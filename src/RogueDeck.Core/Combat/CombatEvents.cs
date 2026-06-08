@@ -27,6 +27,12 @@ public sealed record ResourceRefilledCombatEvent(
     int NewCurrent,
     int? Max
 ) : ICombatEvent;
+public sealed record CardInstanceCreatedCombatEvent(
+    CombatantId CombatantId,
+    CardDefinitionId CardDefinitionId,
+    IReadOnlyCollection<CardInstanceId> CardInstanceIds,
+    CardZone ToZone
+) : ICombatEvent;
 public sealed record CardPlayedCombatEvent(
     CardDefinitionId CardDefinitionId,
     CombatantId SourceCombatantId,
@@ -107,6 +113,7 @@ public sealed record CombatantLifecycleChangedCombatEvent(
     CombatantLifecycleState OldState,
     CombatantLifecycleState NewState
 ) : ICombatEvent;
+
 
 
 

@@ -13,6 +13,7 @@ public const string CardPlayed = "CardPlayed";
     public const string DiscardPileShuffledIntoDrawPile = "DiscardPileShuffledIntoDrawPile";
     public const string HandDiscarded = "HandDiscarded";
     public const string CardMovedToZone = "CardMovedToZone";
+    public const string CardInstanceCreated = "CardInstanceCreated";
 
     public const string DamageDealt = "DamageDealt";
     public const string Healed = "Healed";
@@ -28,4 +29,5 @@ public const string CardPlayed = "CardPlayed";
     public const string CombatantLifecycleChanged = "CombatantLifecycleChanged";
     public const string CombatResultChanged = "CombatResultChanged";
 }
+
 

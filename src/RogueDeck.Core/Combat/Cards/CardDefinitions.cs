@@ -34,6 +34,12 @@ public sealed record DiscardHandCardEffectDefinition(
     CardTargetMode TargetMode
 ) : ICardEffectDefinition;
 
+public sealed record CreateCardInstanceCardEffectDefinition(
+    CardDefinitionId CardDefinitionId,
+    CardZone ToZone,
+    int Count,
+    CardTargetMode TargetMode
+) : ICardEffectDefinition;
 public sealed class CardDefinition
 {
     public CardDefinitionId Id { get; }
@@ -59,3 +65,4 @@ public sealed class CardDefinition
         DescriptionKey = descriptionKey;
     }
 }
+

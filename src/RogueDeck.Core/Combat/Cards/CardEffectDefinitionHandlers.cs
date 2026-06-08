@@ -146,3 +146,24 @@ public sealed class DiscardHandCardEffectDefinitionHandler
         };
     }
 }
+
+public sealed class CreateCardInstanceCardEffectDefinitionHandler
+    : CardEffectDefinitionHandler<CreateCardInstanceCardEffectDefinition>
+{
+    protected override IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+        CardEffectContext context,
+        CreateCardInstanceCardEffectDefinition definition)
+    {
+        var targetId = context.ResolveTarget(definition.TargetMode);
+
+        return new IEffectRequest[]
+        {
+            new CreateCardInstanceEffectRequest(
+                CombatantId: targetId,
+                CardDefinitionId: definition.CardDefinitionId,
+                ToZone: definition.ToZone,
+                Count: definition.Count)
+        };
+    }
+}
+
