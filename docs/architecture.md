@@ -308,3 +308,175 @@ Better direction:
 - phase or event happens
 - registered rules or triggers produce effect requests
 - effect queue resolves them
+
+## Phase 2: Turn and event lifecycle
+
+Phase 2 introduces the first neutral combat lifecycle.
+
+The goal is not to hardcode concrete status rules into the turn processor. The goal is to make the combat lifecycle observable and extensible.
+
+### Phase 2 core rules
+
+CombatTurnProcessor is responsible for neutral turn flow only.
+
+It may:
+
+- start the current turn
+- end the current turn
+- move to the next living combatant
+- advance the round when the turn order wraps
+- emit lifecycle events
+- process pending queues through CombatQueueProcessor
+
+It must not contain concrete status logic such as poison, stun, weak, thorns, block, or any other specific mechanic.
+
+### Turn lifecycle
+
+The current turn lifecycle is:
+
+- StartCurrentTurn
+- process TurnStartedCombatEvent
+- process effects created by event handlers
+- EndCurrentTurn
+- process TurnEndedCombatEvent
+- process effects created by event handlers
+- advance to the next living combatant
+- advance round if the turn order wraps
+
+A turn can only start when the combat is ongoing and the active combatant is alive.
+
+Ending a turn is allowed even if the active combatant became non-living during its own turn. This supports future mechanics such as sacrifice, self-damage, thorns, or other reactive damage.
+
+### Round lifecycle
+
+When turn order wraps from the last living combatant back to the first living combatant, the round advances.
+
+Round lifecycle events make this observable:
+
+- RoundEndedCombatEvent
+- RoundStartedCombatEvent
+
+These events allow future systems to react to round changes without adding special-case logic to CombatTurnProcessor.
+
+### Combat events
+
+Combat events describe things that happened.
+
+Examples include:
+
+- TurnStartedCombatEvent
+- TurnEndedCombatEvent
+- RoundStartedCombatEvent
+- RoundEndedCombatEvent
+- DamageDealtCombatEvent
+- HealedCombatEvent
+- StatusAppliedCombatEvent
+- StatusMergedCombatEvent
+- StatusExpiredCombatEvent
+- CombatantLifecycleChangedCombatEvent
+
+Events should usually not mutate combat state directly.
+
+Instead, event handlers may enqueue effect requests.
+
+### Combat event handlers
+
+CombatEventHandler<TEvent> is the modular reaction point for events.
+
+Examples:
+
+- a turn-start handler can clear standard block
+- a turn-start handler can apply damage-over-time
+- a turn-end handler can decrease timed status durations
+- a damage-dealt handler can trigger reflected damage
+- a damage-dealt handler can mark a combatant downed at zero health
+- a lifecycle-changed handler can update the standard combat result
+
+The event system should prevent central systems from growing large if-chains.
+
+Bad direction:
+
+- CombatTurnProcessor checks poison
+- CombatTurnProcessor checks stun
+- DealDamageEffectHandler checks thorns
+- DealDamageEffectHandler decides victory
+
+Good direction:
+
+- lifecycle or damage event happens
+- registered event handlers react
+- event handlers enqueue effect requests
+- effect queue mutates the state
+- follow-up events can be processed deterministically
+
+### CombatQueueProcessor
+
+CombatQueueProcessor coordinates effect and event processing.
+
+It processes pending queues until they are empty or until combat is no longer ongoing.
+
+The intended flow is:
+
+- resolve pending effects
+- resolve pending events
+- repeat while new effects or events were created
+- stop when queues are empty
+- stop when combat result is no longer Ongoing
+
+This allows chains such as:
+
+- damage effect
+- damage event
+- lifecycle event
+- combat result effect
+
+without hardcoding these chains into a central resolver.
+
+### Standard lifecycle handlers
+
+The standard package may register reusable standard lifecycle handlers.
+
+Examples:
+
+- clear standard block on turn start
+- apply damage-over-time on turn start
+- decrease timed status durations on turn end
+- trigger reflected damage from triggered-damage statuses
+- mark combatants downed at zero health
+- update standard combat result from lifecycle changes
+
+These are standard rules, not universal engine laws.
+
+Other games or packages may register different handlers.
+
+### Combat result
+
+Combat result should not be decided directly by damage.
+
+The standard flow is:
+
+- damage reduces health
+- damage emits DamageDealtCombatEvent
+- zero-health handler marks combatant Downed
+- lifecycle change emits CombatantLifecycleChangedCombatEvent
+- standard result handler checks living player and enemy teams
+- result effect sets Victory, Defeat, Draw, or leaves combat Ongoing
+
+This keeps damage, lifecycle, and win-condition logic separate.
+
+### Phase 2 completion direction
+
+Phase 2 is complete when the combat lifecycle can:
+
+- start and end turns safely
+- advance between living combatants
+- advance rounds
+- emit lifecycle events
+- process event handlers
+- process effect chains deterministically
+- stop processing after combat ends
+- keep concrete mechanics out of central processors
+
+Phase 2 should still not introduce cards, deck zones, energy, enemy AI, map state, rewards, or run progression.
+
+Those belong to later phases.
