@@ -5,6 +5,11 @@ public sealed record CardPlayRequest(
     CombatantId SourceCombatantId,
     CombatantId? TargetCombatantId = null);
 
+public sealed record CardInstancePlayRequest(
+    CardInstanceId CardInstanceId,
+    CombatantId SourceCombatantId,
+    CombatantId? TargetCombatantId = null);
+
 public sealed class CombatCardPlayProcessor
 {
     private readonly CombatQueueProcessor _queueProcessor = new();
@@ -15,43 +20,101 @@ public sealed class CombatCardPlayProcessor
         CardPlayRequest request,
         int maxQueueCyclesToResolve = 1024)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
+        PlayCardCore(
+            combat,
+            registry,
+            request.CardDefinitionId,
+            request.SourceCombatantId,
+            request.TargetCombatantId,
+            cardInstanceId: null,
+            maxQueueCyclesToResolve);
+    }
+
+    public void PlayCardInstance(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        CardInstancePlayRequest request,
+        int maxQueueCyclesToResolve = 1024)
+    {
         ArgumentNullException.ThrowIfNull(combat);
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(request);
+
+        var zones = combat.GetCardZones(request.SourceCombatantId);
+        var cardInstance = zones.GetCard(request.CardInstanceId);
+
+        if (cardInstance.OwnerId != request.SourceCombatantId)
+            throw new InvalidOperationException(
+                $"Card instance '{request.CardInstanceId}' is not owned by combatant '{request.SourceCombatantId}'.");
+
+        if (cardInstance.Zone != CardZone.Hand)
+            throw new InvalidOperationException(
+                $"Card instance '{request.CardInstanceId}' cannot be played because it is in zone '{cardInstance.Zone}'.");
+
+        PlayCardCore(
+            combat,
+            registry,
+            cardInstance.DefinitionId,
+            request.SourceCombatantId,
+            request.TargetCombatantId,
+            cardInstance.Id,
+            maxQueueCyclesToResolve);
+    }
+
+    private void PlayCardCore(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        CardDefinitionId cardDefinitionId,
+        CombatantId sourceCombatantId,
+        CombatantId? targetCombatantId,
+        CardInstanceId? cardInstanceId,
+        int maxQueueCyclesToResolve)
+    {
+        ArgumentNullException.ThrowIfNull(combat);
+        ArgumentNullException.ThrowIfNull(registry);
 
         if (combat.Result != CombatResult.Ongoing)
             throw new InvalidOperationException(
                 $"Cannot play card because combat result is '{combat.Result}'.");
 
-        var source = combat.GetCombatant(request.SourceCombatantId);
+        var source = combat.GetCombatant(sourceCombatantId);
 
         if (!source.IsAlive)
             throw new InvalidOperationException(
-                $"Combatant '{request.SourceCombatantId}' cannot play cards because it is not alive.");
+                $"Combatant '{sourceCombatantId}' cannot play cards because it is not alive.");
 
-        var card = registry.GetCard(request.CardDefinitionId);
+        var card = registry.GetCard(cardDefinitionId);
 
         var effectRequests = BuildEffectRequests(
             combat,
             card,
             source,
-            request.TargetCombatantId);
+            targetCombatantId);
 
         EnsureCostsCanBePaid(source, card);
         PayCosts(source, card);
 
         combat.AddLogEntry(
             StandardCombatLogTypes.CardPlayed,
-            $"Combatant '{request.SourceCombatantId}' played card '{request.CardDefinitionId}'.");
+            $"Combatant '{sourceCombatantId}' played card '{cardDefinitionId}'.");
 
         combat.EnqueueEvent(
             new CardPlayedCombatEvent(
-                CardDefinitionId: request.CardDefinitionId,
-                SourceCombatantId: request.SourceCombatantId,
-                TargetCombatantId: request.TargetCombatantId));
+                CardDefinitionId: cardDefinitionId,
+                SourceCombatantId: sourceCombatantId,
+                TargetCombatantId: targetCombatantId,
+                CardInstanceId: cardInstanceId));
 
         foreach (var effectRequest in effectRequests)
             combat.EnqueueEffect(effectRequest);
+
+        if (cardInstanceId is not null)
+        {
+            var zones = combat.GetCardZones(sourceCombatantId);
+            zones.MoveCardToZone(cardInstanceId.Value, CardZone.DiscardPile);
+        }
 
         _queueProcessor.ResolvePendingQueues(
             combat,
