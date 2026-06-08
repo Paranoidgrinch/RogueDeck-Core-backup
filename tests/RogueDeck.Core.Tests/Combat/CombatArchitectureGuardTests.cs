@@ -104,6 +104,24 @@ public class CombatArchitectureGuardTests
         Assert.DoesNotContain("RefillResource", source);
         Assert.DoesNotContain("StandardCombatIds.EnergyResource", source);
     }    [Fact]
+    public void CombatCardPlayProcessorMustNotKnowConcreteControlStatuses()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var cardPlayPath = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Cards",
+            "CardPlay.cs");
+
+        var source = File.ReadAllText(cardPlayPath);
+
+        Assert.DoesNotContain("StunStatus", source);
+        Assert.DoesNotContain("ControlTag", source);
+        Assert.Contains("GetCardPlayValidators", source);
+    }
+    [Fact]
     public void DealDamageEffectHandlerMustNotKnowConcreteDamageModifierStatuses()
     {
         var repoRoot = FindRepositoryRoot();
@@ -172,6 +190,7 @@ public class CombatArchitectureGuardTests
         throw new InvalidOperationException("Could not find repository root.");
     }
 }
+
 
 
 

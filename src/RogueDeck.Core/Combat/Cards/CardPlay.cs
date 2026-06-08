@@ -87,6 +87,15 @@ public sealed class CombatCardPlayProcessor
 
         var card = registry.GetCard(cardDefinitionId);
 
+        
+        ValidateCardPlay(
+            combat,
+            registry,
+            card,
+            source,
+            targetCombatantId,
+            cardInstanceId);
+
         var effectRequests = BuildEffectRequests(
             combat,
             registry,
@@ -123,7 +132,26 @@ public sealed class CombatCardPlayProcessor
             combat,
             registry,
             maxQueueCyclesToResolve);
+    }    private static void ValidateCardPlay(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        CardDefinition card,
+        CombatantState source,
+        CombatantId? requestedTargetId,
+        CardInstanceId? cardInstanceId)
+    {
+        var context = new CardPlayValidationContext(
+            Combat: combat,
+            Registry: registry,
+            Card: card,
+            Source: source,
+            RequestedTargetId: requestedTargetId,
+            CardInstanceId: cardInstanceId);
+
+        foreach (var validator in registry.GetCardPlayValidators())
+            validator.Validate(context);
     }
+
 
     private static List<IEffectRequest> BuildEffectRequests(
         CombatState combat,
@@ -180,5 +208,7 @@ public sealed class CombatCardPlayProcessor
         }
     }
 }
+
+
 
 

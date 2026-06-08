@@ -9,7 +9,9 @@ public sealed class CombatDefinitionRegistry
     private readonly Dictionary<Type, List<ICombatEventHandler>> _combatEventHandlers = new();
     private readonly List<IDamageAmountModifier> _damageAmountModifiers = new();
 
-    public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitions => _statusDefinitions;
+    
+    private readonly List<ICardPlayValidator> _cardPlayValidators = new();
+public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitions => _statusDefinitions;
     public IReadOnlyDictionary<CardDefinitionId, CardDefinition> CardDefinitions => _cardDefinitions;
     public IReadOnlyDictionary<Type, ICardEffectDefinitionHandler> CardEffectDefinitionHandlers => _cardEffectDefinitionHandlers;
     public IReadOnlyDictionary<Type, IEffectRequestHandler> EffectRequestHandlers => _effectRequestHandlers;
@@ -118,7 +120,34 @@ public sealed class CombatDefinitionRegistry
     public IReadOnlyList<IDamageAmountModifier> GetDamageAmountModifiers()
     {
         return _damageAmountModifiers.ToArray();
+    }    public void RegisterCardPlayValidator(ICardPlayValidator validator)
+    {
+        ArgumentNullException.ThrowIfNull(validator);
+
+        if (_cardPlayValidators.Any(existing => existing.GetType() == validator.GetType()))
+            throw new InvalidOperationException(
+                $"Card play validator '{validator.GetType().Name}' is already registered.");
+
+        _cardPlayValidators.Add(validator);
+        _cardPlayValidators.Sort(static (left, right) =>
+        {
+            var priorityComparison = left.Priority.CompareTo(right.Priority);
+
+            if (priorityComparison != 0)
+                return priorityComparison;
+
+            return string.Compare(
+                left.GetType().FullName,
+                right.GetType().FullName,
+                StringComparison.Ordinal);
+        });
     }
+
+    public IReadOnlyList<ICardPlayValidator> GetCardPlayValidators()
+    {
+        return _cardPlayValidators.ToArray();
+    }
+
 
     public void RegisterEffectRequestHandler(IEffectRequestHandler handler)
     {
@@ -178,3 +207,5 @@ public sealed class CombatDefinitionRegistry
         return handlers;
     }
 }
+
+

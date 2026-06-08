@@ -21,6 +21,8 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterDamageAmountModifier(new StrengthDamageAmountModifier());
         registry.RegisterDamageAmountModifier(new WeakDamageAmountModifier());
 
+        registry.RegisterCardPlayValidator(new StunCardPlayValidator());
+
         registry.RegisterCard(CreateStrike());
         registry.RegisterCard(CreateDefend());
         registry.RegisterCardEffectDefinitionHandler(new DealDamageCardEffectDefinitionHandler());
@@ -182,6 +184,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         return definition;
     }
 }
+
 
 
 
