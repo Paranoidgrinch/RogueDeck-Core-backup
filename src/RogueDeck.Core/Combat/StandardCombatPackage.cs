@@ -138,6 +138,7 @@ public sealed class StandardCombatPackage : ICombatPackage
 
         definition.Costs.Add(new ResourceCost(StandardCombatIds.EnergyResource, 1));
         definition.Tags.Add(StandardCombatIds.AttackCardTag);
+        definition.Effects.Add(new DealDamageCardEffectDefinition(6, CardTargetMode.SingleEnemy));
 
         return definition;
     }
@@ -152,7 +153,9 @@ public sealed class StandardCombatPackage : ICombatPackage
 
         definition.Costs.Add(new ResourceCost(StandardCombatIds.EnergyResource, 1));
         definition.Tags.Add(StandardCombatIds.SkillCardTag);
+        definition.Effects.Add(new GainBlockCardEffectDefinition(5, CardTargetMode.Self));
 
         return definition;
     }
 }
+
