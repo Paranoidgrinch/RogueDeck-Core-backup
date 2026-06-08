@@ -227,3 +227,23 @@ public sealed class RemoveStatusCardEffectDefinitionHandler
     }
 }
 
+public sealed class GainResourceCardEffectDefinitionHandler
+    : CardEffectDefinitionHandler<GainResourceCardEffectDefinition>
+{
+    protected override IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+        CardEffectContext context,
+        GainResourceCardEffectDefinition definition)
+    {
+        var targetId = context.ResolveTarget(definition.TargetMode);
+
+        return new IEffectRequest[]
+        {
+            new GainResourceEffectRequest(
+                CombatantId: targetId,
+                ResourceId: definition.ResourceId,
+                Amount: definition.Amount,
+                DefaultMax: definition.DefaultMax)
+        };
+    }
+}
+

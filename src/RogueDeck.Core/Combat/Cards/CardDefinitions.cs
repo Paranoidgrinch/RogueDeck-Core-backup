@@ -56,6 +56,12 @@ public sealed record RemoveStatusCardEffectDefinition(
     StatusDefinitionId StatusDefinitionId,
     CardTargetMode TargetMode
 ) : ICardEffectDefinition;
+public sealed record GainResourceCardEffectDefinition(
+    ResourceId ResourceId,
+    int Amount,
+    CardTargetMode TargetMode,
+    int? DefaultMax = null
+) : ICardEffectDefinition;
 public sealed class CardDefinition
 {
     public CardDefinitionId Id { get; }
@@ -81,6 +87,7 @@ public sealed class CardDefinition
         DescriptionKey = descriptionKey;
     }
 }
+
 
 
 
