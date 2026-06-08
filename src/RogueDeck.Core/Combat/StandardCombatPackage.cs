@@ -20,6 +20,8 @@ public sealed class StandardCombatPackage : ICombatPackage
 
         registry.RegisterCard(CreateStrike());
         registry.RegisterCard(CreateDefend());
+        registry.RegisterCardEffectDefinitionHandler(new DealDamageCardEffectDefinitionHandler());
+        registry.RegisterCardEffectDefinitionHandler(new GainBlockCardEffectDefinitionHandler());
 
         registry.RegisterEffectRequestHandler(new ApplyStatusEffectHandler());
         registry.RegisterEffectRequestHandler(new DecreaseStatusDurationEffectHandler());
@@ -159,5 +161,6 @@ public sealed class StandardCombatPackage : ICombatPackage
         return definition;
     }
 }
+
 
 

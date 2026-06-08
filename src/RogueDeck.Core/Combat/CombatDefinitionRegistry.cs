@@ -1,15 +1,17 @@
-namespace RogueDeck.Core.Combat;
+﻿namespace RogueDeck.Core.Combat;
 
 public sealed class CombatDefinitionRegistry
 {
     private readonly Dictionary<StatusDefinitionId, StatusDefinition> _statusDefinitions = new();
     private readonly Dictionary<CardDefinitionId, CardDefinition> _cardDefinitions = new();
+    private readonly Dictionary<Type, ICardEffectDefinitionHandler> _cardEffectDefinitionHandlers = new();
     private readonly Dictionary<Type, IEffectRequestHandler> _effectRequestHandlers = new();
     private readonly Dictionary<Type, List<ICombatEventHandler>> _combatEventHandlers = new();
 
     public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitions => _statusDefinitions;
 
     public IReadOnlyDictionary<CardDefinitionId, CardDefinition> CardDefinitions => _cardDefinitions;
+    public IReadOnlyDictionary<Type, ICardEffectDefinitionHandler> CardEffectDefinitionHandlers => _cardEffectDefinitionHandlers;
 
     public IReadOnlyDictionary<Type, IEffectRequestHandler> EffectRequestHandlers => _effectRequestHandlers;
 
@@ -59,7 +61,37 @@ public sealed class CombatDefinitionRegistry
         return _cardDefinitions.TryGetValue(id, out definition);
     }
 
-    public void RegisterEffectRequestHandler(IEffectRequestHandler handler)
+        public void RegisterCardEffectDefinitionHandler(ICardEffectDefinitionHandler handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+
+        if (_cardEffectDefinitionHandlers.ContainsKey(handler.DefinitionType))
+            throw new InvalidOperationException(
+                $"Card effect definition handler for '{handler.DefinitionType.Name}' is already registered.");
+
+        _cardEffectDefinitionHandlers.Add(handler.DefinitionType, handler);
+    }
+
+    public ICardEffectDefinitionHandler GetCardEffectDefinitionHandler(Type definitionType)
+    {
+        ArgumentNullException.ThrowIfNull(definitionType);
+
+        if (!_cardEffectDefinitionHandlers.TryGetValue(definitionType, out var handler))
+            throw new InvalidOperationException(
+                $"Card effect definition handler for '{definitionType.Name}' is not registered.");
+
+        return handler;
+    }
+
+    public bool TryGetCardEffectDefinitionHandler(
+        Type definitionType,
+        out ICardEffectDefinitionHandler? handler)
+    {
+        ArgumentNullException.ThrowIfNull(definitionType);
+
+        return _cardEffectDefinitionHandlers.TryGetValue(definitionType, out handler);
+    }
+public void RegisterEffectRequestHandler(IEffectRequestHandler handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -117,3 +149,4 @@ public sealed class CombatDefinitionRegistry
         return handlers;
     }
 }
+

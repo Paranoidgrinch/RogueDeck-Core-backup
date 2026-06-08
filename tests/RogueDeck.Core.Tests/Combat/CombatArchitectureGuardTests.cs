@@ -1,4 +1,4 @@
-namespace RogueDeck.Core.Tests;
+﻿namespace RogueDeck.Core.Tests;
 
 public class CombatArchitectureGuardTests
 {
@@ -46,7 +46,27 @@ public class CombatArchitectureGuardTests
         Assert.DoesNotContain("DamageOverTime", source, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("TriggeredDamage", source, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("BlockDefensivePool", source, StringComparison.OrdinalIgnoreCase);
+    }    [Fact]
+    public void CombatCardPlayProcessorMustNotKnowConcreteCardEffectDefinitions()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var cardPlayPath = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Cards",
+            "CardPlay.cs");
+
+        var source = File.ReadAllText(cardPlayPath);
+
+        Assert.DoesNotContain("DealDamageCardEffectDefinition", source);
+        Assert.DoesNotContain("GainBlockCardEffectDefinition", source);
+        Assert.DoesNotContain("Unsupported card effect definition type", source);
+        Assert.DoesNotContain("switch", source, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("GetCardEffectDefinitionHandler", source);
     }
+
 
     [Fact]
     public void StandardCombatPackageIsAllowedToRegisterStandardHandlers()
@@ -93,3 +113,4 @@ public class CombatArchitectureGuardTests
         throw new InvalidOperationException("Could not find repository root.");
     }
 }
+
