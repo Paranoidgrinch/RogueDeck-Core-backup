@@ -26,10 +26,12 @@ public const string CardPlayed = "CardPlayed";
     public const string StatusMerged = "StatusMerged";
     public const string StatusDurationReduced = "StatusDurationReduced";
     public const string StatusExpired = "StatusExpired";
+    public const string StatusRemoved = "StatusRemoved";
 
     public const string CombatantLifecycleChanged = "CombatantLifecycleChanged";
     public const string CombatResultChanged = "CombatResultChanged";
 }
+
 
 
 

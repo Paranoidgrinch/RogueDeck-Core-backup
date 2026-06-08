@@ -27,8 +27,10 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterCardEffectDefinitionHandler(new CreateCardInstanceCardEffectDefinitionHandler());
         registry.RegisterCardEffectDefinitionHandler(new MoveAllCardsFromZoneCardEffectDefinitionHandler());
         registry.RegisterCardEffectDefinitionHandler(new ApplyStatusCardEffectDefinitionHandler());
+        registry.RegisterCardEffectDefinitionHandler(new RemoveStatusCardEffectDefinitionHandler());
 
         registry.RegisterEffectRequestHandler(new ApplyStatusEffectHandler());
+        registry.RegisterEffectRequestHandler(new RemoveStatusEffectHandler());
         registry.RegisterEffectRequestHandler(new DecreaseStatusDurationEffectHandler());
         registry.RegisterEffectRequestHandler(new DealDamageEffectHandler());
         registry.RegisterEffectRequestHandler(new HealEffectHandler());
@@ -173,6 +175,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         return definition;
     }
 }
+
 
 
 

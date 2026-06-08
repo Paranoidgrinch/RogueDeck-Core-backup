@@ -209,3 +209,21 @@ public sealed class ApplyStatusCardEffectDefinitionHandler
     }
 }
 
+public sealed class RemoveStatusCardEffectDefinitionHandler
+    : CardEffectDefinitionHandler<RemoveStatusCardEffectDefinition>
+{
+    protected override IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+        CardEffectContext context,
+        RemoveStatusCardEffectDefinition definition)
+    {
+        var targetId = context.ResolveTarget(definition.TargetMode);
+
+        return new IEffectRequest[]
+        {
+            new RemoveStatusEffectRequest(
+                TargetCombatantId: targetId,
+                StatusDefinitionId: definition.StatusDefinitionId)
+        };
+    }
+}
+

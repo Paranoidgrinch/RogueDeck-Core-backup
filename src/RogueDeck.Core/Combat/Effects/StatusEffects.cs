@@ -1,4 +1,4 @@
-namespace RogueDeck.Core.Combat;
+﻿namespace RogueDeck.Core.Combat;
 
 public sealed record ApplyStatusEffectRequest(
     CombatantId TargetCombatantId,
@@ -250,5 +250,43 @@ public sealed class TriggeredDamageOnDamageDealtHandler : CombatEventHandler<Dam
     }
 }
 
+public sealed record RemoveStatusEffectRequest(
+    CombatantId TargetCombatantId,
+    StatusDefinitionId StatusDefinitionId
+) : IEffectRequest;
 
+public sealed class RemoveStatusEffectHandler : EffectRequestHandler<RemoveStatusEffectRequest>
+{
+    protected override void Resolve(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        RemoveStatusEffectRequest request)
+    {
+        registry.GetStatus(request.StatusDefinitionId);
+
+        var target = combat.GetCombatant(request.TargetCombatantId);
+        var statusesToRemove = target.Statuses
+            .Where(status => status.DefinitionId == request.StatusDefinitionId)
+            .ToArray();
+
+        if (statusesToRemove.Length == 0)
+            return;
+
+        foreach (var status in statusesToRemove)
+            target.Statuses.Remove(status);
+
+        var removedStatusIds = statusesToRemove
+            .Select(status => status.Id)
+            .ToArray();
+
+        combat.AddLogEntry(
+            StandardCombatLogTypes.StatusRemoved,
+            $"Removed status '{request.StatusDefinitionId}' from '{request.TargetCombatantId}'.");
+
+        combat.EnqueueEvent(new StatusRemovedCombatEvent(
+            request.TargetCombatantId,
+            removedStatusIds,
+            request.StatusDefinitionId));
+    }
+}
 

@@ -52,6 +52,10 @@ public sealed record ApplyStatusCardEffectDefinition(
     int Charges,
     CardTargetMode TargetMode
 ) : ICardEffectDefinition;
+public sealed record RemoveStatusCardEffectDefinition(
+    StatusDefinitionId StatusDefinitionId,
+    CardTargetMode TargetMode
+) : ICardEffectDefinition;
 public sealed class CardDefinition
 {
     public CardDefinitionId Id { get; }
@@ -77,6 +81,7 @@ public sealed class CardDefinition
         DescriptionKey = descriptionKey;
     }
 }
+
 
 
 

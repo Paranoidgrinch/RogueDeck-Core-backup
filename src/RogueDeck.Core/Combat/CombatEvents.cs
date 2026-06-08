@@ -108,6 +108,11 @@ public sealed record StatusMergedCombatEvent(
     CardDefinitionId? SourceCardId = null
 ) : ICombatEvent;
 
+public sealed record StatusRemovedCombatEvent(
+    CombatantId TargetCombatantId,
+    IReadOnlyCollection<StatusInstanceId> StatusInstanceIds,
+    StatusDefinitionId StatusDefinitionId
+) : ICombatEvent;
 public sealed record StatusExpiredCombatEvent(
     CombatantId TargetCombatantId,
     StatusInstanceId StatusInstanceId,
@@ -119,6 +124,7 @@ public sealed record CombatantLifecycleChangedCombatEvent(
     CombatantLifecycleState OldState,
     CombatantLifecycleState NewState
 ) : ICombatEvent;
+
 
 
 
