@@ -81,6 +81,11 @@ public sealed class CombatantCardZones
         return AllCards.Any(card => card.Id == id);
     }
 
+    public IReadOnlyList<CardInstance> GetCardsInZone(CardZone zone)
+    {
+        return GetMutableZone(zone).ToArray();
+    }
+
     public void MoveCardToZone(CardInstanceId id, CardZone zone)
     {
         var card = GetCard(id);
@@ -88,6 +93,21 @@ public sealed class CombatantCardZones
         RemoveFromCurrentZone(card);
         card.SetZone(zone);
         GetMutableZone(zone).Add(card);
+    }
+
+    public IReadOnlyList<CardInstance> MoveAllCardsFromZone(
+        CardZone fromZone,
+        CardZone toZone)
+    {
+        if (fromZone == toZone)
+            return Array.Empty<CardInstance>();
+
+        var cardsToMove = GetMutableZone(fromZone).ToArray();
+
+        foreach (var card in cardsToMove)
+            MoveCardToZone(card.Id, toZone);
+
+        return cardsToMove;
     }
 
     public IReadOnlyList<CardInstance> DrawCards(int count)

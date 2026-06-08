@@ -55,6 +55,12 @@ public sealed record HandDiscardedCombatEvent(
     IReadOnlyCollection<CardInstanceId> CardInstanceIds
 ) : ICombatEvent;
 
+public sealed record CardsMovedBetweenZonesCombatEvent(
+    CombatantId CombatantId,
+    IReadOnlyCollection<CardInstanceId> CardInstanceIds,
+    CardZone FromZone,
+    CardZone ToZone
+) : ICombatEvent;
 public sealed record CardMovedToZoneCombatEvent(
     CombatantId CombatantId,
     CardInstanceId CardInstanceId,
@@ -113,6 +119,7 @@ public sealed record CombatantLifecycleChangedCombatEvent(
     CombatantLifecycleState OldState,
     CombatantLifecycleState NewState
 ) : ICombatEvent;
+
 
 
 

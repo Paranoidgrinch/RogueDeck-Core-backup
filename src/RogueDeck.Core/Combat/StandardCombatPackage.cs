@@ -25,6 +25,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterCardEffectDefinitionHandler(new DrawCardsCardEffectDefinitionHandler());
         registry.RegisterCardEffectDefinitionHandler(new DiscardHandCardEffectDefinitionHandler());
         registry.RegisterCardEffectDefinitionHandler(new CreateCardInstanceCardEffectDefinitionHandler());
+        registry.RegisterCardEffectDefinitionHandler(new MoveAllCardsFromZoneCardEffectDefinitionHandler());
 
         registry.RegisterEffectRequestHandler(new ApplyStatusEffectHandler());
         registry.RegisterEffectRequestHandler(new DecreaseStatusDurationEffectHandler());
@@ -35,6 +36,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterEffectRequestHandler(new DiscardHandEffectHandler());
 registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterEffectRequestHandler(new CreateCardInstanceEffectHandler());
+        registry.RegisterEffectRequestHandler(new MoveAllCardsFromZoneEffectHandler());
         registry.RegisterEffectRequestHandler(new RefillResourceEffectHandler());
         registry.RegisterEffectRequestHandler(new ClearDefensivePoolEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatantLifecycleStateEffectHandler());
@@ -170,6 +172,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         return definition;
     }
 }
+
 
 
 

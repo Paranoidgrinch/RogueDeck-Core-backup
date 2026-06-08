@@ -167,3 +167,22 @@ public sealed class CreateCardInstanceCardEffectDefinitionHandler
     }
 }
 
+public sealed class MoveAllCardsFromZoneCardEffectDefinitionHandler
+    : CardEffectDefinitionHandler<MoveAllCardsFromZoneCardEffectDefinition>
+{
+    protected override IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+        CardEffectContext context,
+        MoveAllCardsFromZoneCardEffectDefinition definition)
+    {
+        var targetId = context.ResolveTarget(definition.TargetMode);
+
+        return new IEffectRequest[]
+        {
+            new MoveAllCardsFromZoneEffectRequest(
+                CombatantId: targetId,
+                FromZone: definition.FromZone,
+                ToZone: definition.ToZone)
+        };
+    }
+}
+
