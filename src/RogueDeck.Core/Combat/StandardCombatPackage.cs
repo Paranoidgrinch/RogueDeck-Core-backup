@@ -33,9 +33,10 @@ public sealed class StandardCombatPackage : ICombatPackage
                 registry.RegisterEffectRequestHandler(new DrawCardsEffectHandler());
         registry.RegisterEffectRequestHandler(new DiscardHandEffectHandler());
 registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
+        registry.RegisterEffectRequestHandler(new RefillResourceEffectHandler());
         registry.RegisterEffectRequestHandler(new ClearDefensivePoolEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatantLifecycleStateEffectHandler());
-        registry.RegisterEffectRequestHandler(new SetCombatResultEffectHandler());
+        registry.RegisterEffectRequestHandler(new SetCombatResultEffectHandler());        registry.RegisterCombatEventHandler(new RefillResourceOnTurnStartedHandler(StandardCombatIds.EnergyResource, defaultMax: 3));
 
                 registry.RegisterCombatEventHandler(new DrawCardsOnTurnStartedHandler());
 registry.RegisterCombatEventHandler(new ClearBlockOnTurnStartedHandler());
@@ -167,6 +168,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         return definition;
     }
 }
+
 
 
 

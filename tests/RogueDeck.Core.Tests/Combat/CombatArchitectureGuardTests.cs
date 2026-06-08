@@ -85,7 +85,26 @@ public class CombatArchitectureGuardTests
         Assert.DoesNotContain("CardZone", source);
         Assert.DoesNotContain("BanishedPile", source);
         Assert.DoesNotContain("ExhaustPile", source);
+    }    [Fact]
+    public void CombatTurnProcessorMustNotKnowResourceLifecycleMechanics()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var turnProcessorPath = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "CombatTurnProcessor.cs");
+
+        var source = File.ReadAllText(turnProcessorPath);
+
+        Assert.DoesNotContain("Resource", source);
+        Assert.DoesNotContain("Energy", source);
+        Assert.DoesNotContain("ValuePoolState", source);
+        Assert.DoesNotContain("RefillResource", source);
+        Assert.DoesNotContain("StandardCombatIds.EnergyResource", source);
     }
+
 
 
 
@@ -134,5 +153,6 @@ public class CombatArchitectureGuardTests
         throw new InvalidOperationException("Could not find repository root.");
     }
 }
+
 
 
