@@ -177,5 +177,3 @@ public sealed class CombatTurnProcessor
         throw new InvalidOperationException("Cannot advance turn because there are no living combatants in the turn order.");
     }
 }
-
-

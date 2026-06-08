@@ -22,7 +22,6 @@ public sealed record DamageDealtCombatEvent(
     CardDefinitionId? SourceCardId = null
 ) : ICombatEvent;
 
-
 public sealed record CombatantLifecycleChangedCombatEvent(
     CombatantId CombatantId,
     CombatantLifecycleState OldState,
