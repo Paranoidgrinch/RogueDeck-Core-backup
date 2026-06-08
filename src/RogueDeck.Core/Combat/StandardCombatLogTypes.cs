@@ -8,6 +8,8 @@ public static class StandardCombatLogTypes
     public const string RoundStarted = "RoundStarted";
     public const string RoundEnded = "RoundEnded";
 
+    public const string CardPlayed = "CardPlayed";
+
     public const string DamageDealt = "DamageDealt";
     public const string Healed = "Healed";
 

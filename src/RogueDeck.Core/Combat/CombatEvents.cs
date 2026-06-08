@@ -71,3 +71,9 @@ public sealed record RoundStartedCombatEvent(
 public sealed record RoundEndedCombatEvent(
     int Round
 ) : ICombatEvent;
+
+public sealed record CardPlayedCombatEvent(
+    CardDefinitionId CardDefinitionId,
+    CombatantId SourceCombatantId,
+    CombatantId? TargetCombatantId
+) : ICombatEvent;
