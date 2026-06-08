@@ -18,22 +18,24 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreateThorns());
         registry.RegisterStatus(CreateStun());
 
+        registry.RegisterCard(CreateStrike());
+        registry.RegisterCard(CreateDefend());
+
         registry.RegisterEffectRequestHandler(new ApplyStatusEffectHandler());
         registry.RegisterEffectRequestHandler(new DecreaseStatusDurationEffectHandler());
         registry.RegisterEffectRequestHandler(new DealDamageEffectHandler());
-
         registry.RegisterEffectRequestHandler(new HealEffectHandler());
         registry.RegisterEffectRequestHandler(new GainBlockEffectHandler());
         registry.RegisterEffectRequestHandler(new ClearDefensivePoolEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatantLifecycleStateEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatResultEffectHandler());
+
         registry.RegisterCombatEventHandler(new ClearBlockOnTurnStartedHandler());
         registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedHandler());
         registry.RegisterCombatEventHandler(new DamageOverTimeOnTurnStartedHandler());
         registry.RegisterCombatEventHandler(new TriggeredDamageOnDamageDealtHandler());
         registry.RegisterCombatEventHandler(new MarkCombatantDownedOnZeroHealthHandler());
         registry.RegisterCombatEventHandler(new UpdateStandardCombatResultOnLifecycleChangedHandler());
-
     }
 
     private StatusDefinition CreatePoison()
@@ -125,10 +127,32 @@ public sealed class StandardCombatPackage : ICombatPackage
 
         return definition;
     }
+
+    private CardDefinition CreateStrike()
+    {
+        var definition = new CardDefinition(
+            StandardCombatIds.StrikeCard,
+            Id,
+            displayNameKey: "card.standard.strike.name",
+            descriptionKey: "card.standard.strike.description");
+
+        definition.Costs.Add(new ResourceCost(StandardCombatIds.EnergyResource, 1));
+        definition.Tags.Add(StandardCombatIds.AttackCardTag);
+
+        return definition;
+    }
+
+    private CardDefinition CreateDefend()
+    {
+        var definition = new CardDefinition(
+            StandardCombatIds.DefendCard,
+            Id,
+            displayNameKey: "card.standard.defend.name",
+            descriptionKey: "card.standard.defend.description");
+
+        definition.Costs.Add(new ResourceCost(StandardCombatIds.EnergyResource, 1));
+        definition.Tags.Add(StandardCombatIds.SkillCardTag);
+
+        return definition;
+    }
 }
-
-
-
-
-
-
