@@ -8,6 +8,7 @@ public enum CardTargetMode
 {
     Self,
     SingleEnemy,
+    SingleAlly,
     AllEnemies,
     AllAllies
 }
@@ -93,6 +94,7 @@ public sealed class CardDefinition
         DescriptionKey = descriptionKey;
     }
 }
+
 
 
 

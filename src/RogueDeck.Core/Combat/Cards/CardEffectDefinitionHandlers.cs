@@ -40,7 +40,24 @@ public sealed record CardEffectContext(
                         $"Target combatant '{RequestedTargetId}' is not an enemy of '{Source.Id}'.");
 
                 return new[] { target.Id };
+            }            case CardTargetMode.SingleAlly:
+            {
+                if (RequestedTargetId is null)
+                    throw new InvalidOperationException("Card requires a single ally target.");
+
+                var target = Combat.GetCombatant(RequestedTargetId.Value);
+
+                if (!target.IsAlive)
+                    throw new InvalidOperationException(
+                        $"Target combatant '{RequestedTargetId}' is not alive.");
+
+                if (target.TeamId != Source.TeamId)
+                    throw new InvalidOperationException(
+                        $"Target combatant '{RequestedTargetId}' is not an ally of '{Source.Id}'.");
+
+                return new[] { target.Id };
             }
+
 
             case CardTargetMode.AllEnemies:
                 return Combat.Combatants
@@ -271,4 +288,5 @@ public sealed class HealCardEffectDefinitionHandler
             .ToArray();
     }
 }
+
 
