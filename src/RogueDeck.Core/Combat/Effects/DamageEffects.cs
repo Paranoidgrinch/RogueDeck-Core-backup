@@ -1,4 +1,4 @@
-namespace RogueDeck.Core.Combat;
+﻿namespace RogueDeck.Core.Combat;
 
 public sealed record DealDamageEffectRequest(
     CombatantId TargetCombatantId,
@@ -19,11 +19,17 @@ public sealed class DealDamageEffectHandler : EffectRequestHandler<DealDamageEff
             throw new ArgumentOutOfRangeException(nameof(dealDamage.Amount), "Damage amount cannot be negative.");
 
         var target = combat.GetCombatant(dealDamage.TargetCombatantId);
+        var modifiedAmount = ApplyDamageAmountModifiers(
+            combat,
+            registry,
+            dealDamage,
+            target);
 
-        var remainingDamage = dealDamage.Amount;
+        var remainingDamage = modifiedAmount;
         var blockedDamage = 0;
 
-        if (target.DefensivePools.TryGetValue(StandardCombatIds.BlockDefensivePool, out var block) && block.Current > 0)
+        if (target.DefensivePools.TryGetValue(StandardCombatIds.BlockDefensivePool, out var block) &&
+            block.Current > 0)
         {
             blockedDamage = Math.Min(block.Current, remainingDamage);
             block.SetCurrent(block.Current - blockedDamage);
@@ -50,6 +56,37 @@ public sealed class DealDamageEffectHandler : EffectRequestHandler<DealDamageEff
                 SourceCombatantId: dealDamage.SourceCombatantId,
                 SourceCardId: dealDamage.SourceCardId));
     }
+
+    private static int ApplyDamageAmountModifiers(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        DealDamageEffectRequest dealDamage,
+        CombatantState target)
+    {
+        CombatantState? source = null;
+
+        if (dealDamage.SourceCombatantId is not null &&
+            combat.TryGetCombatant(dealDamage.SourceCombatantId.Value, out var foundSource))
+        {
+            source = foundSource;
+        }
+
+        var context = new DamageAmountModificationContext(
+            Combat: combat,
+            Registry: registry,
+            TargetCombatant: target,
+            SourceCombatant: source,
+            SourceCardId: dealDamage.SourceCardId,
+            Kind: dealDamage.Kind,
+            RequestedAmount: dealDamage.Amount);
+
+        var currentAmount = dealDamage.Amount;
+
+        foreach (var modifier in registry.GetDamageAmountModifiers())
+            currentAmount = Math.Max(0, modifier.ModifyDamageAmount(context, currentAmount));
+
+        return currentAmount;
+    }
 }
 
 public sealed record HealEffectRequest(
@@ -70,7 +107,6 @@ public sealed class HealEffectHandler : EffectRequestHandler<HealEffectRequest>
             throw new ArgumentOutOfRangeException(nameof(heal.Amount), "Heal amount cannot be negative.");
 
         var target = combat.GetCombatant(heal.TargetCombatantId);
-
         var healthBeforeHealing = target.Health.Current;
         var requestedHealth = (long)healthBeforeHealing + heal.Amount;
         var newHealth = (int)Math.Min(target.Health.Max, requestedHealth);
@@ -91,7 +127,3 @@ public sealed class HealEffectHandler : EffectRequestHandler<HealEffectRequest>
                 SourceCardId: heal.SourceCardId));
     }
 }
-
-
-
-

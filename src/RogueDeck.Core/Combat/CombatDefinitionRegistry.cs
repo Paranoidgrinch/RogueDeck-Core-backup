@@ -7,13 +7,13 @@ public sealed class CombatDefinitionRegistry
     private readonly Dictionary<Type, ICardEffectDefinitionHandler> _cardEffectDefinitionHandlers = new();
     private readonly Dictionary<Type, IEffectRequestHandler> _effectRequestHandlers = new();
     private readonly Dictionary<Type, List<ICombatEventHandler>> _combatEventHandlers = new();
+    private readonly List<IDamageAmountModifier> _damageAmountModifiers = new();
 
     public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitions => _statusDefinitions;
-
     public IReadOnlyDictionary<CardDefinitionId, CardDefinition> CardDefinitions => _cardDefinitions;
     public IReadOnlyDictionary<Type, ICardEffectDefinitionHandler> CardEffectDefinitionHandlers => _cardEffectDefinitionHandlers;
-
     public IReadOnlyDictionary<Type, IEffectRequestHandler> EffectRequestHandlers => _effectRequestHandlers;
+    public IReadOnlyCollection<IDamageAmountModifier> DamageAmountModifiers => _damageAmountModifiers;
 
     public void RegisterStatus(StatusDefinition definition)
     {
@@ -61,7 +61,7 @@ public sealed class CombatDefinitionRegistry
         return _cardDefinitions.TryGetValue(id, out definition);
     }
 
-        public void RegisterCardEffectDefinitionHandler(ICardEffectDefinitionHandler handler)
+    public void RegisterCardEffectDefinitionHandler(ICardEffectDefinitionHandler handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -91,7 +91,36 @@ public sealed class CombatDefinitionRegistry
 
         return _cardEffectDefinitionHandlers.TryGetValue(definitionType, out handler);
     }
-public void RegisterEffectRequestHandler(IEffectRequestHandler handler)
+
+    public void RegisterDamageAmountModifier(IDamageAmountModifier modifier)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+
+        if (_damageAmountModifiers.Any(existing => existing.GetType() == modifier.GetType()))
+            throw new InvalidOperationException(
+                $"Damage amount modifier '{modifier.GetType().Name}' is already registered.");
+
+        _damageAmountModifiers.Add(modifier);
+        _damageAmountModifiers.Sort(static (left, right) =>
+        {
+            var priorityComparison = left.Priority.CompareTo(right.Priority);
+
+            if (priorityComparison != 0)
+                return priorityComparison;
+
+            return string.Compare(
+                left.GetType().FullName,
+                right.GetType().FullName,
+                StringComparison.Ordinal);
+        });
+    }
+
+    public IReadOnlyList<IDamageAmountModifier> GetDamageAmountModifiers()
+    {
+        return _damageAmountModifiers.ToArray();
+    }
+
+    public void RegisterEffectRequestHandler(IEffectRequestHandler handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 
@@ -149,4 +178,3 @@ public void RegisterEffectRequestHandler(IEffectRequestHandler handler)
         return handlers;
     }
 }
-

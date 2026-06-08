@@ -103,7 +103,26 @@ public class CombatArchitectureGuardTests
         Assert.DoesNotContain("ValuePoolState", source);
         Assert.DoesNotContain("RefillResource", source);
         Assert.DoesNotContain("StandardCombatIds.EnergyResource", source);
+    }    [Fact]
+    public void DealDamageEffectHandlerMustNotKnowConcreteDamageModifierStatuses()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var damageEffectsPath = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "DamageEffects.cs");
+
+        var source = File.ReadAllText(damageEffectsPath);
+
+        Assert.DoesNotContain("StrengthStatus", source);
+        Assert.DoesNotContain("WeakStatus", source);
+        Assert.DoesNotContain("DamageModifierTag", source);
+        Assert.Contains("GetDamageAmountModifiers", source);
     }
+
 
 
 
@@ -153,6 +172,7 @@ public class CombatArchitectureGuardTests
         throw new InvalidOperationException("Could not find repository root.");
     }
 }
+
 
 
 
