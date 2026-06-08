@@ -23,11 +23,15 @@ public sealed class CombatState
 
     public int NextStatusInstanceNumber { get; private set; } = 1;
 
+    public int NextCardInstanceNumber { get; private set; } = 1;
+
     public List<CombatantState> Combatants { get; } = new();
 
     public List<CombatantId> TurnOrder { get; } = new();
 
     public List<StatusInstance> GlobalStatuses { get; } = new();
+
+    public Dictionary<CombatantId, CombatantCardZones> CardZonesByCombatant { get; } = new();
 
     public IReadOnlyCollection<IEffectRequest> PendingEffects => _pendingEffects;
 
@@ -55,11 +59,14 @@ public sealed class CombatState
 
     public void AddCombatant(CombatantState combatant)
     {
+        ArgumentNullException.ThrowIfNull(combatant);
+
         if (Combatants.Any(existing => existing.Id == combatant.Id))
             throw new InvalidOperationException($"Combatant with id '{combatant.Id}' already exists.");
 
         Combatants.Add(combatant);
         TurnOrder.Add(combatant.Id);
+        CardZonesByCombatant.Add(combatant.Id, new CombatantCardZones());
 
         if (ActiveCombatantId is null)
             ActiveCombatantId = combatant.Id;
@@ -75,6 +82,14 @@ public sealed class CombatState
         combatant = Combatants.FirstOrDefault(existing => existing.Id == id);
 
         return combatant is not null;
+    }
+
+    public CombatantCardZones GetCardZones(CombatantId combatantId)
+    {
+        if (!TryGetCombatant(combatantId, out _))
+            throw new InvalidOperationException($"Combatant with id '{combatantId}' does not exist.");
+
+        return CardZonesByCombatant[combatantId];
     }
 
     public IReadOnlyCollection<CombatantState> GetLivingCombatantsOnTeam(TeamId teamId)
@@ -173,9 +188,17 @@ public sealed class CombatState
         return id;
     }
 
+    public CardInstanceId CreateNextCardInstanceId()
+    {
+        var id = new CardInstanceId($"card_{NextCardInstanceNumber:000000}");
+
+        NextCardInstanceNumber++;
+
+        return id;
+    }
+
     public void AddLogEntry(string type, string message)
     {
         CombatLog.Add(new CombatLogEntry(CurrentRound, CurrentTurn, type, message));
     }
 }
-

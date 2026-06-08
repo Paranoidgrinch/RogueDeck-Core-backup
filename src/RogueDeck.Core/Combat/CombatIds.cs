@@ -30,6 +30,11 @@ public readonly record struct CardDefinitionId(string value)
     public override string ToString() => value;
 }
 
+public readonly record struct CardInstanceId(string value)
+{
+    public override string ToString() => value;
+}
+
 public readonly record struct TeamId(string value)
 {
     public override string ToString() => value;
