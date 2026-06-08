@@ -19,22 +19,57 @@ public sealed class DrawCardsEffectHandler : EffectRequestHandler<DrawCardsEffec
             return;
 
         var zones = combat.GetCardZones(request.CombatantId);
-        var drawnCards = zones.DrawCards(request.Count);
+        var drawnCards = new List<CardInstance>();
+
+        while (drawnCards.Count < request.Count)
+        {
+            var remainingCardsToDraw = request.Count - drawnCards.Count;
+            var newlyDrawnCards = zones.DrawCards(remainingCardsToDraw);
+
+            drawnCards.AddRange(newlyDrawnCards);
+
+            if (drawnCards.Count >= request.Count)
+                break;
+
+            if (zones.DiscardPile.Count == 0)
+                break;
+
+            var shuffleOrder = CombatRandom.CreateShuffledIndexes(
+                zones.DiscardPile.Count,
+                combat.RandomSeed,
+                combat.RandomStep);
+
+            var shuffledCards = zones.MoveDiscardPileToDrawPile(shuffleOrder);
+
+            combat.AdvanceRandomStep();
+
+            var shuffledCardIds = shuffledCards
+                .Select(card => card.Id)
+                .ToArray();
+
+            combat.AddLogEntry(
+                StandardCombatLogTypes.DiscardPileShuffledIntoDrawPile,
+                $"Combatant '{request.CombatantId}' shuffled {shuffledCardIds.Length} card(s) from discard pile into draw pile.");
+
+            combat.EnqueueEvent(new DiscardPileShuffledIntoDrawPileCombatEvent(
+                request.CombatantId,
+                shuffledCardIds));
+        }
 
         if (drawnCards.Count == 0)
             return;
 
-        var cardIds = drawnCards
+        var drawnCardIds = drawnCards
             .Select(card => card.Id)
             .ToArray();
 
         combat.AddLogEntry(
             StandardCombatLogTypes.CardsDrawn,
-            $"Combatant '{request.CombatantId}' drew {cardIds.Length} card(s).");
+            $"Combatant '{request.CombatantId}' drew {drawnCardIds.Length} card(s).");
 
         combat.EnqueueEvent(new CardsDrawnCombatEvent(
             request.CombatantId,
-            cardIds));
+            drawnCardIds));
     }
 }
 

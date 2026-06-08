@@ -32,6 +32,11 @@ public sealed record CardsDrawnCombatEvent(
     IReadOnlyCollection<CardInstanceId> CardInstanceIds
 ) : ICombatEvent;
 
+public sealed record DiscardPileShuffledIntoDrawPileCombatEvent(
+    CombatantId CombatantId,
+    IReadOnlyCollection<CardInstanceId> CardInstanceIds
+) : ICombatEvent;
+
 public sealed record HandDiscardedCombatEvent(
     CombatantId CombatantId,
     IReadOnlyCollection<CardInstanceId> CardInstanceIds
@@ -95,4 +100,5 @@ public sealed record CombatantLifecycleChangedCombatEvent(
     CombatantLifecycleState OldState,
     CombatantLifecycleState NewState
 ) : ICombatEvent;
+
 

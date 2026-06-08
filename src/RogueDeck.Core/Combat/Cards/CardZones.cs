@@ -12,9 +12,7 @@ public enum CardZone
 public sealed class CardInstance
 {
     public CardInstanceId Id { get; }
-
     public CardDefinitionId DefinitionId { get; }
-
     public CombatantId OwnerId { get; }
 
     public CardZone Zone { get; private set; }
@@ -46,21 +44,17 @@ public sealed class CombatantCardZones
     private readonly List<CardInstance> _banishedPile = new();
 
     public IReadOnlyList<CardInstance> DrawPile => _drawPile;
-
     public IReadOnlyList<CardInstance> Hand => _hand;
-
     public IReadOnlyList<CardInstance> DiscardPile => _discardPile;
-
     public IReadOnlyList<CardInstance> ExhaustPile => _exhaustPile;
     public IReadOnlyList<CardInstance> BanishedPile => _banishedPile;
 
-    public IReadOnlyCollection<CardInstance> AllCards =>
-        _drawPile
-            .Concat(_hand)
-            .Concat(_discardPile)
-            .Concat(_exhaustPile)
-            .Concat(_banishedPile)
-            .ToArray();
+    public IReadOnlyCollection<CardInstance> AllCards => _drawPile
+        .Concat(_hand)
+        .Concat(_discardPile)
+        .Concat(_exhaustPile)
+        .Concat(_banishedPile)
+        .ToArray();
 
     public void AddCard(CardInstance card)
     {
@@ -92,9 +86,7 @@ public sealed class CombatantCardZones
         var card = GetCard(id);
 
         RemoveFromCurrentZone(card);
-
         card.SetZone(zone);
-
         GetMutableZone(zone).Add(card);
     }
 
@@ -110,14 +102,51 @@ public sealed class CombatantCardZones
             var card = _drawPile[0];
 
             _drawPile.RemoveAt(0);
-
             card.SetZone(CardZone.Hand);
             _hand.Add(card);
-
             drawnCards.Add(card);
         }
 
         return drawnCards;
+    }
+
+    public IReadOnlyList<CardInstance> MoveDiscardPileToDrawPile(
+        IReadOnlyList<int> discardPileIndexesInNewDrawOrder)
+    {
+        ArgumentNullException.ThrowIfNull(discardPileIndexesInNewDrawOrder);
+
+        if (discardPileIndexesInNewDrawOrder.Count != _discardPile.Count)
+            throw new InvalidOperationException(
+                "The shuffle order must contain exactly one index for each card in the discard pile.");
+
+        var discardCards = _discardPile.ToArray();
+        var seenIndexes = new HashSet<int>();
+
+        foreach (var sourceIndex in discardPileIndexesInNewDrawOrder)
+        {
+            if (sourceIndex < 0 || sourceIndex >= discardCards.Length)
+                throw new InvalidOperationException(
+                    $"Discard pile shuffle index '{sourceIndex}' is outside the discard pile.");
+
+            if (!seenIndexes.Add(sourceIndex))
+                throw new InvalidOperationException(
+                    $"Discard pile shuffle index '{sourceIndex}' appears more than once.");
+        }
+
+        _discardPile.Clear();
+
+        var movedCards = new List<CardInstance>();
+
+        foreach (var sourceIndex in discardPileIndexesInNewDrawOrder)
+        {
+            var card = discardCards[sourceIndex];
+
+            card.SetZone(CardZone.DrawPile);
+            _drawPile.Add(card);
+            movedCards.Add(card);
+        }
+
+        return movedCards;
     }
 
     public void DiscardHand()
@@ -148,5 +177,3 @@ public sealed class CombatantCardZones
         };
     }
 }
-
-

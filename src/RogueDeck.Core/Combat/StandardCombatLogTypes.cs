@@ -9,6 +9,7 @@ public static class StandardCombatLogTypes
 
     public const string CardPlayed = "CardPlayed";
     public const string CardsDrawn = "CardsDrawn";
+    public const string DiscardPileShuffledIntoDrawPile = "DiscardPileShuffledIntoDrawPile";
     public const string HandDiscarded = "HandDiscarded";
     public const string CardMovedToZone = "CardMovedToZone";
 
