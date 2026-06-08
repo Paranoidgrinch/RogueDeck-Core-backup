@@ -7,7 +7,9 @@ public sealed record ResourceCost(
 public enum CardTargetMode
 {
     Self,
-    SingleEnemy
+    SingleEnemy,
+    AllEnemies,
+    AllAllies
 }
 
 public interface ICardEffectDefinition
@@ -87,6 +89,7 @@ public sealed class CardDefinition
         DescriptionKey = descriptionKey;
     }
 }
+
 
 
 

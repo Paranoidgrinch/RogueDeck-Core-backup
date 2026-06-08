@@ -8,10 +8,21 @@ public sealed record CardEffectContext(
 {
     public CombatantId ResolveTarget(CardTargetMode targetMode)
     {
+        var targets = ResolveTargets(targetMode);
+
+        if (targets.Count != 1)
+            throw new InvalidOperationException(
+                $"Card target mode '{targetMode}' resolved to {targets.Count} targets, but exactly one target was required.");
+
+        return targets[0];
+    }
+
+    public IReadOnlyList<CombatantId> ResolveTargets(CardTargetMode targetMode)
+    {
         switch (targetMode)
         {
             case CardTargetMode.Self:
-                return Source.Id;
+                return new[] { Source.Id };
 
             case CardTargetMode.SingleEnemy:
             {
@@ -28,8 +39,22 @@ public sealed record CardEffectContext(
                     throw new InvalidOperationException(
                         $"Target combatant '{RequestedTargetId}' is not an enemy of '{Source.Id}'.");
 
-                return target.Id;
+                return new[] { target.Id };
             }
+
+            case CardTargetMode.AllEnemies:
+                return Combat.Combatants
+                    .Where(combatant => combatant.IsAlive)
+                    .Where(combatant => combatant.TeamId != Source.TeamId)
+                    .Select(combatant => combatant.Id)
+                    .ToArray();
+
+            case CardTargetMode.AllAllies:
+                return Combat.Combatants
+                    .Where(combatant => combatant.IsAlive)
+                    .Where(combatant => combatant.TeamId == Source.TeamId)
+                    .Select(combatant => combatant.Id)
+                    .ToArray();
 
             default:
                 throw new InvalidOperationException(
@@ -78,17 +103,15 @@ public sealed class DealDamageCardEffectDefinitionHandler
         CardEffectContext context,
         DealDamageCardEffectDefinition definition)
     {
-        var targetId = context.ResolveTarget(definition.TargetMode);
-
-        return new IEffectRequest[]
-        {
-            new DealDamageEffectRequest(
+        return context.ResolveTargets(definition.TargetMode)
+            .Select(targetId => new DealDamageEffectRequest(
                 TargetCombatantId: targetId,
                 Amount: definition.Amount,
                 SourceCombatantId: context.Source.Id,
                 SourceCardId: context.Card.Id,
-                Kind: DamageKind.Direct)
-        };
+                Kind: DamageKind.Direct))
+            .Cast<IEffectRequest>()
+            .ToArray();
     }
 }
 
@@ -99,16 +122,14 @@ public sealed class GainBlockCardEffectDefinitionHandler
         CardEffectContext context,
         GainBlockCardEffectDefinition definition)
     {
-        var targetId = context.ResolveTarget(definition.TargetMode);
-
-        return new IEffectRequest[]
-        {
-            new GainBlockEffectRequest(
+        return context.ResolveTargets(definition.TargetMode)
+            .Select(targetId => new GainBlockEffectRequest(
                 TargetCombatantId: targetId,
                 Amount: definition.Amount,
                 SourceCombatantId: context.Source.Id,
-                SourceCardId: context.Card.Id)
-        };
+                SourceCardId: context.Card.Id))
+            .Cast<IEffectRequest>()
+            .ToArray();
     }
 }
 
@@ -119,14 +140,12 @@ public sealed class DrawCardsCardEffectDefinitionHandler
         CardEffectContext context,
         DrawCardsCardEffectDefinition definition)
     {
-        var targetId = context.ResolveTarget(definition.TargetMode);
-
-        return new IEffectRequest[]
-        {
-            new DrawCardsEffectRequest(
+        return context.ResolveTargets(definition.TargetMode)
+            .Select(targetId => new DrawCardsEffectRequest(
                 CombatantId: targetId,
-                Count: definition.Count)
-        };
+                Count: definition.Count))
+            .Cast<IEffectRequest>()
+            .ToArray();
     }
 }
 
@@ -137,13 +156,11 @@ public sealed class DiscardHandCardEffectDefinitionHandler
         CardEffectContext context,
         DiscardHandCardEffectDefinition definition)
     {
-        var targetId = context.ResolveTarget(definition.TargetMode);
-
-        return new IEffectRequest[]
-        {
-            new DiscardHandEffectRequest(
-                CombatantId: targetId)
-        };
+        return context.ResolveTargets(definition.TargetMode)
+            .Select(targetId => new DiscardHandEffectRequest(
+                CombatantId: targetId))
+            .Cast<IEffectRequest>()
+            .ToArray();
     }
 }
 
@@ -154,16 +171,14 @@ public sealed class CreateCardInstanceCardEffectDefinitionHandler
         CardEffectContext context,
         CreateCardInstanceCardEffectDefinition definition)
     {
-        var targetId = context.ResolveTarget(definition.TargetMode);
-
-        return new IEffectRequest[]
-        {
-            new CreateCardInstanceEffectRequest(
+        return context.ResolveTargets(definition.TargetMode)
+            .Select(targetId => new CreateCardInstanceEffectRequest(
                 CombatantId: targetId,
                 CardDefinitionId: definition.CardDefinitionId,
                 ToZone: definition.ToZone,
-                Count: definition.Count)
-        };
+                Count: definition.Count))
+            .Cast<IEffectRequest>()
+            .ToArray();
     }
 }
 
@@ -174,15 +189,13 @@ public sealed class MoveAllCardsFromZoneCardEffectDefinitionHandler
         CardEffectContext context,
         MoveAllCardsFromZoneCardEffectDefinition definition)
     {
-        var targetId = context.ResolveTarget(definition.TargetMode);
-
-        return new IEffectRequest[]
-        {
-            new MoveAllCardsFromZoneEffectRequest(
+        return context.ResolveTargets(definition.TargetMode)
+            .Select(targetId => new MoveAllCardsFromZoneEffectRequest(
                 CombatantId: targetId,
                 FromZone: definition.FromZone,
-                ToZone: definition.ToZone)
-        };
+                ToZone: definition.ToZone))
+            .Cast<IEffectRequest>()
+            .ToArray();
     }
 }
 
@@ -193,19 +206,17 @@ public sealed class ApplyStatusCardEffectDefinitionHandler
         CardEffectContext context,
         ApplyStatusCardEffectDefinition definition)
     {
-        var targetId = context.ResolveTarget(definition.TargetMode);
-
-        return new IEffectRequest[]
-        {
-            new ApplyStatusEffectRequest(
+        return context.ResolveTargets(definition.TargetMode)
+            .Select(targetId => new ApplyStatusEffectRequest(
                 TargetCombatantId: targetId,
                 StatusDefinitionId: definition.StatusDefinitionId,
                 SourceCombatantId: context.Source.Id,
                 SourceCardId: context.Card.Id,
                 Stacks: definition.Stacks,
                 DurationTurns: definition.DurationTurns,
-                Charges: definition.Charges)
-        };
+                Charges: definition.Charges))
+            .Cast<IEffectRequest>()
+            .ToArray();
     }
 }
 
@@ -216,14 +227,12 @@ public sealed class RemoveStatusCardEffectDefinitionHandler
         CardEffectContext context,
         RemoveStatusCardEffectDefinition definition)
     {
-        var targetId = context.ResolveTarget(definition.TargetMode);
-
-        return new IEffectRequest[]
-        {
-            new RemoveStatusEffectRequest(
+        return context.ResolveTargets(definition.TargetMode)
+            .Select(targetId => new RemoveStatusEffectRequest(
                 TargetCombatantId: targetId,
-                StatusDefinitionId: definition.StatusDefinitionId)
-        };
+                StatusDefinitionId: definition.StatusDefinitionId))
+            .Cast<IEffectRequest>()
+            .ToArray();
     }
 }
 
@@ -234,16 +243,13 @@ public sealed class GainResourceCardEffectDefinitionHandler
         CardEffectContext context,
         GainResourceCardEffectDefinition definition)
     {
-        var targetId = context.ResolveTarget(definition.TargetMode);
-
-        return new IEffectRequest[]
-        {
-            new GainResourceEffectRequest(
+        return context.ResolveTargets(definition.TargetMode)
+            .Select(targetId => new GainResourceEffectRequest(
                 CombatantId: targetId,
                 ResourceId: definition.ResourceId,
                 Amount: definition.Amount,
-                DefaultMax: definition.DefaultMax)
-        };
+                DefaultMax: definition.DefaultMax))
+            .Cast<IEffectRequest>()
+            .ToArray();
     }
 }
-
