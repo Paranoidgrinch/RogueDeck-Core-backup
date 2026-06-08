@@ -121,6 +121,13 @@ public sealed record StatusRemovedCombatEvent(
     IReadOnlyCollection<StatusInstanceId> StatusInstanceIds,
     StatusDefinitionId StatusDefinitionId
 ) : ICombatEvent;
+public sealed record StatusChargesReducedCombatEvent(
+    CombatantId TargetCombatantId,
+    StatusInstanceId StatusInstanceId,
+    StatusDefinitionId StatusDefinitionId,
+    int OldCharges,
+    int NewCharges
+) : ICombatEvent;
 public sealed record StatusExpiredCombatEvent(
     CombatantId TargetCombatantId,
     StatusInstanceId StatusInstanceId,
@@ -132,6 +139,7 @@ public sealed record CombatantLifecycleChangedCombatEvent(
     CombatantLifecycleState OldState,
     CombatantLifecycleState NewState
 ) : ICombatEvent;
+
 
 
 

@@ -290,3 +290,62 @@ public sealed class RemoveStatusEffectHandler : EffectRequestHandler<RemoveStatu
     }
 }
 
+public sealed record DecreaseStatusChargesEffectRequest(
+    CombatantId TargetCombatantId,
+    StatusInstanceId StatusInstanceId,
+    int Amount = 1
+) : IEffectRequest;
+
+public sealed class DecreaseStatusChargesEffectHandler
+    : EffectRequestHandler<DecreaseStatusChargesEffectRequest>
+{
+    protected override void Resolve(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        DecreaseStatusChargesEffectRequest decreaseCharges)
+    {
+        if (decreaseCharges.Amount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(decreaseCharges.Amount), "Charge decrease amount must be greater than zero.");
+
+        var target = combat.GetCombatant(decreaseCharges.TargetCombatantId);
+        var status = target.Statuses.FirstOrDefault(
+            existing => existing.Id == decreaseCharges.StatusInstanceId);
+
+        if (status is null)
+            return;
+
+        if (status.Charges <= 0)
+            return;
+
+        var oldCharges = status.Charges;
+        var newCharges = Math.Max(0, oldCharges - decreaseCharges.Amount);
+
+        status.SetCharges(newCharges);
+
+        combat.AddLogEntry(
+            StandardCombatLogTypes.StatusChargesReduced,
+            $"Reduced status '{status.DefinitionId}' charges on '{target.Id}' from {oldCharges} to {newCharges}.");
+
+        combat.EnqueueEvent(new StatusChargesReducedCombatEvent(
+            TargetCombatantId: target.Id,
+            StatusInstanceId: status.Id,
+            StatusDefinitionId: status.DefinitionId,
+            OldCharges: oldCharges,
+            NewCharges: newCharges));
+
+        if (newCharges > 0)
+            return;
+
+        target.Statuses.Remove(status);
+
+        combat.AddLogEntry(
+            StandardCombatLogTypes.StatusExpired,
+            $"Status '{status.DefinitionId}' expired on '{target.Id}'.");
+
+        combat.EnqueueEvent(new StatusExpiredCombatEvent(
+            TargetCombatantId: target.Id,
+            StatusInstanceId: status.Id,
+            StatusDefinitionId: status.DefinitionId));
+    }
+}
+

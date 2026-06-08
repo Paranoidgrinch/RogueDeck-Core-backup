@@ -1,4 +1,4 @@
-namespace RogueDeck.Core.Combat;
+﻿namespace RogueDeck.Core.Combat;
 
 public static class StandardCombatIds
 {
@@ -19,6 +19,7 @@ public static class StandardCombatIds
     public static readonly StatusDefinitionId ThornsStatus = new("standard.thorns");
 
     public static readonly StatusDefinitionId StunStatus = new("standard.stun");
+    public static readonly StatusDefinitionId FreeNextCardStatus = new("standard.free_next_card");
 
     public static readonly CardDefinitionId StrikeCard = new("standard.strike");
 
@@ -35,8 +36,10 @@ public static class StandardCombatIds
     public static readonly TagId TriggeredDamageTag = new("triggered_damage");
 
     public static readonly TagId ControlTag = new("control");
+    public static readonly TagId CostModifierTag = new("cost_modifier");
 
     public static readonly TagId AttackCardTag = new("attack");
 
     public static readonly TagId SkillCardTag = new("skill");
 }
+

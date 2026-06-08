@@ -31,13 +31,14 @@ public class CardCostModifierTests
         Assert.Throws<InvalidOperationException>(() =>
             registry.RegisterCardCostModifier(new ReduceFlatCostModifier(2)));
     }
-
     [Fact]
-    public void StandardCombatPackageHasNoCardCostModifiersByDefault()
+    public void StandardCombatPackageRegistersFreeNextCardCostModifier()
     {
         var registry = CombatTestFactory.CreateStandardRegistry();
 
-        Assert.Empty(registry.GetCardCostModifiers());
+        Assert.Contains(
+            registry.GetCardCostModifiers(),
+            modifier => modifier is FreeNextCardCostModifier);
     }
 
     [Fact]
@@ -280,3 +281,4 @@ public class CardCostModifierTests
         }
     }
 }
+

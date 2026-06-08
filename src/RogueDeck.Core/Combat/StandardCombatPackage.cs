@@ -17,11 +17,14 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreateStrength());
         registry.RegisterStatus(CreateThorns());
         registry.RegisterStatus(CreateStun());
+        registry.RegisterStatus(CreateFreeNextCard());
 
         registry.RegisterDamageAmountModifier(new StrengthDamageAmountModifier());
         registry.RegisterDamageAmountModifier(new WeakDamageAmountModifier());
 
         registry.RegisterCardPlayValidator(new StunCardPlayValidator());
+
+        registry.RegisterCardCostModifier(new FreeNextCardCostModifier());
 
         registry.RegisterCard(CreateStrike());
         registry.RegisterCard(CreateDefend());
@@ -39,6 +42,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterEffectRequestHandler(new ApplyStatusEffectHandler());
         registry.RegisterEffectRequestHandler(new RemoveStatusEffectHandler());
         registry.RegisterEffectRequestHandler(new DecreaseStatusDurationEffectHandler());
+        registry.RegisterEffectRequestHandler(new DecreaseStatusChargesEffectHandler());
         registry.RegisterEffectRequestHandler(new DealDamageEffectHandler());
         registry.RegisterEffectRequestHandler(new HealEffectHandler());
         registry.RegisterEffectRequestHandler(new GainBlockEffectHandler());
@@ -59,6 +63,7 @@ registry.RegisterCombatEventHandler(new ClearBlockOnTurnStartedHandler());
                 registry.RegisterCombatEventHandler(new DiscardHandOnTurnEndedHandler());
 registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedHandler());
         registry.RegisterCombatEventHandler(new DamageOverTimeOnTurnStartedHandler());
+        registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler());
         registry.RegisterCombatEventHandler(new TriggeredDamageOnDamageDealtHandler());
         registry.RegisterCombatEventHandler(new MarkCombatantDownedOnZeroHealthHandler());
         registry.RegisterCombatEventHandler(new UpdateStandardCombatResultOnLifecycleChangedHandler());
@@ -153,6 +158,23 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
 
         return definition;
     }
+    private StatusDefinition CreateFreeNextCard()
+    {
+        var definition = new StatusDefinition(
+            StandardCombatIds.FreeNextCardStatus,
+            Id,
+            displayNameKey: "status.standard.free_next_card.name",
+            descriptionKey: "status.standard.free_next_card.description",
+            polarity: StatusPolarity.Buff,
+            usesCharges: true,
+            showChargesInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
+
+        definition.Tags.Add(StandardCombatIds.BuffTag);
+        definition.Tags.Add(StandardCombatIds.CostModifierTag);
+
+        return definition;
+    }
 
     private CardDefinition CreateStrike()
     {
@@ -184,6 +206,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         return definition;
     }
 }
+
 
 
 
