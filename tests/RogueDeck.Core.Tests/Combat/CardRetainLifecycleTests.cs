@@ -13,6 +13,8 @@ public class CardRetainLifecycleTests
 
         Assert.False(registry.GetCard(StandardCombatIds.StrikeCard).RetainInHandOnTurnEnd);
         Assert.False(registry.GetCard(StandardCombatIds.DefendCard).RetainInHandOnTurnEnd);
+        Assert.Equal(CardZone.DiscardPile, registry.GetCard(StandardCombatIds.StrikeCard).TurnEndHandDestinationZone);
+        Assert.Equal(CardZone.DiscardPile, registry.GetCard(StandardCombatIds.DefendCard).TurnEndHandDestinationZone);
     }
 
     [Fact]
@@ -220,4 +222,5 @@ public class CardRetainLifecycleTests
         return card;
     }
 }
+
 

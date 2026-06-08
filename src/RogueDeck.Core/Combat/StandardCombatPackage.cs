@@ -42,6 +42,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterEffectRequestHandler(new GainBlockEffectHandler());
                 registry.RegisterEffectRequestHandler(new DrawCardsEffectHandler());
         registry.RegisterEffectRequestHandler(new DiscardHandEffectHandler());
+        registry.RegisterEffectRequestHandler(new MoveHandCardsOnTurnEndEffectHandler());
 registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterEffectRequestHandler(new CreateCardInstanceEffectHandler());
         registry.RegisterEffectRequestHandler(new MoveAllCardsFromZoneEffectHandler());
@@ -181,6 +182,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         return definition;
     }
 }
+
 
 
 

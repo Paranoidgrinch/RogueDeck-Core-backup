@@ -83,6 +83,8 @@ public sealed class CardDefinition
 
         public bool RetainInHandOnTurnEnd { get; set; } = false;
 
+    public CardZone TurnEndHandDestinationZone { get; set; } = CardZone.DiscardPile;
+
     public CardZone PlayedCardDestinationZone { get; set; } = CardZone.DiscardPile;
 
     public CardDefinition(
@@ -97,6 +99,7 @@ public sealed class CardDefinition
         DescriptionKey = descriptionKey;
     }
 }
+
 
 
 

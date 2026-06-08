@@ -160,3 +160,88 @@ public sealed class MoveCardToZoneEffectHandler : EffectRequestHandler<MoveCardT
             request.ToZone));
     }
 }
+
+public sealed record MoveHandCardsOnTurnEndEffectRequest(
+    CombatantId CombatantId
+) : IEffectRequest;
+
+public sealed class MoveHandCardsOnTurnEndEffectHandler
+    : EffectRequestHandler<MoveHandCardsOnTurnEndEffectRequest>
+{
+    protected override void Resolve(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        MoveHandCardsOnTurnEndEffectRequest request)
+    {
+        var zones = combat.GetCardZones(request.CombatantId);
+        var cardsInHand = zones.Hand.ToArray();
+
+        if (cardsInHand.Length == 0)
+            return;
+
+        var movedCardsByDestination = new Dictionary<CardZone, List<CardInstance>>();
+
+        foreach (var card in cardsInHand)
+        {
+            var destinationZone = ResolveTurnEndDestinationZone(registry, card);
+
+            if (destinationZone == CardZone.Hand)
+                continue;
+
+            zones.MoveCardToZone(card.Id, destinationZone);
+
+            if (!movedCardsByDestination.TryGetValue(destinationZone, out var movedCards))
+            {
+                movedCards = new List<CardInstance>();
+                movedCardsByDestination.Add(destinationZone, movedCards);
+            }
+
+            movedCards.Add(card);
+        }
+
+        foreach (var pair in movedCardsByDestination)
+        {
+            var destinationZone = pair.Key;
+            var movedCards = pair.Value;
+            var movedCardIds = movedCards
+                .Select(card => card.Id)
+                .ToArray();
+
+            if (destinationZone == CardZone.DiscardPile)
+            {
+                combat.AddLogEntry(
+                    StandardCombatLogTypes.HandDiscarded,
+                    $"Combatant '{request.CombatantId}' discarded {movedCardIds.Length} card(s).");
+
+                combat.EnqueueEvent(new HandDiscardedCombatEvent(
+                    request.CombatantId,
+                    movedCardIds));
+
+                continue;
+            }
+
+            combat.AddLogEntry(
+                StandardCombatLogTypes.CardsMovedBetweenZones,
+                $"Moved {movedCardIds.Length} card(s) for combatant '{request.CombatantId}' from hand to '{destinationZone}' at turn end.");
+
+            combat.EnqueueEvent(new CardsMovedBetweenZonesCombatEvent(
+                request.CombatantId,
+                movedCardIds,
+                FromZone: CardZone.Hand,
+                ToZone: destinationZone));
+        }
+    }
+
+    private static CardZone ResolveTurnEndDestinationZone(
+        CombatDefinitionRegistry registry,
+        CardInstance card)
+    {
+        var definition = registry.GetCard(card.DefinitionId);
+
+        if (definition.RetainInHandOnTurnEnd)
+            return CardZone.Hand;
+
+        return definition.TurnEndHandDestinationZone;
+    }
+}
+
