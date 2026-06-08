@@ -1,4 +1,4 @@
-namespace RogueDeck.Core.Combat;
+﻿namespace RogueDeck.Core.Combat;
 
 public static class StandardCombatLogTypes
 {
@@ -9,6 +9,7 @@ public static class StandardCombatLogTypes
     public const string RoundEnded = "RoundEnded";
 
     public const string CardPlayed = "CardPlayed";
+    public const string CardMovedToZone = "CardMovedToZone";
 
     public const string DamageDealt = "DamageDealt";
     public const string Healed = "Healed";
@@ -24,3 +25,4 @@ public static class StandardCombatLogTypes
     public const string CombatantLifecycleChanged = "CombatantLifecycleChanged";
     public const string CombatResultChanged = "CombatResultChanged";
 }
+

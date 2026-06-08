@@ -1,4 +1,4 @@
-namespace RogueDeck.Core.Combat;
+﻿namespace RogueDeck.Core.Combat;
 
 public sealed record TurnStartedCombatEvent(
     CombatantId CombatantId,
@@ -35,6 +35,13 @@ public sealed record CardsDrawnCombatEvent(
 public sealed record HandDiscardedCombatEvent(
     CombatantId CombatantId,
     IReadOnlyCollection<CardInstanceId> CardInstanceIds
+) : ICombatEvent;
+
+public sealed record CardMovedToZoneCombatEvent(
+    CombatantId CombatantId,
+    CardInstanceId CardInstanceId,
+    CardZone FromZone,
+    CardZone ToZone
 ) : ICombatEvent;
 
 public sealed record DamageDealtCombatEvent(
@@ -88,3 +95,4 @@ public sealed record CombatantLifecycleChangedCombatEvent(
     CombatantLifecycleState OldState,
     CombatantLifecycleState NewState
 ) : ICombatEvent;
+
