@@ -1,11 +1,12 @@
-namespace RogueDeck.Core.Combat;
+﻿namespace RogueDeck.Core.Combat;
 
 public enum CardZone
 {
     DrawPile,
     Hand,
     DiscardPile,
-    ExhaustPile
+    ExhaustPile,
+    BanishedPile
 }
 
 public sealed class CardInstance
@@ -42,6 +43,7 @@ public sealed class CombatantCardZones
     private readonly List<CardInstance> _hand = new();
     private readonly List<CardInstance> _discardPile = new();
     private readonly List<CardInstance> _exhaustPile = new();
+    private readonly List<CardInstance> _banishedPile = new();
 
     public IReadOnlyList<CardInstance> DrawPile => _drawPile;
 
@@ -50,12 +52,14 @@ public sealed class CombatantCardZones
     public IReadOnlyList<CardInstance> DiscardPile => _discardPile;
 
     public IReadOnlyList<CardInstance> ExhaustPile => _exhaustPile;
+    public IReadOnlyList<CardInstance> BanishedPile => _banishedPile;
 
     public IReadOnlyCollection<CardInstance> AllCards =>
         _drawPile
             .Concat(_hand)
             .Concat(_discardPile)
             .Concat(_exhaustPile)
+            .Concat(_banishedPile)
             .ToArray();
 
     public void AddCard(CardInstance card)
@@ -139,7 +143,9 @@ public sealed class CombatantCardZones
             CardZone.Hand => _hand,
             CardZone.DiscardPile => _discardPile,
             CardZone.ExhaustPile => _exhaustPile,
+            CardZone.BanishedPile => _banishedPile,
             _ => throw new InvalidOperationException($"Unsupported card zone '{zone}'.")
         };
     }
 }
+
