@@ -1,4 +1,4 @@
-namespace RogueDeck.Core.Combat;
+﻿namespace RogueDeck.Core.Combat;
 
 public sealed class CombatState
 {
@@ -32,6 +32,7 @@ public sealed class CombatState
     public List<StatusInstance> GlobalStatuses { get; } = new();
 
     public Dictionary<CombatantId, CombatantCardZones> CardZonesByCombatant { get; } = new();
+    public Dictionary<CombatantId, CombatantCardPlayTurnStats> CardPlayTurnStatsByCombatant { get; } = new();
 
     public IReadOnlyCollection<IEffectRequest> PendingEffects => _pendingEffects;
 
@@ -67,6 +68,7 @@ public sealed class CombatState
         Combatants.Add(combatant);
         TurnOrder.Add(combatant.Id);
         CardZonesByCombatant.Add(combatant.Id, new CombatantCardZones());
+        CardPlayTurnStatsByCombatant.Add(combatant.Id, new CombatantCardPlayTurnStats());
 
         if (ActiveCombatantId is null)
             ActiveCombatantId = combatant.Id;
@@ -90,7 +92,20 @@ public sealed class CombatState
             throw new InvalidOperationException($"Combatant with id '{combatantId}' does not exist.");
 
         return CardZonesByCombatant[combatantId];
+    }    public CombatantCardPlayTurnStats GetCardPlayTurnStats(CombatantId combatantId)
+    {
+        if (!TryGetCombatant(combatantId, out _))
+            throw new InvalidOperationException($"Combatant with id '{combatantId}' does not exist.");
+
+        if (!CardPlayTurnStatsByCombatant.TryGetValue(combatantId, out var stats))
+        {
+            stats = new CombatantCardPlayTurnStats();
+            CardPlayTurnStatsByCombatant.Add(combatantId, stats);
+        }
+
+        return stats;
     }
+
 
     public IReadOnlyCollection<CombatantState> GetLivingCombatantsOnTeam(TeamId teamId)
     {
@@ -202,3 +217,4 @@ public sealed class CombatState
         CombatLog.Add(new CombatLogEntry(CurrentRound, CurrentTurn, type, message));
     }
 }
+

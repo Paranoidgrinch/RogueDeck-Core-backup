@@ -70,14 +70,16 @@ registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterEffectRequestHandler(new GainResourceEffectHandler());
         registry.RegisterEffectRequestHandler(new ClearDefensivePoolEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatantLifecycleStateEffectHandler());
-        registry.RegisterEffectRequestHandler(new SetCombatResultEffectHandler());        registry.RegisterCombatEventHandler(new RefillResourceOnTurnStartedHandler(StandardCombatIds.EnergyResource, defaultMax: 3));
+        registry.RegisterEffectRequestHandler(new SetCombatResultEffectHandler());                registry.RegisterCombatEventHandler(new ResetCardPlayTurnStatsOnTurnStartedHandler());
+registry.RegisterCombatEventHandler(new RefillResourceOnTurnStartedHandler(StandardCombatIds.EnergyResource, defaultMax: 3));
 
                 registry.RegisterCombatEventHandler(new DrawCardsOnTurnStartedHandler());
 registry.RegisterCombatEventHandler(new ClearBlockOnTurnStartedHandler());
                 registry.RegisterCombatEventHandler(new DiscardHandOnTurnEndedHandler());
 registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedHandler());
         registry.RegisterCombatEventHandler(new DamageOverTimeOnTurnStartedHandler());
-        registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler());
+                registry.RegisterCombatEventHandler(new TrackCardsPlayedThisTurnHandler());
+registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler());
         registry.RegisterCombatEventHandler(new TriggeredDamageOnDamageDealtHandler());
         registry.RegisterCombatEventHandler(new MarkCombatantDownedOnZeroHealthHandler());
         registry.RegisterCombatEventHandler(new UpdateStandardCombatResultOnLifecycleChangedHandler());
@@ -307,6 +309,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         return definition;
     }
 }
+
 
 
 
