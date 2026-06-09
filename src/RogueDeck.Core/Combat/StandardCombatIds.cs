@@ -24,6 +24,7 @@ public static class StandardCombatIds
 
     public static readonly StatusDefinitionId StunStatus = new("standard.stun");
     public static readonly StatusDefinitionId FreeNextCardStatus = new("standard.free_next_card");
+    public static readonly StatusDefinitionId FirstAttackEachTurnFreeStatus = new("standard.first_attack_each_turn_free");
     public static readonly StatusDefinitionId SkillCostReductionStatus = new("standard.skill_cost_reduction");
 
     public static readonly CardDefinitionId StrikeCard = new("standard.strike");
@@ -49,6 +50,7 @@ public static class StandardCombatIds
 
     public static readonly TagId SkillCardTag = new("skill");
 }
+
 
 
 

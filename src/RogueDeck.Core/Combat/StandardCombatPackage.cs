@@ -22,6 +22,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreateThorns());
         registry.RegisterStatus(CreateStun());
         registry.RegisterStatus(CreateFreeNextCard());
+        registry.RegisterStatus(CreateFirstAttackEachTurnFree());
         registry.RegisterStatus(CreateSkillCostReduction());
 
         registry.RegisterDamageAmountModifier(new StrengthDamageAmountModifier());
@@ -34,6 +35,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterCardPlayValidator(new StunCardPlayValidator());
 
         registry.RegisterCardCostModifier(new FreeNextCardCostModifier());
+        registry.RegisterCardCostModifier(new FirstAttackEachTurnFreeCostModifier());
         registry.RegisterCardCostModifier(new SkillCostReductionCostModifier());
 
         registry.RegisterStatusApplicationInterceptor(new ArtifactStatusApplicationInterceptor());
@@ -242,6 +244,23 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
 
         return definition;
     }
+    private StatusDefinition CreateFirstAttackEachTurnFree()
+    {
+        var definition = new StatusDefinition(
+            StandardCombatIds.FirstAttackEachTurnFreeStatus,
+            Id,
+            displayNameKey: "status.standard.first_attack_each_turn_free.name",
+            descriptionKey: "status.standard.first_attack_each_turn_free.description",
+            polarity: StatusPolarity.Buff,
+            usesDuration: true,
+            showDurationInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
+
+        definition.Tags.Add(StandardCombatIds.BuffTag);
+        definition.Tags.Add(StandardCombatIds.CostModifierTag);
+
+        return definition;
+    }
     private StatusDefinition CreateSkillCostReduction()
     {
         var definition = new StatusDefinition(
@@ -309,6 +328,7 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
         return definition;
     }
 }
+
 
 
 
