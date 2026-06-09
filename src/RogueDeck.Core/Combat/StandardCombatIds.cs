@@ -26,6 +26,7 @@ public static class StandardCombatIds
     public static readonly StatusDefinitionId OneAttackPerTurnStatus = new("standard.one_attack_per_turn");
     public static readonly StatusDefinitionId FreeNextCardStatus = new("standard.free_next_card");
     public static readonly StatusDefinitionId FirstAttackEachTurnFreeStatus = new("standard.first_attack_each_turn_free");
+    public static readonly StatusDefinitionId SkillComboDrawStatus = new("standard.skill_combo_draw");
     public static readonly StatusDefinitionId SkillCostReductionStatus = new("standard.skill_cost_reduction");
 
     public static readonly CardDefinitionId StrikeCard = new("standard.strike");
@@ -51,7 +52,9 @@ public static class StandardCombatIds
     public static readonly TagId AttackCardTag = new("attack");
 
     public static readonly TagId SkillCardTag = new("skill");
+    public static readonly TagId ComboTag = new("combo");
 }
+
 
 
 

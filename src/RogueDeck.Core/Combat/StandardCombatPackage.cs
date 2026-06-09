@@ -24,6 +24,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreateOneAttackPerTurn());
         registry.RegisterStatus(CreateFreeNextCard());
         registry.RegisterStatus(CreateFirstAttackEachTurnFree());
+        registry.RegisterStatus(CreateSkillComboDraw());
         registry.RegisterStatus(CreateSkillCostReduction());
 
         registry.RegisterDamageAmountModifier(new StrengthDamageAmountModifier());
@@ -83,6 +84,7 @@ registry.RegisterCombatEventHandler(new ClearBlockOnTurnStartedHandler());
 registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedHandler());
         registry.RegisterCombatEventHandler(new DamageOverTimeOnTurnStartedHandler());
                 registry.RegisterCombatEventHandler(new TrackCardsPlayedThisTurnHandler());
+        registry.RegisterCombatEventHandler(new SkillComboDrawOnCardPlayedHandler());
 registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler());
         registry.RegisterCombatEventHandler(new TriggeredDamageOnDamageDealtHandler());
         registry.RegisterCombatEventHandler(new MarkCombatantDownedOnZeroHealthHandler());
@@ -264,6 +266,23 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
 
         return definition;
     }
+    private StatusDefinition CreateSkillComboDraw()
+    {
+        var definition = new StatusDefinition(
+            StandardCombatIds.SkillComboDrawStatus,
+            Id,
+            displayNameKey: "status.standard.skill_combo_draw.name",
+            descriptionKey: "status.standard.skill_combo_draw.description",
+            polarity: StatusPolarity.Buff,
+            usesStacks: true,
+            showStacksInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
+
+        definition.Tags.Add(StandardCombatIds.BuffTag);
+        definition.Tags.Add(StandardCombatIds.ComboTag);
+
+        return definition;
+    }
     private StatusDefinition CreateFirstAttackEachTurnFree()
     {
         var definition = new StatusDefinition(
@@ -348,6 +367,7 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
         return definition;
     }
 }
+
 
 
 
