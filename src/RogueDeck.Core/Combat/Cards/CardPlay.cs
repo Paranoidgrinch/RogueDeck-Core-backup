@@ -121,6 +121,13 @@ public sealed class CombatCardPlayProcessor
         EnsureCostsCanBePaid(source, card, costsToPay);
         PayCosts(source, costsToPay);
 
+        AddCardCostPaidLogAndEvent(
+            combat,
+            sourceCombatantId,
+            cardDefinitionId,
+            cardInstanceId,
+            costsToPay);
+
         combat.AddLogEntry(
             StandardCombatLogTypes.CardPlayed,
             $"Combatant '{sourceCombatantId}' played card '{cardDefinitionId}'.");
@@ -147,7 +154,31 @@ public sealed class CombatCardPlayProcessor
             combat,
             registry,
             maxQueueCyclesToResolve);
+    }    private static void AddCardCostPaidLogAndEvent(
+        CombatState combat,
+        CombatantId sourceCombatantId,
+        CardDefinitionId cardDefinitionId,
+        CardInstanceId? cardInstanceId,
+        IReadOnlyCollection<CalculatedResourceCost> costsToPay)
+    {
+        if (costsToPay.Count == 0)
+            return;
+
+        var costSummary = string.Join(
+            ", ",
+            costsToPay.Select(cost => $"{cost.Amount} {cost.ResourceId}"));
+
+        combat.AddLogEntry(
+            StandardCombatLogTypes.CardCostPaid,
+            $"Combatant '{sourceCombatantId}' paid {costSummary} for card '{cardDefinitionId}'.");
+
+        combat.EnqueueEvent(new CardCostPaidCombatEvent(
+            SourceCombatantId: sourceCombatantId,
+            CardDefinitionId: cardDefinitionId,
+            CardInstanceId: cardInstanceId,
+            Costs: costsToPay.ToArray()));
     }
+
 
     private static void ValidateCardPlay(
         CombatState combat,
@@ -268,3 +299,4 @@ public sealed class CombatCardPlayProcessor
         }
     }
 }
+

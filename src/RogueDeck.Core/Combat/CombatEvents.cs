@@ -41,6 +41,12 @@ public sealed record CardInstanceCreatedCombatEvent(
     IReadOnlyCollection<CardInstanceId> CardInstanceIds,
     CardZone ToZone
 ) : ICombatEvent;
+public sealed record CardCostPaidCombatEvent(
+    CombatantId SourceCombatantId,
+    CardDefinitionId CardDefinitionId,
+    CardInstanceId? CardInstanceId,
+    IReadOnlyCollection<CalculatedResourceCost> Costs
+) : ICombatEvent;
 public sealed record CardPlayedCombatEvent(
     CardDefinitionId CardDefinitionId,
     CombatantId SourceCombatantId,
@@ -150,6 +156,7 @@ public sealed record CombatantLifecycleChangedCombatEvent(
     CombatantLifecycleState OldState,
     CombatantLifecycleState NewState
 ) : ICombatEvent;
+
 
 
 
