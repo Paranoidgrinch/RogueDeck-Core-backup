@@ -21,6 +21,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreateDexterity());
         registry.RegisterStatus(CreateThorns());
         registry.RegisterStatus(CreateStun());
+        registry.RegisterStatus(CreateOneAttackPerTurn());
         registry.RegisterStatus(CreateFreeNextCard());
         registry.RegisterStatus(CreateFirstAttackEachTurnFree());
         registry.RegisterStatus(CreateSkillCostReduction());
@@ -33,6 +34,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterBlockAmountModifier(new FrailBlockAmountModifier());
 
         registry.RegisterCardPlayValidator(new StunCardPlayValidator());
+        registry.RegisterCardPlayValidator(new OneAttackPerTurnCardPlayValidator());
 
         registry.RegisterCardCostModifier(new FreeNextCardCostModifier());
         registry.RegisterCardCostModifier(new FirstAttackEachTurnFreeCostModifier());
@@ -226,6 +228,24 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
 
         return definition;
     }
+    private StatusDefinition CreateOneAttackPerTurn()
+    {
+        var definition = new StatusDefinition(
+            StandardCombatIds.OneAttackPerTurnStatus,
+            Id,
+            displayNameKey: "status.standard.one_attack_per_turn.name",
+            descriptionKey: "status.standard.one_attack_per_turn.description",
+            polarity: StatusPolarity.Debuff,
+            usesDuration: true,
+            showDurationInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
+
+        definition.Tags.Add(StandardCombatIds.DebuffTag);
+        definition.Tags.Add(StandardCombatIds.ControlTag);
+        definition.Tags.Add(StandardCombatIds.PlayLimitTag);
+
+        return definition;
+    }
 
     private StatusDefinition CreateStun()
     {
@@ -328,6 +348,7 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
         return definition;
     }
 }
+
 
 
 

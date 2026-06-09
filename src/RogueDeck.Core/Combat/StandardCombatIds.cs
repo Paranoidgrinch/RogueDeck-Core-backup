@@ -23,6 +23,7 @@ public static class StandardCombatIds
     public static readonly StatusDefinitionId ThornsStatus = new("standard.thorns");
 
     public static readonly StatusDefinitionId StunStatus = new("standard.stun");
+    public static readonly StatusDefinitionId OneAttackPerTurnStatus = new("standard.one_attack_per_turn");
     public static readonly StatusDefinitionId FreeNextCardStatus = new("standard.free_next_card");
     public static readonly StatusDefinitionId FirstAttackEachTurnFreeStatus = new("standard.first_attack_each_turn_free");
     public static readonly StatusDefinitionId SkillCostReductionStatus = new("standard.skill_cost_reduction");
@@ -43,6 +44,7 @@ public static class StandardCombatIds
     public static readonly TagId TriggeredDamageTag = new("triggered_damage");
 
     public static readonly TagId ControlTag = new("control");
+    public static readonly TagId PlayLimitTag = new("play_limit");
     public static readonly TagId StatusApplicationInterceptorTag = new("status_application_interceptor");
     public static readonly TagId CostModifierTag = new("cost_modifier");
 
@@ -50,6 +52,7 @@ public static class StandardCombatIds
 
     public static readonly TagId SkillCardTag = new("skill");
 }
+
 
 
 
