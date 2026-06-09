@@ -18,6 +18,7 @@ public static class StandardCombatIds
     public static readonly StatusDefinitionId ArtifactStatus = new("standard.artifact");
 
     public static readonly StatusDefinitionId StrengthStatus = new("standard.strength");
+    public static readonly StatusDefinitionId RageStatus = new("standard.rage");
     public static readonly StatusDefinitionId DexterityStatus = new("standard.dexterity");
 
     public static readonly StatusDefinitionId ThornsStatus = new("standard.thorns");
@@ -53,7 +54,9 @@ public static class StandardCombatIds
 
     public static readonly TagId SkillCardTag = new("skill");
     public static readonly TagId ComboTag = new("combo");
+    public static readonly TagId CardPlayedTriggerTag = new("card_played_trigger");
 }
+
 
 
 

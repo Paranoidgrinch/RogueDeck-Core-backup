@@ -18,6 +18,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreateFrail());
         registry.RegisterStatus(CreateArtifact());
         registry.RegisterStatus(CreateStrength());
+        registry.RegisterStatus(CreateRage());
         registry.RegisterStatus(CreateDexterity());
         registry.RegisterStatus(CreateThorns());
         registry.RegisterStatus(CreateStun());
@@ -85,6 +86,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         registry.RegisterCombatEventHandler(new DamageOverTimeOnTurnStartedHandler());
                 registry.RegisterCombatEventHandler(new TrackCardsPlayedThisTurnHandler());
         registry.RegisterCombatEventHandler(new SkillComboDrawOnCardPlayedHandler());
+        registry.RegisterCombatEventHandler(new RageBlockOnAttackPlayedHandler());
 registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler());
         registry.RegisterCombatEventHandler(new TriggeredDamageOnDamageDealtHandler());
         registry.RegisterCombatEventHandler(new MarkCombatantDownedOnZeroHealthHandler());
@@ -191,6 +193,23 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
 
         definition.Tags.Add(StandardCombatIds.BuffTag);
         definition.Tags.Add(StandardCombatIds.BlockModifierTag);
+
+        return definition;
+    }
+    private StatusDefinition CreateRage()
+    {
+        var definition = new StatusDefinition(
+            StandardCombatIds.RageStatus,
+            Id,
+            displayNameKey: "status.standard.rage.name",
+            descriptionKey: "status.standard.rage.description",
+            polarity: StatusPolarity.Buff,
+            usesStacks: true,
+            showStacksInUi: true,
+            stackingBehavior: StatusStackingBehavior.MergeWithExistingInstance);
+
+        definition.Tags.Add(StandardCombatIds.BuffTag);
+        definition.Tags.Add(StandardCombatIds.CardPlayedTriggerTag);
 
         return definition;
     }
@@ -367,6 +386,7 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
         return definition;
     }
 }
+
 
 
 

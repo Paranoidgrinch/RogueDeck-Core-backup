@@ -54,7 +54,9 @@ public class SkillComboDrawTests
                 CardInstanceId: firstSkill.Id,
                 SourceCombatantId: HeroId));
 
-        Assert.Empty(combat.GetCardZones(HeroId).DiscardPile.Where(card => card.DefinitionId == drawCardId));
+        Assert.DoesNotContain(
+            combat.GetCardZones(HeroId).DiscardPile,
+            card => card.DefinitionId == drawCardId);
         Assert.Single(combat.GetCardZones(HeroId).DrawPile);
 
         var secondSkill = combat.GetCardZones(HeroId).Hand[0];
@@ -65,7 +67,9 @@ public class SkillComboDrawTests
                 CardInstanceId: secondSkill.Id,
                 SourceCombatantId: HeroId));
 
-        Assert.Empty(combat.GetCardZones(HeroId).DiscardPile.Where(card => card.DefinitionId == drawCardId));
+        Assert.DoesNotContain(
+            combat.GetCardZones(HeroId).DiscardPile,
+            card => card.DefinitionId == drawCardId);
         Assert.Single(combat.GetCardZones(HeroId).DrawPile);
 
         var thirdSkill = combat.GetCardZones(HeroId).Hand[0];
@@ -350,3 +354,4 @@ public class SkillComboDrawTests
         return card;
     }
 }
+
