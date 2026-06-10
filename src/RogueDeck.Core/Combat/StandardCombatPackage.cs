@@ -19,6 +19,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreateArtifact());
         registry.RegisterStatus(CreateStrength());
         registry.RegisterStatus(CreateRage());
+        registry.RegisterTriggeredEffectDefinition(CreateRageBlockOnAttackPlayedTriggeredEffect());
         registry.RegisterStatus(CreateDexterity());
         registry.RegisterStatus(CreateThorns());
         registry.RegisterStatus(CreateStun());
@@ -26,6 +27,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterStatus(CreateFreeNextCard());
         registry.RegisterStatus(CreateFirstAttackEachTurnFree());
         registry.RegisterStatus(CreateSkillComboDraw());
+        registry.RegisterTriggeredEffectDefinition(CreateSkillComboDrawTriggeredEffect());
         registry.RegisterStatus(CreateSkillCostReduction());
 
         registry.RegisterDamageAmountModifier(new StrengthDamageAmountModifier());
@@ -85,8 +87,7 @@ registry.RegisterCombatEventHandler(new ClearBlockOnTurnStartedHandler());
 registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedHandler());
         registry.RegisterCombatEventHandler(new DamageOverTimeOnTurnStartedHandler());
                 registry.RegisterCombatEventHandler(new TrackCardsPlayedThisTurnHandler());
-        registry.RegisterCombatEventHandler(new SkillComboDrawOnCardPlayedHandler());
-        registry.RegisterCombatEventHandler(new RageBlockOnAttackPlayedHandler());
+        registry.RegisterCombatEventHandler(new CardPlayedTriggeredEffectHandler());
 registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler());
         registry.RegisterCombatEventHandler(new TriggeredDamageOnDamageDealtHandler());
         registry.RegisterCombatEventHandler(new MarkCombatantDownedOnZeroHealthHandler());
@@ -214,6 +215,47 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
         return definition;
     }
 
+    private CardPlayedTriggeredEffectDefinition CreateSkillComboDrawTriggeredEffect()
+    {
+        var definition = new CardPlayedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("standard.skill_combo_draw"));
+
+        definition.Filters.Add(
+            new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
+
+        definition.Filters.Add(
+            new CardPlayedSourceHasStatusTriggerFilter(StandardCombatIds.SkillComboDrawStatus));
+
+        definition.Filters.Add(
+            new CardPlayedEveryNthCardWithTagThisTurnFilter(
+                StandardCombatIds.SkillCardTag,
+                interval: 3));
+
+        definition.Actions.Add(
+            new DrawCardsOnCardPlayedTriggeredEffectAction(
+                CardPlayedTriggeredEffectTarget.Source,
+                new CardPlayedSourceStatusStacksAmount(StandardCombatIds.SkillComboDrawStatus)));
+
+        return definition;
+    }
+    private CardPlayedTriggeredEffectDefinition CreateRageBlockOnAttackPlayedTriggeredEffect()
+    {
+        var definition = new CardPlayedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("standard.rage_block_on_attack_played"));
+
+        definition.Filters.Add(
+            new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
+
+        definition.Filters.Add(
+            new CardPlayedSourceHasStatusTriggerFilter(StandardCombatIds.RageStatus));
+
+        definition.Actions.Add(
+            new GainBlockOnCardPlayedTriggeredEffectAction(
+                CardPlayedTriggeredEffectTarget.Source,
+                new CardPlayedSourceStatusStacksAmount(StandardCombatIds.RageStatus)));
+
+        return definition;
+    }
     private StatusDefinition CreateStrength()
     {
         var definition = new StatusDefinition(
@@ -386,6 +428,10 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
         return definition;
     }
 }
+
+
+
+
 
 
 

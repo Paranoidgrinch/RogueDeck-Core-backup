@@ -20,9 +20,23 @@ public class RageStatusTests
         Assert.Contains(StandardCombatIds.BuffTag, definition.Tags);
         Assert.Contains(StandardCombatIds.CardPlayedTriggerTag, definition.Tags);
 
+        var triggeredEffect = Assert.IsType<CardPlayedTriggeredEffectDefinition>(
+            registry.GetTriggeredEffectDefinition(
+                new TriggeredEffectDefinitionId("standard.rage_block_on_attack_played")));
+
         Assert.Contains(
-            registry.GetCombatEventHandlers(typeof(CardPlayedCombatEvent)),
-            handler => handler is RageBlockOnAttackPlayedHandler);
+            triggeredEffect.Filters,
+            filter => filter is CardPlayedCardHasTagTriggerFilter);
+
+        Assert.Contains(
+            triggeredEffect.Filters,
+            filter => filter is CardPlayedSourceHasStatusTriggerFilter);
+
+        Assert.Contains(
+            triggeredEffect.Actions,
+            action => action is GainBlockOnCardPlayedTriggeredEffectAction);
+
+
     }
 
     [Fact]
@@ -271,3 +285,5 @@ public class RageStatusTests
         return card;
     }
 }
+
+

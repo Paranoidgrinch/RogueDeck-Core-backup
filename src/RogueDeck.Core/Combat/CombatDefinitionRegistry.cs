@@ -15,6 +15,7 @@ public sealed class CombatDefinitionRegistry
     private readonly List<IStatusApplicationInterceptor> _statusApplicationInterceptors = new();
 
     private readonly List<IBlockAmountModifier> _blockAmountModifiers = new();
+    private readonly Dictionary<TriggeredEffectDefinitionId, ITriggeredEffectDefinition> _triggeredEffectDefinitions = new();
 public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitions => _statusDefinitions;
     public IReadOnlyDictionary<CardDefinitionId, CardDefinition> CardDefinitions => _cardDefinitions;
     public IReadOnlyDictionary<Type, ICardEffectDefinitionHandler> CardEffectDefinitionHandlers => _cardEffectDefinitionHandlers;
@@ -269,6 +270,41 @@ public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitio
         return _effectRequestHandlers.TryGetValue(requestType, out handler);
     }
 
+    public void RegisterTriggeredEffectDefinition(ITriggeredEffectDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+
+        if (_triggeredEffectDefinitions.ContainsKey(definition.Id))
+            throw new InvalidOperationException(
+                $"Triggered effect definition '{definition.Id}' is already registered.");
+
+        _triggeredEffectDefinitions.Add(definition.Id, definition);
+    }
+
+    public ITriggeredEffectDefinition GetTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
+    {
+        if (!_triggeredEffectDefinitions.TryGetValue(id, out var definition))
+            throw new InvalidOperationException(
+                $"Triggered effect definition '{id}' is not registered.");
+
+        return definition;
+    }
+
+    public bool TryGetTriggeredEffectDefinition(
+        TriggeredEffectDefinitionId id,
+        out ITriggeredEffectDefinition? definition)
+    {
+        return _triggeredEffectDefinitions.TryGetValue(id, out definition);
+    }
+
+    public IReadOnlyCollection<ITriggeredEffectDefinition> GetTriggeredEffectDefinitions(Type eventType)
+    {
+        ArgumentNullException.ThrowIfNull(eventType);
+
+        return _triggeredEffectDefinitions.Values
+            .Where(definition => definition.EventType == eventType)
+            .ToArray();
+    }
     public void RegisterCombatEventHandler(ICombatEventHandler handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
@@ -296,5 +332,6 @@ public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitio
         return handlers;
     }
 }
+
 
 

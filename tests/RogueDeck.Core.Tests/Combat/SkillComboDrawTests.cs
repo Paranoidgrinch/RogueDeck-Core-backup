@@ -19,9 +19,25 @@ public class SkillComboDrawTests
         Assert.Contains(StandardCombatIds.BuffTag, definition.Tags);
         Assert.Contains(StandardCombatIds.ComboTag, definition.Tags);
 
+        var triggeredEffect = Assert.IsType<CardPlayedTriggeredEffectDefinition>(
+            registry.GetTriggeredEffectDefinition(
+                new TriggeredEffectDefinitionId("standard.skill_combo_draw")));
+
         Assert.Contains(
-            registry.GetCombatEventHandlers(typeof(CardPlayedCombatEvent)),
-            handler => handler is SkillComboDrawOnCardPlayedHandler);
+            triggeredEffect.Filters,
+            filter => filter is CardPlayedCardHasTagTriggerFilter);
+
+        Assert.Contains(
+            triggeredEffect.Filters,
+            filter => filter is CardPlayedSourceHasStatusTriggerFilter);
+
+        Assert.Contains(
+            triggeredEffect.Filters,
+            filter => filter is CardPlayedEveryNthCardWithTagThisTurnFilter);
+
+        Assert.Contains(
+            triggeredEffect.Actions,
+            action => action is DrawCardsOnCardPlayedTriggeredEffectAction);
     }
 
     [Fact]
@@ -231,7 +247,7 @@ public class SkillComboDrawTests
     }
 
     [Fact]
-    public void SkillComboDrawHandlerRunsAfterTurnStatsTracker()
+    public void CardPlayedTriggeredEffectHandlerRunsAfterTurnStatsTracker()
     {
         var registry = CombatTestFactory.CreateStandardRegistry();
 
@@ -243,7 +259,7 @@ public class SkillComboDrawTests
 
         var comboIndex = Array.FindIndex(
             handlers,
-            handler => handler is SkillComboDrawOnCardPlayedHandler);
+            handler => handler is CardPlayedTriggeredEffectHandler);
 
         Assert.True(trackerIndex >= 0);
         Assert.True(comboIndex >= 0);
@@ -354,4 +370,6 @@ public class SkillComboDrawTests
         return card;
     }
 }
+
+
 
