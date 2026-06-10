@@ -128,6 +128,39 @@ public enum CardPlayedTriggeredEffectTarget
     Source,
     PlayedCardTarget
 }
+public static class CardPlayedTriggeredEffectTargetResolver
+{
+    public static bool TryResolveTarget(
+        CardPlayedTriggeredEffectContext context,
+        CardPlayedTriggeredEffectTarget target,
+        out CombatantId targetId)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        switch (target)
+        {
+            case CardPlayedTriggeredEffectTarget.Source:
+                targetId = context.CombatEvent.SourceCombatantId;
+                return context.Combat.TryGetCombatant(targetId, out var source) &&
+                    source!.IsAlive;
+
+            case CardPlayedTriggeredEffectTarget.PlayedCardTarget:
+                if (context.CombatEvent.TargetCombatantId is null)
+                {
+                    targetId = default;
+                    return false;
+                }
+
+                targetId = context.CombatEvent.TargetCombatantId.Value;
+                return context.Combat.TryGetCombatant(targetId, out var targetCombatant) &&
+                    targetCombatant!.IsAlive;
+
+            default:
+                throw new InvalidOperationException(
+                    $"Unsupported card played triggered effect target '{target}'.");
+        }
+    }
+}
 
 public sealed record GainBlockOnCardPlayedTriggeredEffectAction(
     CardPlayedTriggeredEffectTarget Target,
@@ -139,7 +172,7 @@ public sealed record GainBlockOnCardPlayedTriggeredEffectAction(
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(AmountProvider);
 
-        if (!TryResolveTarget(context, Target, out var targetId))
+        if (!CardPlayedTriggeredEffectTargetResolver.TryResolveTarget(context, Target, out var targetId))
             return Array.Empty<IEffectRequest>();
 
         var amount = AmountProvider.ResolveAmount(context);
@@ -157,33 +190,6 @@ public sealed record GainBlockOnCardPlayedTriggeredEffectAction(
         };
     }
 
-    private static bool TryResolveTarget(
-        CardPlayedTriggeredEffectContext context,
-        CardPlayedTriggeredEffectTarget target,
-        out CombatantId targetId)
-    {
-        switch (target)
-        {
-            case CardPlayedTriggeredEffectTarget.Source:
-                targetId = context.CombatEvent.SourceCombatantId;
-                return true;
-
-            case CardPlayedTriggeredEffectTarget.PlayedCardTarget:
-                if (context.CombatEvent.TargetCombatantId is null)
-                {
-                    targetId = default;
-                    return false;
-                }
-
-                targetId = context.CombatEvent.TargetCombatantId.Value;
-                return context.Combat.TryGetCombatant(targetId, out var combatant) &&
-                    combatant!.IsAlive;
-
-            default:
-                throw new InvalidOperationException(
-                    $"Unsupported card played triggered effect target '{target}'.");
-        }
-    }
 }
 
 public sealed record DrawCardsOnCardPlayedTriggeredEffectAction(
@@ -196,7 +202,7 @@ public sealed record DrawCardsOnCardPlayedTriggeredEffectAction(
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(AmountProvider);
 
-        if (!TryResolveTarget(context, Target, out var targetId))
+        if (!CardPlayedTriggeredEffectTargetResolver.TryResolveTarget(context, Target, out var targetId))
             return Array.Empty<IEffectRequest>();
 
         var count = AmountProvider.ResolveAmount(context);
@@ -212,33 +218,37 @@ public sealed record DrawCardsOnCardPlayedTriggeredEffectAction(
         };
     }
 
-    private static bool TryResolveTarget(
-        CardPlayedTriggeredEffectContext context,
-        CardPlayedTriggeredEffectTarget target,
-        out CombatantId targetId)
+}
+public sealed record DealDamageOnCardPlayedTriggeredEffectAction(
+    CardPlayedTriggeredEffectTarget Target,
+    ICardPlayedTriggeredEffectAmountProvider AmountProvider,
+    DamageKind Kind = DamageKind.Direct)
+    : ICardPlayedTriggeredEffectAction
+{
+    public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(CardPlayedTriggeredEffectContext context)
     {
-        switch (target)
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(AmountProvider);
+
+        if (!CardPlayedTriggeredEffectTargetResolver.TryResolveTarget(context, Target, out var targetId))
+            return Array.Empty<IEffectRequest>();
+
+        var amount = AmountProvider.ResolveAmount(context);
+
+        if (amount <= 0)
+            return Array.Empty<IEffectRequest>();
+
+        return new IEffectRequest[]
         {
-            case CardPlayedTriggeredEffectTarget.Source:
-                targetId = context.CombatEvent.SourceCombatantId;
-                return true;
-
-            case CardPlayedTriggeredEffectTarget.PlayedCardTarget:
-                if (context.CombatEvent.TargetCombatantId is null)
-                {
-                    targetId = default;
-                    return false;
-                }
-
-                targetId = context.CombatEvent.TargetCombatantId.Value;
-                return context.Combat.TryGetCombatant(targetId, out var combatant) &&
-                    combatant!.IsAlive;
-
-            default:
-                throw new InvalidOperationException(
-                    $"Unsupported card played triggered effect target '{target}'.");
-        }
+            new DealDamageEffectRequest(
+                TargetCombatantId: targetId,
+                Amount: amount,
+                SourceCombatantId: context.CombatEvent.SourceCombatantId,
+                SourceCardId: context.CombatEvent.CardDefinitionId,
+                Kind: Kind)
+        };
     }
+
 }
 public sealed class CardPlayedTriggeredEffectHandler
     : CombatEventHandler<CardPlayedCombatEvent>
@@ -289,6 +299,9 @@ public sealed class CardPlayedTriggeredEffectHandler
         }
     }
 }
+
+
+
 
 
 

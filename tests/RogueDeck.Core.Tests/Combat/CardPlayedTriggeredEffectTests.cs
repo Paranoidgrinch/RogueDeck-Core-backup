@@ -896,6 +896,170 @@ public class CardPlayedTriggeredEffectTests
             registry.GetCombatEventHandlers(typeof(CardPlayedCombatEvent)),
             handler => handler is CardPlayedTriggeredEffectHandler);
     }
+    [Fact]
+    public void CardPlayedTriggeredEffectCanDealDamageToPlayedCardTarget()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var attackCardId = new CardDefinitionId("test.zero_cost_attack");
+        RegisterZeroCostCard(
+            registry,
+            attackCardId,
+            StandardCombatIds.AttackCardTag);
+
+        var definition = new CardPlayedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.deal_damage_when_attack_played"));
+
+        definition.Filters.Add(
+            new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
+
+        definition.Actions.Add(
+            new DealDamageOnCardPlayedTriggeredEffectAction(
+                CardPlayedTriggeredEffectTarget.PlayedCardTarget,
+                new FixedCardPlayedTriggeredEffectAmount(3)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        var goblin = combat.GetCombatant(GoblinId);
+        var healthBefore = goblin.Health.Current;
+
+        PlayCard(
+            combat,
+            registry,
+            attackCardId,
+            GoblinId);
+
+        Assert.Equal(
+            healthBefore - 3,
+            goblin.Health.Current);
+    }
+
+    [Fact]
+    public void CardPlayedTriggeredEffectCanDealDamageUsingSourceStatusStacksAsAmount()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var damageStatusId = new StatusDefinitionId("test.damage_counter");
+        RegisterStackingStatus(registry, damageStatusId);
+
+        ApplyStatus(
+            combat,
+            registry,
+            HeroId,
+            damageStatusId,
+            stacks: 4);
+
+        var attackCardId = new CardDefinitionId("test.zero_cost_attack");
+        RegisterZeroCostCard(
+            registry,
+            attackCardId,
+            StandardCombatIds.AttackCardTag);
+
+        var definition = new CardPlayedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.deal_damage_equal_to_status_stacks"));
+
+        definition.Filters.Add(
+            new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
+
+        definition.Filters.Add(
+            new CardPlayedSourceHasStatusTriggerFilter(damageStatusId));
+
+        definition.Actions.Add(
+            new DealDamageOnCardPlayedTriggeredEffectAction(
+                CardPlayedTriggeredEffectTarget.PlayedCardTarget,
+                new CardPlayedSourceStatusStacksAmount(damageStatusId)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        var goblin = combat.GetCombatant(GoblinId);
+        var healthBefore = goblin.Health.Current;
+
+        PlayCard(
+            combat,
+            registry,
+            attackCardId,
+            GoblinId);
+
+        Assert.Equal(
+            healthBefore - 4,
+            goblin.Health.Current);
+    }
+
+    [Fact]
+    public void CardPlayedTriggeredEffectDoesNotDealDamageWhenPlayedCardTargetIsMissing()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var skillCardId = new CardDefinitionId("test.zero_cost_skill");
+        RegisterZeroCostCard(
+            registry,
+            skillCardId,
+            StandardCombatIds.SkillCardTag);
+
+        var definition = new CardPlayedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.deal_damage_without_target"));
+
+        definition.Filters.Add(
+            new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
+
+        definition.Actions.Add(
+            new DealDamageOnCardPlayedTriggeredEffectAction(
+                CardPlayedTriggeredEffectTarget.PlayedCardTarget,
+                new FixedCardPlayedTriggeredEffectAmount(3)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        var goblin = combat.GetCombatant(GoblinId);
+        var healthBefore = goblin.Health.Current;
+
+        PlayCard(combat, registry, skillCardId);
+
+        Assert.Equal(
+            healthBefore,
+            goblin.Health.Current);
+    }
+
+    [Fact]
+    public void CardPlayedTriggeredEffectDoesNotDealDamageForNonPositiveAmounts()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var attackCardId = new CardDefinitionId("test.zero_cost_attack");
+        RegisterZeroCostCard(
+            registry,
+            attackCardId,
+            StandardCombatIds.AttackCardTag);
+
+        var definition = new CardPlayedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.deal_zero_damage"));
+
+        definition.Filters.Add(
+            new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
+
+        definition.Actions.Add(
+            new DealDamageOnCardPlayedTriggeredEffectAction(
+                CardPlayedTriggeredEffectTarget.PlayedCardTarget,
+                new FixedCardPlayedTriggeredEffectAmount(0)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        var goblin = combat.GetCombatant(GoblinId);
+        var healthBefore = goblin.Health.Current;
+
+        PlayCard(
+            combat,
+            registry,
+            attackCardId,
+            GoblinId);
+
+        Assert.Equal(
+            healthBefore,
+            goblin.Health.Current);
+    }
     private static void RegisterStackingStatus(
         CombatDefinitionRegistry registry,
         StatusDefinitionId statusId)
@@ -947,6 +1111,7 @@ public class CardPlayedTriggeredEffectTests
         registry.RegisterCard(definition);
     }
 }
+
 
 
 
