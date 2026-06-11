@@ -5,6 +5,20 @@ public static class TriggeredEffectActionRequestFactory
     public static IReadOnlyCollection<IEffectRequest> BuildGainBlockRequests(
         IReadOnlyCollection<CombatantId> targetIds,
         int amount,
+        TriggeredEffectActionSource source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return BuildGainBlockRequests(
+            targetIds,
+            amount,
+            sourceCombatantId: source.SourceCombatantId,
+            sourceCardId: source.SourceCardId);
+    }
+
+    public static IReadOnlyCollection<IEffectRequest> BuildGainBlockRequests(
+        IReadOnlyCollection<CombatantId> targetIds,
+        int amount,
         CombatantId? sourceCombatantId = null,
         CardDefinitionId? sourceCardId = null)
     {
@@ -20,6 +34,22 @@ public static class TriggeredEffectActionRequestFactory
                 SourceCombatantId: sourceCombatantId,
                 SourceCardId: sourceCardId))
             .ToArray();
+    }
+
+    public static IReadOnlyCollection<IEffectRequest> BuildDealDamageRequests(
+        IReadOnlyCollection<CombatantId> targetIds,
+        int amount,
+        TriggeredEffectActionSource source,
+        DamageKind kind = DamageKind.Direct)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return BuildDealDamageRequests(
+            targetIds,
+            amount,
+            sourceCombatantId: source.SourceCombatantId,
+            sourceCardId: source.SourceCardId,
+            kind: kind);
     }
 
     public static IReadOnlyCollection<IEffectRequest> BuildDealDamageRequests(
@@ -58,6 +88,26 @@ public static class TriggeredEffectActionRequestFactory
                 CombatantId: targetId,
                 Count: count))
             .ToArray();
+    }
+
+    public static IReadOnlyCollection<IEffectRequest> BuildApplyStatusRequests(
+        IReadOnlyCollection<CombatantId> targetIds,
+        StatusDefinitionId statusDefinitionId,
+        int stacks,
+        int durationTurns,
+        int charges,
+        TriggeredEffectActionSource source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return BuildApplyStatusRequests(
+            targetIds,
+            statusDefinitionId,
+            stacks,
+            durationTurns,
+            charges,
+            sourceCombatantId: source.SourceCombatantId,
+            sourceCardId: source.SourceCardId);
     }
 
     public static IReadOnlyCollection<IEffectRequest> BuildApplyStatusRequests(

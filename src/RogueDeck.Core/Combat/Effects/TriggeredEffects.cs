@@ -186,6 +186,16 @@ public static class CardPlayedTriggeredEffectTargetResolver
             EventTargetId: context.CombatEvent.TargetCombatantId);
     }
 
+    public static TriggeredEffectActionSource CreateActionSource(
+        CardPlayedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new TriggeredEffectActionSource(
+            SourceCombatantId: context.CombatEvent.SourceCombatantId,
+            SourceCardId: context.CombatEvent.CardDefinitionId);
+    }
+
     public static bool TryResolveTarget(
         CardPlayedTriggeredEffectContext context,
         CardPlayedTriggeredEffectTarget target,
@@ -262,8 +272,7 @@ public sealed record GainBlockOnCardPlayedTriggeredEffectAction
         return TriggeredEffectActionRequestFactory.BuildGainBlockRequests(
             targetIds,
             amount,
-            sourceCombatantId: context.CombatEvent.SourceCombatantId,
-            sourceCardId: context.CombatEvent.CardDefinitionId);
+            CardPlayedTriggeredEffectTargetResolver.CreateActionSource(context));
     }
 }
 
@@ -357,8 +366,7 @@ public sealed record DealDamageOnCardPlayedTriggeredEffectAction
         return TriggeredEffectActionRequestFactory.BuildDealDamageRequests(
             targetIds,
             amount,
-            sourceCombatantId: context.CombatEvent.SourceCombatantId,
-            sourceCardId: context.CombatEvent.CardDefinitionId,
+            CardPlayedTriggeredEffectTargetResolver.CreateActionSource(context),
             kind: Kind);
     }
 }
@@ -432,8 +440,7 @@ public sealed record ApplyStatusOnCardPlayedTriggeredEffectAction
             stacks,
             durationTurns,
             charges,
-            sourceCombatantId: context.CombatEvent.SourceCombatantId,
-            sourceCardId: context.CombatEvent.CardDefinitionId);
+            CardPlayedTriggeredEffectTargetResolver.CreateActionSource(context));
     }
 }
 
@@ -486,6 +493,10 @@ public sealed class CardPlayedTriggeredEffectHandler
         }
     }
 }
+
+
+
+
 
 
 

@@ -126,6 +126,15 @@ public static class TurnStartedTriggeredEffectTargetResolver
             Combat: context.Combat,
             Source: context.TurnCombatant);
     }
+
+    public static TriggeredEffectActionSource CreateActionSource(
+        TurnStartedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new TriggeredEffectActionSource(
+            SourceCombatantId: context.CombatEvent.CombatantId);
+    }
 }
 
 public sealed record GainBlockOnTurnStartedTriggeredEffectAction
@@ -169,7 +178,7 @@ public sealed record GainBlockOnTurnStartedTriggeredEffectAction
         return TriggeredEffectActionRequestFactory.BuildGainBlockRequests(
             targetIds,
             amount,
-            sourceCombatantId: context.CombatEvent.CombatantId);
+            TurnStartedTriggeredEffectTargetResolver.CreateActionSource(context));
     }
 }
 
@@ -219,7 +228,7 @@ public sealed record DealDamageOnTurnStartedTriggeredEffectAction
         return TriggeredEffectActionRequestFactory.BuildDealDamageRequests(
             targetIds,
             amount,
-            sourceCombatantId: context.CombatEvent.CombatantId,
+            TurnStartedTriggeredEffectTargetResolver.CreateActionSource(context),
             kind: Kind);
     }
 }
@@ -293,7 +302,7 @@ public sealed record ApplyStatusOnTurnStartedTriggeredEffectAction
             stacks,
             durationTurns,
             charges,
-            sourceCombatantId: context.CombatEvent.CombatantId);
+            TurnStartedTriggeredEffectTargetResolver.CreateActionSource(context));
     }
 }
 
@@ -387,6 +396,10 @@ public sealed class TurnStartedTriggeredEffectHandler
         }
     }
 }
+
+
+
+
 
 
 
