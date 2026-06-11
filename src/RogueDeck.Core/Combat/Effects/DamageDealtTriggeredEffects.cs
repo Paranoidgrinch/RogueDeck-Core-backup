@@ -377,16 +377,10 @@ public sealed class DamageDealtTriggeredEffectHandler
             registry.GetTriggeredEffectDefinitions(typeof(DamageDealtCombatEvent))
                 .OfType<DamageDealtTriggeredEffectDefinition>());
 
-        foreach (var definition in definitions)
-        {
-            if (definition.Filters.Any(filter => !filter.Matches(context)))
-                continue;
-
-            foreach (var action in definition.Actions)
-            {
-                foreach (var effectRequest in action.BuildEffectRequests(context))
-                    combat.EnqueueEffect(effectRequest);
-            }
-        }
+        TriggeredEffectDefinitionRunner.EnqueueEffectRequests(
+            combat,
+            definitions,
+            definition => definition.Filters.All(filter => filter.Matches(context)),
+            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
     }
 }
