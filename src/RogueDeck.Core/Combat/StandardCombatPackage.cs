@@ -79,6 +79,7 @@ registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterEffectRequestHandler(new ClearDefensivePoolEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatantLifecycleStateEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatResultEffectHandler());                registry.RegisterCombatEventHandler(new ResetCardPlayTurnStatsOnTurnStartedHandler());
+        registry.RegisterCombatEventHandler(new TurnStartedTriggeredEffectHandler());
 registry.RegisterCombatEventHandler(new RefillResourceOnTurnStartedHandler(StandardCombatIds.EnergyResource, defaultMax: 3));
 
                 registry.RegisterCombatEventHandler(new DrawCardsOnTurnStartedHandler());
@@ -428,6 +429,7 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
         return definition;
     }
 }
+
 
 
 
