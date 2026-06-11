@@ -85,46 +85,83 @@ public static class TurnEndedTriggeredEffectTargetResolver
         TurnEndedTriggeredEffectContext context,
         TurnEndedTriggeredEffectTarget target)
     {
+        return ResolveTargets(context, ToSelector(target));
+    }
+
+    public static IReadOnlyCollection<CombatantId> ResolveTargets(
+        TurnEndedTriggeredEffectContext context,
+        ICombatantTargetSelector targetSelector)
+    {
         ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(targetSelector);
 
-        var selectionContext = new CombatantTargetSelectionContext(
-            Combat: context.Combat,
-            Source: context.TurnCombatant);
+        return targetSelector.ResolveTargets(CreateSelectionContext(context));
+    }
 
+    public static ICombatantTargetSelector ToSelector(TurnEndedTriggeredEffectTarget target)
+    {
         switch (target)
         {
             case TurnEndedTriggeredEffectTarget.TurnCombatant:
-                return CombatantTargetSelectors.Source.ResolveTargets(selectionContext);
+                return CombatantTargetSelectors.Source;
 
             case TurnEndedTriggeredEffectTarget.AllAllies:
-                return CombatantTargetSelectors.AllAlliesOfSource.ResolveTargets(selectionContext);
+                return CombatantTargetSelectors.AllAlliesOfSource;
 
             case TurnEndedTriggeredEffectTarget.AllEnemies:
-                return CombatantTargetSelectors.AllEnemiesOfSource.ResolveTargets(selectionContext);
+                return CombatantTargetSelectors.AllEnemiesOfSource;
 
             default:
                 throw new InvalidOperationException(
                     $"Unsupported turn ended triggered effect target '{target}'.");
         }
     }
+
+    public static CombatantTargetSelectionContext CreateSelectionContext(
+        TurnEndedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new CombatantTargetSelectionContext(
+            Combat: context.Combat,
+            Source: context.TurnCombatant);
+    }
 }
 
-public sealed record GainBlockOnTurnEndedTriggeredEffectAction(
-    TurnEndedTriggeredEffectTarget Target,
-    ITurnEndedTriggeredEffectAmountProvider AmountProvider)
+public sealed record GainBlockOnTurnEndedTriggeredEffectAction
     : ITurnEndedTriggeredEffectAction
 {
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public ITurnEndedTriggeredEffectAmountProvider AmountProvider { get; }
+
+    public GainBlockOnTurnEndedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        ITurnEndedTriggeredEffectAmountProvider amountProvider)
+    {
+        TargetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
+        AmountProvider = amountProvider ?? throw new ArgumentNullException(nameof(amountProvider));
+    }
+
+    public GainBlockOnTurnEndedTriggeredEffectAction(
+        TurnEndedTriggeredEffectTarget target,
+        ITurnEndedTriggeredEffectAmountProvider amountProvider)
+        : this(TurnEndedTriggeredEffectTargetResolver.ToSelector(target), amountProvider)
+    {
+    }
+
     public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(TurnEndedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(AmountProvider);
 
         var amount = AmountProvider.ResolveAmount(context);
 
         if (amount <= 0)
             return Array.Empty<IEffectRequest>();
 
-        var targetIds = TurnEndedTriggeredEffectTargetResolver.ResolveTargets(context, Target);
+        var targetIds = TurnEndedTriggeredEffectTargetResolver.ResolveTargets(
+            context,
+            TargetSelector);
 
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
@@ -138,23 +175,45 @@ public sealed record GainBlockOnTurnEndedTriggeredEffectAction(
     }
 }
 
-public sealed record DealDamageOnTurnEndedTriggeredEffectAction(
-    TurnEndedTriggeredEffectTarget Target,
-    ITurnEndedTriggeredEffectAmountProvider AmountProvider,
-    DamageKind Kind = DamageKind.Direct)
+public sealed record DealDamageOnTurnEndedTriggeredEffectAction
     : ITurnEndedTriggeredEffectAction
 {
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public ITurnEndedTriggeredEffectAmountProvider AmountProvider { get; }
+
+    public DamageKind Kind { get; }
+
+    public DealDamageOnTurnEndedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        ITurnEndedTriggeredEffectAmountProvider amountProvider,
+        DamageKind kind = DamageKind.Direct)
+    {
+        TargetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
+        AmountProvider = amountProvider ?? throw new ArgumentNullException(nameof(amountProvider));
+        Kind = kind;
+    }
+
+    public DealDamageOnTurnEndedTriggeredEffectAction(
+        TurnEndedTriggeredEffectTarget target,
+        ITurnEndedTriggeredEffectAmountProvider amountProvider,
+        DamageKind kind = DamageKind.Direct)
+        : this(TurnEndedTriggeredEffectTargetResolver.ToSelector(target), amountProvider, kind)
+    {
+    }
+
     public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(TurnEndedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(AmountProvider);
 
         var amount = AmountProvider.ResolveAmount(context);
 
         if (amount <= 0)
             return Array.Empty<IEffectRequest>();
 
-        var targetIds = TurnEndedTriggeredEffectTargetResolver.ResolveTargets(context, Target);
+        var targetIds = TurnEndedTriggeredEffectTargetResolver.ResolveTargets(
+            context,
+            TargetSelector);
 
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
@@ -169,20 +228,51 @@ public sealed record DealDamageOnTurnEndedTriggeredEffectAction(
     }
 }
 
-public sealed record ApplyStatusOnTurnEndedTriggeredEffectAction(
-    TurnEndedTriggeredEffectTarget Target,
-    StatusDefinitionId StatusDefinitionId,
-    ITurnEndedTriggeredEffectAmountProvider StacksProvider,
-    ITurnEndedTriggeredEffectAmountProvider DurationTurnsProvider,
-    ITurnEndedTriggeredEffectAmountProvider ChargesProvider)
+public sealed record ApplyStatusOnTurnEndedTriggeredEffectAction
     : ITurnEndedTriggeredEffectAction
 {
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public StatusDefinitionId StatusDefinitionId { get; }
+
+    public ITurnEndedTriggeredEffectAmountProvider StacksProvider { get; }
+
+    public ITurnEndedTriggeredEffectAmountProvider DurationTurnsProvider { get; }
+
+    public ITurnEndedTriggeredEffectAmountProvider ChargesProvider { get; }
+
+    public ApplyStatusOnTurnEndedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        StatusDefinitionId statusDefinitionId,
+        ITurnEndedTriggeredEffectAmountProvider stacksProvider,
+        ITurnEndedTriggeredEffectAmountProvider durationTurnsProvider,
+        ITurnEndedTriggeredEffectAmountProvider chargesProvider)
+    {
+        TargetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
+        StatusDefinitionId = statusDefinitionId;
+        StacksProvider = stacksProvider ?? throw new ArgumentNullException(nameof(stacksProvider));
+        DurationTurnsProvider = durationTurnsProvider ?? throw new ArgumentNullException(nameof(durationTurnsProvider));
+        ChargesProvider = chargesProvider ?? throw new ArgumentNullException(nameof(chargesProvider));
+    }
+
+    public ApplyStatusOnTurnEndedTriggeredEffectAction(
+        TurnEndedTriggeredEffectTarget target,
+        StatusDefinitionId statusDefinitionId,
+        ITurnEndedTriggeredEffectAmountProvider stacksProvider,
+        ITurnEndedTriggeredEffectAmountProvider durationTurnsProvider,
+        ITurnEndedTriggeredEffectAmountProvider chargesProvider)
+        : this(
+            TurnEndedTriggeredEffectTargetResolver.ToSelector(target),
+            statusDefinitionId,
+            stacksProvider,
+            durationTurnsProvider,
+            chargesProvider)
+    {
+    }
+
     public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(TurnEndedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(StacksProvider);
-        ArgumentNullException.ThrowIfNull(DurationTurnsProvider);
-        ArgumentNullException.ThrowIfNull(ChargesProvider);
 
         var stacks = StacksProvider.ResolveAmount(context);
         var durationTurns = DurationTurnsProvider.ResolveAmount(context);
@@ -194,7 +284,9 @@ public sealed record ApplyStatusOnTurnEndedTriggeredEffectAction(
         if (stacks == 0 && durationTurns == 0 && charges == 0)
             return Array.Empty<IEffectRequest>();
 
-        var targetIds = TurnEndedTriggeredEffectTargetResolver.ResolveTargets(context, Target);
+        var targetIds = TurnEndedTriggeredEffectTargetResolver.ResolveTargets(
+            context,
+            TargetSelector);
 
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
@@ -211,22 +303,40 @@ public sealed record ApplyStatusOnTurnEndedTriggeredEffectAction(
     }
 }
 
-public sealed record DrawCardsOnTurnEndedTriggeredEffectAction(
-    TurnEndedTriggeredEffectTarget Target,
-    ITurnEndedTriggeredEffectAmountProvider AmountProvider)
+public sealed record DrawCardsOnTurnEndedTriggeredEffectAction
     : ITurnEndedTriggeredEffectAction
 {
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public ITurnEndedTriggeredEffectAmountProvider AmountProvider { get; }
+
+    public DrawCardsOnTurnEndedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        ITurnEndedTriggeredEffectAmountProvider amountProvider)
+    {
+        TargetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
+        AmountProvider = amountProvider ?? throw new ArgumentNullException(nameof(amountProvider));
+    }
+
+    public DrawCardsOnTurnEndedTriggeredEffectAction(
+        TurnEndedTriggeredEffectTarget target,
+        ITurnEndedTriggeredEffectAmountProvider amountProvider)
+        : this(TurnEndedTriggeredEffectTargetResolver.ToSelector(target), amountProvider)
+    {
+    }
+
     public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(TurnEndedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(AmountProvider);
 
         var count = AmountProvider.ResolveAmount(context);
 
         if (count <= 0)
             return Array.Empty<IEffectRequest>();
 
-        var targetIds = TurnEndedTriggeredEffectTargetResolver.ResolveTargets(context, Target);
+        var targetIds = TurnEndedTriggeredEffectTargetResolver.ResolveTargets(
+            context,
+            TargetSelector);
 
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
@@ -285,4 +395,9 @@ public sealed class TurnEndedTriggeredEffectHandler
         }
     }
 }
+
+
+
+
+
 

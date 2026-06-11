@@ -140,26 +140,34 @@ public static class CardPlayedTriggeredEffectTargetResolver
         CardPlayedTriggeredEffectContext context,
         CardPlayedTriggeredEffectTarget target)
     {
+        return ResolveTargets(context, ToSelector(target));
+    }
+
+    public static IReadOnlyCollection<CombatantId> ResolveTargets(
+        CardPlayedTriggeredEffectContext context,
+        ICombatantTargetSelector targetSelector)
+    {
         ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(targetSelector);
 
-        var selectionContext = new CombatantTargetSelectionContext(
-            Combat: context.Combat,
-            Source: context.Source,
-            EventTargetId: context.CombatEvent.TargetCombatantId);
+        return targetSelector.ResolveTargets(CreateSelectionContext(context));
+    }
 
+    public static ICombatantTargetSelector ToSelector(CardPlayedTriggeredEffectTarget target)
+    {
         switch (target)
         {
             case CardPlayedTriggeredEffectTarget.Source:
-                return CombatantTargetSelectors.Source.ResolveTargets(selectionContext);
+                return CombatantTargetSelectors.Source;
 
             case CardPlayedTriggeredEffectTarget.PlayedCardTarget:
-                return CombatantTargetSelectors.EventTarget.ResolveTargets(selectionContext);
+                return CombatantTargetSelectors.EventTarget;
 
             case CardPlayedTriggeredEffectTarget.AllAllies:
-                return CombatantTargetSelectors.AllAlliesOfSource.ResolveTargets(selectionContext);
+                return CombatantTargetSelectors.AllAlliesOfSource;
 
             case CardPlayedTriggeredEffectTarget.AllEnemies:
-                return CombatantTargetSelectors.AllEnemiesOfSource.ResolveTargets(selectionContext);
+                return CombatantTargetSelectors.AllEnemiesOfSource;
 
             default:
                 throw new InvalidOperationException(
@@ -167,40 +175,86 @@ public static class CardPlayedTriggeredEffectTargetResolver
         }
     }
 
+    public static CombatantTargetSelectionContext CreateSelectionContext(
+        CardPlayedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new CombatantTargetSelectionContext(
+            Combat: context.Combat,
+            Source: context.Source,
+            EventTargetId: context.CombatEvent.TargetCombatantId);
+    }
+
     public static bool TryResolveTarget(
         CardPlayedTriggeredEffectContext context,
         CardPlayedTriggeredEffectTarget target,
         out CombatantId targetId)
     {
-        var targets = ResolveTargets(context, target);
+        var targetIds = ResolveTargets(context, target);
 
-        if (targets.Count == 0)
+        if (targetIds.Count == 0)
         {
             targetId = default;
             return false;
         }
 
-        targetId = targets.First();
+        targetId = targetIds.First();
+        return true;
+    }
+
+    public static bool TryResolveTarget(
+        CardPlayedTriggeredEffectContext context,
+        ICombatantTargetSelector targetSelector,
+        out CombatantId targetId)
+    {
+        var targetIds = ResolveTargets(context, targetSelector);
+
+        if (targetIds.Count == 0)
+        {
+            targetId = default;
+            return false;
+        }
+
+        targetId = targetIds.First();
         return true;
     }
 }
 
-public sealed record GainBlockOnCardPlayedTriggeredEffectAction(
-    CardPlayedTriggeredEffectTarget Target,
-    ICardPlayedTriggeredEffectAmountProvider AmountProvider)
+public sealed record GainBlockOnCardPlayedTriggeredEffectAction
     : ICardPlayedTriggeredEffectAction
 {
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public ICardPlayedTriggeredEffectAmountProvider AmountProvider { get; }
+
+    public GainBlockOnCardPlayedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        ICardPlayedTriggeredEffectAmountProvider amountProvider)
+    {
+        TargetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
+        AmountProvider = amountProvider ?? throw new ArgumentNullException(nameof(amountProvider));
+    }
+
+    public GainBlockOnCardPlayedTriggeredEffectAction(
+        CardPlayedTriggeredEffectTarget target,
+        ICardPlayedTriggeredEffectAmountProvider amountProvider)
+        : this(CardPlayedTriggeredEffectTargetResolver.ToSelector(target), amountProvider)
+    {
+    }
+
     public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(CardPlayedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(AmountProvider);
 
         var amount = AmountProvider.ResolveAmount(context);
 
         if (amount <= 0)
             return Array.Empty<IEffectRequest>();
 
-        var targetIds = CardPlayedTriggeredEffectTargetResolver.ResolveTargets(context, Target);
+        var targetIds = CardPlayedTriggeredEffectTargetResolver.ResolveTargets(
+            context,
+            TargetSelector);
 
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
@@ -215,22 +269,40 @@ public sealed record GainBlockOnCardPlayedTriggeredEffectAction(
     }
 }
 
-public sealed record DrawCardsOnCardPlayedTriggeredEffectAction(
-    CardPlayedTriggeredEffectTarget Target,
-    ICardPlayedTriggeredEffectAmountProvider AmountProvider)
+public sealed record DrawCardsOnCardPlayedTriggeredEffectAction
     : ICardPlayedTriggeredEffectAction
 {
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public ICardPlayedTriggeredEffectAmountProvider AmountProvider { get; }
+
+    public DrawCardsOnCardPlayedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        ICardPlayedTriggeredEffectAmountProvider amountProvider)
+    {
+        TargetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
+        AmountProvider = amountProvider ?? throw new ArgumentNullException(nameof(amountProvider));
+    }
+
+    public DrawCardsOnCardPlayedTriggeredEffectAction(
+        CardPlayedTriggeredEffectTarget target,
+        ICardPlayedTriggeredEffectAmountProvider amountProvider)
+        : this(CardPlayedTriggeredEffectTargetResolver.ToSelector(target), amountProvider)
+    {
+    }
+
     public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(CardPlayedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(AmountProvider);
 
         var count = AmountProvider.ResolveAmount(context);
 
         if (count <= 0)
             return Array.Empty<IEffectRequest>();
 
-        var targetIds = CardPlayedTriggeredEffectTargetResolver.ResolveTargets(context, Target);
+        var targetIds = CardPlayedTriggeredEffectTargetResolver.ResolveTargets(
+            context,
+            TargetSelector);
 
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
@@ -243,23 +315,45 @@ public sealed record DrawCardsOnCardPlayedTriggeredEffectAction(
     }
 }
 
-public sealed record DealDamageOnCardPlayedTriggeredEffectAction(
-    CardPlayedTriggeredEffectTarget Target,
-    ICardPlayedTriggeredEffectAmountProvider AmountProvider,
-    DamageKind Kind = DamageKind.Direct)
+public sealed record DealDamageOnCardPlayedTriggeredEffectAction
     : ICardPlayedTriggeredEffectAction
 {
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public ICardPlayedTriggeredEffectAmountProvider AmountProvider { get; }
+
+    public DamageKind Kind { get; }
+
+    public DealDamageOnCardPlayedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        ICardPlayedTriggeredEffectAmountProvider amountProvider,
+        DamageKind kind = DamageKind.Direct)
+    {
+        TargetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
+        AmountProvider = amountProvider ?? throw new ArgumentNullException(nameof(amountProvider));
+        Kind = kind;
+    }
+
+    public DealDamageOnCardPlayedTriggeredEffectAction(
+        CardPlayedTriggeredEffectTarget target,
+        ICardPlayedTriggeredEffectAmountProvider amountProvider,
+        DamageKind kind = DamageKind.Direct)
+        : this(CardPlayedTriggeredEffectTargetResolver.ToSelector(target), amountProvider, kind)
+    {
+    }
+
     public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(CardPlayedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(AmountProvider);
 
         var amount = AmountProvider.ResolveAmount(context);
 
         if (amount <= 0)
             return Array.Empty<IEffectRequest>();
 
-        var targetIds = CardPlayedTriggeredEffectTargetResolver.ResolveTargets(context, Target);
+        var targetIds = CardPlayedTriggeredEffectTargetResolver.ResolveTargets(
+            context,
+            TargetSelector);
 
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
@@ -275,20 +369,51 @@ public sealed record DealDamageOnCardPlayedTriggeredEffectAction(
     }
 }
 
-public sealed record ApplyStatusOnCardPlayedTriggeredEffectAction(
-    CardPlayedTriggeredEffectTarget Target,
-    StatusDefinitionId StatusDefinitionId,
-    ICardPlayedTriggeredEffectAmountProvider StacksProvider,
-    ICardPlayedTriggeredEffectAmountProvider DurationTurnsProvider,
-    ICardPlayedTriggeredEffectAmountProvider ChargesProvider)
+public sealed record ApplyStatusOnCardPlayedTriggeredEffectAction
     : ICardPlayedTriggeredEffectAction
 {
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public StatusDefinitionId StatusDefinitionId { get; }
+
+    public ICardPlayedTriggeredEffectAmountProvider StacksProvider { get; }
+
+    public ICardPlayedTriggeredEffectAmountProvider DurationTurnsProvider { get; }
+
+    public ICardPlayedTriggeredEffectAmountProvider ChargesProvider { get; }
+
+    public ApplyStatusOnCardPlayedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        StatusDefinitionId statusDefinitionId,
+        ICardPlayedTriggeredEffectAmountProvider stacksProvider,
+        ICardPlayedTriggeredEffectAmountProvider durationTurnsProvider,
+        ICardPlayedTriggeredEffectAmountProvider chargesProvider)
+    {
+        TargetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
+        StatusDefinitionId = statusDefinitionId;
+        StacksProvider = stacksProvider ?? throw new ArgumentNullException(nameof(stacksProvider));
+        DurationTurnsProvider = durationTurnsProvider ?? throw new ArgumentNullException(nameof(durationTurnsProvider));
+        ChargesProvider = chargesProvider ?? throw new ArgumentNullException(nameof(chargesProvider));
+    }
+
+    public ApplyStatusOnCardPlayedTriggeredEffectAction(
+        CardPlayedTriggeredEffectTarget target,
+        StatusDefinitionId statusDefinitionId,
+        ICardPlayedTriggeredEffectAmountProvider stacksProvider,
+        ICardPlayedTriggeredEffectAmountProvider durationTurnsProvider,
+        ICardPlayedTriggeredEffectAmountProvider chargesProvider)
+        : this(
+            CardPlayedTriggeredEffectTargetResolver.ToSelector(target),
+            statusDefinitionId,
+            stacksProvider,
+            durationTurnsProvider,
+            chargesProvider)
+    {
+    }
+
     public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(CardPlayedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(StacksProvider);
-        ArgumentNullException.ThrowIfNull(DurationTurnsProvider);
-        ArgumentNullException.ThrowIfNull(ChargesProvider);
 
         var stacks = StacksProvider.ResolveAmount(context);
         var durationTurns = DurationTurnsProvider.ResolveAmount(context);
@@ -300,7 +425,9 @@ public sealed record ApplyStatusOnCardPlayedTriggeredEffectAction(
         if (stacks == 0 && durationTurns == 0 && charges == 0)
             return Array.Empty<IEffectRequest>();
 
-        var targetIds = CardPlayedTriggeredEffectTargetResolver.ResolveTargets(context, Target);
+        var targetIds = CardPlayedTriggeredEffectTargetResolver.ResolveTargets(
+            context,
+            TargetSelector);
 
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
@@ -367,4 +494,10 @@ public sealed class CardPlayedTriggeredEffectHandler
         }
     }
 }
+
+
+
+
+
+
 
