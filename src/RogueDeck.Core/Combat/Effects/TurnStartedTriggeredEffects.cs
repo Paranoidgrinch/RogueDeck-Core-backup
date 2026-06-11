@@ -166,12 +166,10 @@ public sealed record GainBlockOnTurnStartedTriggeredEffectAction
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
 
-        return targetIds
-            .Select(targetId => (IEffectRequest)new GainBlockEffectRequest(
-                TargetCombatantId: targetId,
-                Amount: amount,
-                SourceCombatantId: context.CombatEvent.CombatantId))
-            .ToArray();
+        return TriggeredEffectActionRequestFactory.BuildGainBlockRequests(
+            targetIds,
+            amount,
+            sourceCombatantId: context.CombatEvent.CombatantId);
     }
 }
 
@@ -218,13 +216,11 @@ public sealed record DealDamageOnTurnStartedTriggeredEffectAction
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
 
-        return targetIds
-            .Select(targetId => (IEffectRequest)new DealDamageEffectRequest(
-                TargetCombatantId: targetId,
-                Amount: amount,
-                SourceCombatantId: context.CombatEvent.CombatantId,
-                Kind: Kind))
-            .ToArray();
+        return TriggeredEffectActionRequestFactory.BuildDealDamageRequests(
+            targetIds,
+            amount,
+            sourceCombatantId: context.CombatEvent.CombatantId,
+            kind: Kind);
     }
 }
 
@@ -291,15 +287,13 @@ public sealed record ApplyStatusOnTurnStartedTriggeredEffectAction
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
 
-        return targetIds
-            .Select(targetId => (IEffectRequest)new ApplyStatusEffectRequest(
-                TargetCombatantId: targetId,
-                StatusDefinitionId: StatusDefinitionId,
-                SourceCombatantId: context.CombatEvent.CombatantId,
-                Stacks: stacks,
-                DurationTurns: durationTurns,
-                Charges: charges))
-            .ToArray();
+        return TriggeredEffectActionRequestFactory.BuildApplyStatusRequests(
+            targetIds,
+            StatusDefinitionId,
+            stacks,
+            durationTurns,
+            charges,
+            sourceCombatantId: context.CombatEvent.CombatantId);
     }
 }
 
@@ -341,11 +335,9 @@ public sealed record DrawCardsOnTurnStartedTriggeredEffectAction
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
 
-        return targetIds
-            .Select(targetId => (IEffectRequest)new DrawCardsEffectRequest(
-                CombatantId: targetId,
-                Count: count))
-            .ToArray();
+        return TriggeredEffectActionRequestFactory.BuildDrawCardsRequests(
+            targetIds,
+            count);
     }
 }
 
@@ -395,6 +387,10 @@ public sealed class TurnStartedTriggeredEffectHandler
         }
     }
 }
+
+
+
+
 
 
 

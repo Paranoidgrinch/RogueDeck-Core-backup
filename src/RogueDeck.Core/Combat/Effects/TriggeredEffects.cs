@@ -259,13 +259,11 @@ public sealed record GainBlockOnCardPlayedTriggeredEffectAction
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
 
-        return targetIds
-            .Select(targetId => (IEffectRequest)new GainBlockEffectRequest(
-                TargetCombatantId: targetId,
-                Amount: amount,
-                SourceCombatantId: context.CombatEvent.SourceCombatantId,
-                SourceCardId: context.CombatEvent.CardDefinitionId))
-            .ToArray();
+        return TriggeredEffectActionRequestFactory.BuildGainBlockRequests(
+            targetIds,
+            amount,
+            sourceCombatantId: context.CombatEvent.SourceCombatantId,
+            sourceCardId: context.CombatEvent.CardDefinitionId);
     }
 }
 
@@ -307,11 +305,9 @@ public sealed record DrawCardsOnCardPlayedTriggeredEffectAction
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
 
-        return targetIds
-            .Select(targetId => (IEffectRequest)new DrawCardsEffectRequest(
-                CombatantId: targetId,
-                Count: count))
-            .ToArray();
+        return TriggeredEffectActionRequestFactory.BuildDrawCardsRequests(
+            targetIds,
+            count);
     }
 }
 
@@ -358,14 +354,12 @@ public sealed record DealDamageOnCardPlayedTriggeredEffectAction
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
 
-        return targetIds
-            .Select(targetId => (IEffectRequest)new DealDamageEffectRequest(
-                TargetCombatantId: targetId,
-                Amount: amount,
-                SourceCombatantId: context.CombatEvent.SourceCombatantId,
-                SourceCardId: context.CombatEvent.CardDefinitionId,
-                Kind: Kind))
-            .ToArray();
+        return TriggeredEffectActionRequestFactory.BuildDealDamageRequests(
+            targetIds,
+            amount,
+            sourceCombatantId: context.CombatEvent.SourceCombatantId,
+            sourceCardId: context.CombatEvent.CardDefinitionId,
+            kind: Kind);
     }
 }
 
@@ -432,16 +426,14 @@ public sealed record ApplyStatusOnCardPlayedTriggeredEffectAction
         if (targetIds.Count == 0)
             return Array.Empty<IEffectRequest>();
 
-        return targetIds
-            .Select(targetId => (IEffectRequest)new ApplyStatusEffectRequest(
-                TargetCombatantId: targetId,
-                StatusDefinitionId: StatusDefinitionId,
-                SourceCombatantId: context.CombatEvent.SourceCombatantId,
-                SourceCardId: context.CombatEvent.CardDefinitionId,
-                Stacks: stacks,
-                DurationTurns: durationTurns,
-                Charges: charges))
-            .ToArray();
+        return TriggeredEffectActionRequestFactory.BuildApplyStatusRequests(
+            targetIds,
+            StatusDefinitionId,
+            stacks,
+            durationTurns,
+            charges,
+            sourceCombatantId: context.CombatEvent.SourceCombatantId,
+            sourceCardId: context.CombatEvent.CardDefinitionId);
     }
 }
 
@@ -494,6 +486,10 @@ public sealed class CardPlayedTriggeredEffectHandler
         }
     }
 }
+
+
+
+
 
 
 
