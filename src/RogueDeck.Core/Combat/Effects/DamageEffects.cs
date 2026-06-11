@@ -55,6 +55,16 @@ public sealed class DealDamageEffectHandler : EffectRequestHandler<DealDamageEff
                 Kind: dealDamage.Kind,
                 SourceCombatantId: dealDamage.SourceCombatantId,
                 SourceCardId: dealDamage.SourceCardId));
+
+        combat.EnqueueEvent(
+            new DamageReceivedCombatEvent(
+                ReceiverCombatantId: dealDamage.TargetCombatantId,
+                HealthDamage: healthDamage,
+                BlockedDamage: blockedDamage,
+                RequestedAmount: dealDamage.Amount,
+                Kind: dealDamage.Kind,
+                SourceCombatantId: dealDamage.SourceCombatantId,
+                SourceCardId: dealDamage.SourceCardId));
     }
 
     private static int ApplyDamageAmountModifiers(

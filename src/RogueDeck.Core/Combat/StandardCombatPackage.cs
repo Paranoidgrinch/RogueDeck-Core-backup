@@ -80,6 +80,7 @@ registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatantLifecycleStateEffectHandler());
         registry.RegisterEffectRequestHandler(new SetCombatResultEffectHandler());                registry.RegisterCombatEventHandler(new ResetCardPlayTurnStatsOnTurnStartedHandler());
         registry.RegisterCombatEventHandler(new DamageDealtTriggeredEffectHandler());
+        registry.RegisterCombatEventHandler(new DamageReceivedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new TurnStartedTriggeredEffectHandler());
 registry.RegisterCombatEventHandler(new RefillResourceOnTurnStartedHandler(StandardCombatIds.EnergyResource, defaultMax: 3));
 

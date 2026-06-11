@@ -26,13 +26,52 @@ public class DamageDealtCombatEventTests
                 TargetCombatantId: heroId,
                 Amount: 5));
 
-        var combatEvent = Assert.Single(combat.PendingEvents);
-        var damageEvent = Assert.IsType<DamageDealtCombatEvent>(combatEvent);
+        var damageEvent = Assert.IsType<DamageDealtCombatEvent>(
+            Assert.Single(combat.PendingEvents.OfType<DamageDealtCombatEvent>()));
 
         Assert.Equal(heroId, damageEvent.TargetCombatantId);
         Assert.Equal(2, damageEvent.HealthDamage);
         Assert.Equal(3, damageEvent.BlockedDamage);
         Assert.Equal(5, damageEvent.RequestedAmount);
+    }
+
+    [Fact]
+    public void DealDamageEnqueuesDamageReceivedEvent()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CreateCombatWithHero();
+
+        var heroId = new CombatantId("hero_001");
+        var sourceId = new CombatantId("enemy_001");
+        var sourceCardId = new CardDefinitionId("card.enemy.strike");
+        var hero = combat.GetCombatant(heroId);
+
+        hero.DefensivePools.Add(
+            StandardCombatIds.BlockDefensivePool,
+            new ValuePoolState(current: 3));
+
+        var resolver = new CombatEffectResolver();
+
+        resolver.Resolve(
+            combat,
+            registry,
+            new DealDamageEffectRequest(
+                TargetCombatantId: heroId,
+                Amount: 5,
+                SourceCombatantId: sourceId,
+                SourceCardId: sourceCardId,
+                Kind: DamageKind.Reflected));
+
+        var damageEvent = Assert.IsType<DamageReceivedCombatEvent>(
+            Assert.Single(combat.PendingEvents.OfType<DamageReceivedCombatEvent>()));
+
+        Assert.Equal(heroId, damageEvent.ReceiverCombatantId);
+        Assert.Equal(2, damageEvent.HealthDamage);
+        Assert.Equal(3, damageEvent.BlockedDamage);
+        Assert.Equal(5, damageEvent.RequestedAmount);
+        Assert.Equal(DamageKind.Reflected, damageEvent.Kind);
+        Assert.Equal(sourceId, damageEvent.SourceCombatantId);
+        Assert.Equal(sourceCardId, damageEvent.SourceCardId);
     }
 
     [Fact]
