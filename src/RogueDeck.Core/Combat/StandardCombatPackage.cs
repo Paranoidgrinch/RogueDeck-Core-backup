@@ -85,6 +85,7 @@ registry.RegisterCombatEventHandler(new RefillResourceOnTurnStartedHandler(Stand
                 registry.RegisterCombatEventHandler(new DrawCardsOnTurnStartedHandler());
 registry.RegisterCombatEventHandler(new ClearBlockOnTurnStartedHandler());
                 registry.RegisterCombatEventHandler(new DiscardHandOnTurnEndedHandler());
+registry.RegisterCombatEventHandler(new TurnEndedTriggeredEffectHandler());
 registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedHandler());
         registry.RegisterCombatEventHandler(new DamageOverTimeOnTurnStartedHandler());
                 registry.RegisterCombatEventHandler(new TrackCardsPlayedThisTurnHandler());
@@ -429,6 +430,7 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
         return definition;
     }
 }
+
 
 
 
