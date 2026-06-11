@@ -82,6 +82,9 @@ registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterCombatEventHandler(new DamageDealtTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new DamageReceivedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusAppliedTriggeredEffectHandler());
+        registry.RegisterCombatEventHandler(new StatusMergedTriggeredEffectHandler());
+        registry.RegisterCombatEventHandler(new StatusRemovedTriggeredEffectHandler());
+        registry.RegisterCombatEventHandler(new StatusExpiredTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new TurnStartedTriggeredEffectHandler());
 registry.RegisterCombatEventHandler(new RefillResourceOnTurnStartedHandler(StandardCombatIds.EnergyResource, defaultMax: 3));
 
