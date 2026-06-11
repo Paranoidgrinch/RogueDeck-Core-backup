@@ -95,15 +95,9 @@ public sealed class LowestHealthEnemyOfSourceCombatantTargetSelector : ICombatan
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        return context.Combat.Combatants
-            .Where(combatant =>
-                combatant.TeamId != context.Source.TeamId &&
-                combatant.IsAlive)
-            .OrderBy(combatant => combatant.Health.Current)
-            .ThenBy(combatant => combatant.Id.ToString(), StringComparer.Ordinal)
-            .Select(combatant => combatant.Id)
-            .Take(1)
-            .ToArray();
+        return CombatantTargetSelectors
+            .LowestHealth(CombatantTargetSelectors.AllEnemiesOfSource)
+            .ResolveTargets(context);
     }
 }
 
@@ -113,15 +107,9 @@ public sealed class HighestHealthEnemyOfSourceCombatantTargetSelector : ICombata
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        return context.Combat.Combatants
-            .Where(combatant =>
-                combatant.TeamId != context.Source.TeamId &&
-                combatant.IsAlive)
-            .OrderByDescending(combatant => combatant.Health.Current)
-            .ThenBy(combatant => combatant.Id.ToString(), StringComparer.Ordinal)
-            .Select(combatant => combatant.Id)
-            .Take(1)
-            .ToArray();
+        return CombatantTargetSelectors
+            .HighestHealth(CombatantTargetSelectors.AllEnemiesOfSource)
+            .ResolveTargets(context);
     }
 }
 
@@ -131,13 +119,9 @@ public sealed class AllDamagedAlliesOfSourceCombatantTargetSelector : ICombatant
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        return context.Combat.Combatants
-            .Where(combatant =>
-                combatant.TeamId == context.Source.TeamId &&
-                combatant.IsAlive &&
-                combatant.Health.Current < combatant.Health.Max)
-            .Select(combatant => combatant.Id)
-            .ToArray();
+        return CombatantTargetSelectors
+            .Damaged(CombatantTargetSelectors.AllAlliesOfSource)
+            .ResolveTargets(context);
     }
 }
 
@@ -148,13 +132,11 @@ public sealed record AllAlliesOfSourceWithStatusCombatantTargetSelector(StatusDe
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        return context.Combat.Combatants
-            .Where(combatant =>
-                combatant.TeamId == context.Source.TeamId &&
-                combatant.IsAlive &&
-                combatant.Statuses.Any(status => status.DefinitionId == StatusDefinitionId))
-            .Select(combatant => combatant.Id)
-            .ToArray();
+        return CombatantTargetSelectors
+            .WithStatus(
+                CombatantTargetSelectors.AllAlliesOfSource,
+                StatusDefinitionId)
+            .ResolveTargets(context);
     }
 }
 
@@ -165,13 +147,11 @@ public sealed record AllEnemiesOfSourceWithStatusCombatantTargetSelector(StatusD
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        return context.Combat.Combatants
-            .Where(combatant =>
-                combatant.TeamId != context.Source.TeamId &&
-                combatant.IsAlive &&
-                combatant.Statuses.Any(status => status.DefinitionId == StatusDefinitionId))
-            .Select(combatant => combatant.Id)
-            .ToArray();
+        return CombatantTargetSelectors
+            .WithStatus(
+                CombatantTargetSelectors.AllEnemiesOfSource,
+                StatusDefinitionId)
+            .ResolveTargets(context);
     }
 }
 public sealed record DamagedCombatantsTargetSelector(ICombatantTargetSelector Inner)
@@ -388,6 +368,11 @@ public static class CombatantTargetSelectors
         return new ExceptCombatantTargetSelector(include, exclude);
     }
 }
+
+
+
+
+
 
 
 

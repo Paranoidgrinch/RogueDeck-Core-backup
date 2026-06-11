@@ -330,6 +330,88 @@ public class CombatantTargetSelectorTests
         Assert.Contains(SecondGoblinId, targets);
         Assert.DoesNotContain(HeroId, targets);
     }
+    [Fact]
+    public void ConvenienceLowestHealthEnemySelectorMatchesComposableSelector()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndTwoGoblins();
+
+        DealDamage(
+            combat,
+            registry,
+            SecondGoblinId,
+            amount: 2);
+
+        var context = CreateContext(combat, HeroId);
+
+        var convenienceTargets = CombatantTargetSelectors
+            .LowestHealthEnemyOfSource
+            .ResolveTargets(context);
+
+        var composableTargets = CombatantTargetSelectors
+            .LowestHealth(CombatantTargetSelectors.AllEnemiesOfSource)
+            .ResolveTargets(context);
+
+        Assert.Equal(composableTargets, convenienceTargets);
+    }
+
+    [Fact]
+    public void ConvenienceDamagedAlliesSelectorMatchesComposableSelector()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        AddPlayerAlly(combat);
+
+        DealDamage(
+            combat,
+            registry,
+            AllyId,
+            amount: 2);
+
+        var context = CreateContext(combat, HeroId);
+
+        var convenienceTargets = CombatantTargetSelectors
+            .AllDamagedAlliesOfSource
+            .ResolveTargets(context);
+
+        var composableTargets = CombatantTargetSelectors
+            .Damaged(CombatantTargetSelectors.AllAlliesOfSource)
+            .ResolveTargets(context);
+
+        Assert.Equal(composableTargets, convenienceTargets);
+    }
+
+    [Fact]
+    public void ConvenienceEnemiesWithStatusSelectorMatchesComposableSelector()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndTwoGoblins();
+
+        var statusId = new StatusDefinitionId("test.convenience_composition_status");
+        RegisterStackingStatus(registry, statusId, StatusPolarity.Debuff);
+
+        ApplyStatus(
+            combat,
+            registry,
+            SecondGoblinId,
+            statusId,
+            stacks: 1);
+
+        var context = CreateContext(combat, HeroId);
+
+        var convenienceTargets = CombatantTargetSelectors
+            .AllEnemiesOfSourceWithStatus(statusId)
+            .ResolveTargets(context);
+
+        var composableTargets = CombatantTargetSelectors
+            .WithStatus(
+                CombatantTargetSelectors.AllEnemiesOfSource,
+                statusId)
+            .ResolveTargets(context);
+
+        Assert.Equal(composableTargets, convenienceTargets);
+    }
     private static CombatantTargetSelectionContext CreateContext(
         CombatState combat,
         CombatantId sourceId,
@@ -400,6 +482,7 @@ public class CombatantTargetSelectorTests
         combat.AddCombatant(ally);
     }
 }
+
 
 
 
