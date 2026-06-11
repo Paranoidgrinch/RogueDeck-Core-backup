@@ -200,6 +200,136 @@ public class CombatantTargetSelectorTests
         Assert.DoesNotContain(HeroId, targets);
         Assert.DoesNotContain(GoblinId, targets);
     }
+    [Fact]
+    public void ComposableDamagedSelectorFiltersInnerTargets()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        AddPlayerAlly(combat);
+
+        DealDamage(
+            combat,
+            registry,
+            AllyId,
+            amount: 2);
+
+        var context = CreateContext(combat, HeroId);
+
+        var targets = CombatantTargetSelectors
+            .Damaged(CombatantTargetSelectors.AllAlliesOfSource)
+            .ResolveTargets(context);
+
+        Assert.Equal(AllyId, Assert.Single(targets));
+        Assert.DoesNotContain(HeroId, targets);
+        Assert.DoesNotContain(GoblinId, targets);
+    }
+
+    [Fact]
+    public void ComposableWithStatusSelectorFiltersInnerTargets()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndTwoGoblins();
+
+        var statusId = new StatusDefinitionId("test.composable_status");
+        RegisterStackingStatus(registry, statusId, StatusPolarity.Debuff);
+
+        ApplyStatus(
+            combat,
+            registry,
+            SecondGoblinId,
+            statusId,
+            stacks: 1);
+
+        var context = CreateContext(combat, HeroId);
+
+        var targets = CombatantTargetSelectors
+            .WithStatus(
+                CombatantTargetSelectors.AllEnemiesOfSource,
+                statusId)
+            .ResolveTargets(context);
+
+        Assert.Equal(SecondGoblinId, Assert.Single(targets));
+        Assert.DoesNotContain(GoblinId, targets);
+        Assert.DoesNotContain(HeroId, targets);
+    }
+
+    [Fact]
+    public void ComposableLowestHealthSelectorSelectsLowestFromInnerTargets()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndTwoGoblins();
+
+        DealDamage(
+            combat,
+            registry,
+            SecondGoblinId,
+            amount: 2);
+
+        var context = CreateContext(combat, HeroId);
+
+        var targets = CombatantTargetSelectors
+            .LowestHealth(CombatantTargetSelectors.AllEnemiesOfSource)
+            .ResolveTargets(context);
+
+        Assert.Equal(SecondGoblinId, Assert.Single(targets));
+    }
+
+    [Fact]
+    public void ComposableHighestHealthSelectorSelectsHighestFromInnerTargets()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndTwoGoblins();
+
+        DealDamage(
+            combat,
+            registry,
+            SecondGoblinId,
+            amount: 2);
+
+        var context = CreateContext(combat, HeroId);
+
+        var targets = CombatantTargetSelectors
+            .HighestHealth(CombatantTargetSelectors.AllEnemiesOfSource)
+            .ResolveTargets(context);
+
+        Assert.Equal(GoblinId, Assert.Single(targets));
+    }
+
+    [Fact]
+    public void ComposableUnionSelectorCombinesTargetsWithoutDuplicates()
+    {
+        var combat = CombatTestFactory.CreateCombatWithHeroAndTwoGoblins();
+        var context = CreateContext(combat, HeroId);
+
+        var targets = CombatantTargetSelectors
+            .Union(
+                CombatantTargetSelectors.Source,
+                CombatantTargetSelectors.AllEnemiesOfSource,
+                CombatantTargetSelectors.Source)
+            .ResolveTargets(context);
+
+        Assert.Equal(
+            new[] { HeroId, GoblinId, SecondGoblinId },
+            targets);
+    }
+
+    [Fact]
+    public void ComposableExceptSelectorRemovesExcludedTargets()
+    {
+        var combat = CombatTestFactory.CreateCombatWithHeroAndTwoGoblins();
+        var context = CreateContext(combat, HeroId);
+
+        var targets = CombatantTargetSelectors
+            .Except(
+                CombatantTargetSelectors.AllAliveCombatants,
+                CombatantTargetSelectors.Source)
+            .ResolveTargets(context);
+
+        Assert.Contains(GoblinId, targets);
+        Assert.Contains(SecondGoblinId, targets);
+        Assert.DoesNotContain(HeroId, targets);
+    }
     private static CombatantTargetSelectionContext CreateContext(
         CombatState combat,
         CombatantId sourceId,
@@ -270,5 +400,6 @@ public class CombatantTargetSelectorTests
         combat.AddCombatant(ally);
     }
 }
+
 
 

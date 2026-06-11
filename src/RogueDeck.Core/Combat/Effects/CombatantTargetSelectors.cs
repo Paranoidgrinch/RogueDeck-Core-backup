@@ -174,6 +174,147 @@ public sealed record AllEnemiesOfSourceWithStatusCombatantTargetSelector(StatusD
             .ToArray();
     }
 }
+public sealed record DamagedCombatantsTargetSelector(ICombatantTargetSelector Inner)
+    : ICombatantTargetSelector
+{
+    public IReadOnlyCollection<CombatantId> ResolveTargets(CombatantTargetSelectionContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(Inner);
+
+        return Inner.ResolveTargets(context)
+            .Select(targetId => context.Combat.TryGetCombatant(targetId, out var combatant)
+                ? combatant
+                : null)
+            .Where(combatant =>
+                combatant is not null &&
+                combatant.IsAlive &&
+                combatant.Health.Current < combatant.Health.Max)
+            .Select(combatant => combatant!.Id)
+            .ToArray();
+    }
+}
+
+public sealed record CombatantsWithStatusTargetSelector(
+    ICombatantTargetSelector Inner,
+    StatusDefinitionId StatusDefinitionId)
+    : ICombatantTargetSelector
+{
+    public IReadOnlyCollection<CombatantId> ResolveTargets(CombatantTargetSelectionContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(Inner);
+
+        return Inner.ResolveTargets(context)
+            .Select(targetId => context.Combat.TryGetCombatant(targetId, out var combatant)
+                ? combatant
+                : null)
+            .Where(combatant =>
+                combatant is not null &&
+                combatant.IsAlive &&
+                combatant.Statuses.Any(status => status.DefinitionId == StatusDefinitionId))
+            .Select(combatant => combatant!.Id)
+            .ToArray();
+    }
+}
+
+public sealed record LowestHealthCombatantTargetSelector(ICombatantTargetSelector Inner)
+    : ICombatantTargetSelector
+{
+    public IReadOnlyCollection<CombatantId> ResolveTargets(CombatantTargetSelectionContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(Inner);
+
+        return Inner.ResolveTargets(context)
+            .Select(targetId => context.Combat.TryGetCombatant(targetId, out var combatant)
+                ? combatant
+                : null)
+            .Where(combatant => combatant is not null && combatant.IsAlive)
+            .OrderBy(combatant => combatant!.Health.Current)
+            .ThenBy(combatant => combatant!.Id.ToString(), StringComparer.Ordinal)
+            .Select(combatant => combatant!.Id)
+            .Take(1)
+            .ToArray();
+    }
+}
+
+public sealed record HighestHealthCombatantTargetSelector(ICombatantTargetSelector Inner)
+    : ICombatantTargetSelector
+{
+    public IReadOnlyCollection<CombatantId> ResolveTargets(CombatantTargetSelectionContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(Inner);
+
+        return Inner.ResolveTargets(context)
+            .Select(targetId => context.Combat.TryGetCombatant(targetId, out var combatant)
+                ? combatant
+                : null)
+            .Where(combatant => combatant is not null && combatant.IsAlive)
+            .OrderByDescending(combatant => combatant!.Health.Current)
+            .ThenBy(combatant => combatant!.Id.ToString(), StringComparer.Ordinal)
+            .Select(combatant => combatant!.Id)
+            .Take(1)
+            .ToArray();
+    }
+}
+
+public sealed class UnionCombatantTargetSelector : ICombatantTargetSelector
+{
+    private readonly IReadOnlyCollection<ICombatantTargetSelector> _selectors;
+
+    public UnionCombatantTargetSelector(params ICombatantTargetSelector[] selectors)
+    {
+        ArgumentNullException.ThrowIfNull(selectors);
+
+        if (selectors.Length == 0)
+            throw new ArgumentException("At least one selector is required.", nameof(selectors));
+
+        if (selectors.Any(selector => selector is null))
+            throw new ArgumentException("Selectors cannot contain null.", nameof(selectors));
+
+        _selectors = selectors.ToArray();
+    }
+
+    public IReadOnlyCollection<CombatantId> ResolveTargets(CombatantTargetSelectionContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var seen = new HashSet<CombatantId>();
+        var result = new List<CombatantId>();
+
+        foreach (var selector in _selectors)
+        {
+            foreach (var targetId in selector.ResolveTargets(context))
+            {
+                if (seen.Add(targetId))
+                    result.Add(targetId);
+            }
+        }
+
+        return result;
+    }
+}
+
+public sealed record ExceptCombatantTargetSelector(
+    ICombatantTargetSelector Include,
+    ICombatantTargetSelector Exclude)
+    : ICombatantTargetSelector
+{
+    public IReadOnlyCollection<CombatantId> ResolveTargets(CombatantTargetSelectionContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(Include);
+        ArgumentNullException.ThrowIfNull(Exclude);
+
+        var excluded = Exclude.ResolveTargets(context).ToHashSet();
+
+        return Include.ResolveTargets(context)
+            .Where(targetId => !excluded.Contains(targetId))
+            .ToArray();
+    }
+}
 public static class CombatantTargetSelectors
 {
     public static ICombatantTargetSelector Source { get; } =
@@ -213,6 +354,41 @@ public static class CombatantTargetSelectors
     {
         return new AllEnemiesOfSourceWithStatusCombatantTargetSelector(statusDefinitionId);
     }
+    public static ICombatantTargetSelector Damaged(ICombatantTargetSelector inner)
+    {
+        return new DamagedCombatantsTargetSelector(inner);
+    }
+
+    public static ICombatantTargetSelector WithStatus(
+        ICombatantTargetSelector inner,
+        StatusDefinitionId statusDefinitionId)
+    {
+        return new CombatantsWithStatusTargetSelector(inner, statusDefinitionId);
+    }
+
+    public static ICombatantTargetSelector LowestHealth(ICombatantTargetSelector inner)
+    {
+        return new LowestHealthCombatantTargetSelector(inner);
+    }
+
+    public static ICombatantTargetSelector HighestHealth(ICombatantTargetSelector inner)
+    {
+        return new HighestHealthCombatantTargetSelector(inner);
+    }
+
+    public static ICombatantTargetSelector Union(params ICombatantTargetSelector[] selectors)
+    {
+        return new UnionCombatantTargetSelector(selectors);
+    }
+
+    public static ICombatantTargetSelector Except(
+        ICombatantTargetSelector include,
+        ICombatantTargetSelector exclude)
+    {
+        return new ExceptCombatantTargetSelector(include, exclude);
+    }
 }
+
+
 
 
