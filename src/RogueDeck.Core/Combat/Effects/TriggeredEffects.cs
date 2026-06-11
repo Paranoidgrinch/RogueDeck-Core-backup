@@ -196,6 +196,16 @@ public static class CardPlayedTriggeredEffectTargetResolver
             SourceCardId: context.CombatEvent.CardDefinitionId);
     }
 
+    public static TriggeredEffectActionBuildContext CreateActionBuildContext(
+        CardPlayedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new TriggeredEffectActionBuildContext(
+            TargetSelectionContext: CreateSelectionContext(context),
+            Source: CreateActionSource(context));
+    }
+
     public static bool TryResolveTarget(
         CardPlayedTriggeredEffectContext context,
         CardPlayedTriggeredEffectTarget target,
@@ -259,20 +269,10 @@ public sealed record GainBlockOnCardPlayedTriggeredEffectAction
 
         var amount = AmountProvider.ResolveAmount(context);
 
-        if (amount <= 0)
-            return Array.Empty<IEffectRequest>();
-
-        var targetIds = CardPlayedTriggeredEffectTargetResolver.ResolveTargets(
-            context,
-            TargetSelector);
-
-        if (targetIds.Count == 0)
-            return Array.Empty<IEffectRequest>();
-
-        return TriggeredEffectActionRequestFactory.BuildGainBlockRequests(
-            targetIds,
-            amount,
-            CardPlayedTriggeredEffectTargetResolver.CreateActionSource(context));
+        return TriggeredEffectActionBuilder.BuildGainBlockRequests(
+            CardPlayedTriggeredEffectTargetResolver.CreateActionBuildContext(context),
+            TargetSelector,
+            amount);
     }
 }
 
@@ -304,18 +304,9 @@ public sealed record DrawCardsOnCardPlayedTriggeredEffectAction
 
         var count = AmountProvider.ResolveAmount(context);
 
-        if (count <= 0)
-            return Array.Empty<IEffectRequest>();
-
-        var targetIds = CardPlayedTriggeredEffectTargetResolver.ResolveTargets(
-            context,
-            TargetSelector);
-
-        if (targetIds.Count == 0)
-            return Array.Empty<IEffectRequest>();
-
-        return TriggeredEffectActionRequestFactory.BuildDrawCardsRequests(
-            targetIds,
+        return TriggeredEffectActionBuilder.BuildDrawCardsRequests(
+            CardPlayedTriggeredEffectTargetResolver.CreateActionBuildContext(context),
+            TargetSelector,
             count);
     }
 }
@@ -353,20 +344,10 @@ public sealed record DealDamageOnCardPlayedTriggeredEffectAction
 
         var amount = AmountProvider.ResolveAmount(context);
 
-        if (amount <= 0)
-            return Array.Empty<IEffectRequest>();
-
-        var targetIds = CardPlayedTriggeredEffectTargetResolver.ResolveTargets(
-            context,
-            TargetSelector);
-
-        if (targetIds.Count == 0)
-            return Array.Empty<IEffectRequest>();
-
-        return TriggeredEffectActionRequestFactory.BuildDealDamageRequests(
-            targetIds,
+        return TriggeredEffectActionBuilder.BuildDealDamageRequests(
+            CardPlayedTriggeredEffectTargetResolver.CreateActionBuildContext(context),
+            TargetSelector,
             amount,
-            CardPlayedTriggeredEffectTargetResolver.CreateActionSource(context),
             kind: Kind);
     }
 }
@@ -421,26 +402,13 @@ public sealed record ApplyStatusOnCardPlayedTriggeredEffectAction
         var durationTurns = DurationTurnsProvider.ResolveAmount(context);
         var charges = ChargesProvider.ResolveAmount(context);
 
-        if (stacks < 0 || durationTurns < 0 || charges < 0)
-            return Array.Empty<IEffectRequest>();
-
-        if (stacks == 0 && durationTurns == 0 && charges == 0)
-            return Array.Empty<IEffectRequest>();
-
-        var targetIds = CardPlayedTriggeredEffectTargetResolver.ResolveTargets(
-            context,
-            TargetSelector);
-
-        if (targetIds.Count == 0)
-            return Array.Empty<IEffectRequest>();
-
-        return TriggeredEffectActionRequestFactory.BuildApplyStatusRequests(
-            targetIds,
+        return TriggeredEffectActionBuilder.BuildApplyStatusRequests(
+            CardPlayedTriggeredEffectTargetResolver.CreateActionBuildContext(context),
+            TargetSelector,
             StatusDefinitionId,
             stacks,
             durationTurns,
-            charges,
-            CardPlayedTriggeredEffectTargetResolver.CreateActionSource(context));
+            charges);
     }
 }
 
@@ -493,6 +461,11 @@ public sealed class CardPlayedTriggeredEffectHandler
         }
     }
 }
+
+
+
+
+
 
 
 

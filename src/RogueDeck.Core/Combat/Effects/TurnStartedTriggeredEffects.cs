@@ -135,6 +135,16 @@ public static class TurnStartedTriggeredEffectTargetResolver
         return new TriggeredEffectActionSource(
             SourceCombatantId: context.CombatEvent.CombatantId);
     }
+
+    public static TriggeredEffectActionBuildContext CreateActionBuildContext(
+        TurnStartedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new TriggeredEffectActionBuildContext(
+            TargetSelectionContext: CreateSelectionContext(context),
+            Source: CreateActionSource(context));
+    }
 }
 
 public sealed record GainBlockOnTurnStartedTriggeredEffectAction
@@ -165,20 +175,10 @@ public sealed record GainBlockOnTurnStartedTriggeredEffectAction
 
         var amount = AmountProvider.ResolveAmount(context);
 
-        if (amount <= 0)
-            return Array.Empty<IEffectRequest>();
-
-        var targetIds = TurnStartedTriggeredEffectTargetResolver.ResolveTargets(
-            context,
-            TargetSelector);
-
-        if (targetIds.Count == 0)
-            return Array.Empty<IEffectRequest>();
-
-        return TriggeredEffectActionRequestFactory.BuildGainBlockRequests(
-            targetIds,
-            amount,
-            TurnStartedTriggeredEffectTargetResolver.CreateActionSource(context));
+        return TriggeredEffectActionBuilder.BuildGainBlockRequests(
+            TurnStartedTriggeredEffectTargetResolver.CreateActionBuildContext(context),
+            TargetSelector,
+            amount);
     }
 }
 
@@ -215,20 +215,10 @@ public sealed record DealDamageOnTurnStartedTriggeredEffectAction
 
         var amount = AmountProvider.ResolveAmount(context);
 
-        if (amount <= 0)
-            return Array.Empty<IEffectRequest>();
-
-        var targetIds = TurnStartedTriggeredEffectTargetResolver.ResolveTargets(
-            context,
-            TargetSelector);
-
-        if (targetIds.Count == 0)
-            return Array.Empty<IEffectRequest>();
-
-        return TriggeredEffectActionRequestFactory.BuildDealDamageRequests(
-            targetIds,
+        return TriggeredEffectActionBuilder.BuildDealDamageRequests(
+            TurnStartedTriggeredEffectTargetResolver.CreateActionBuildContext(context),
+            TargetSelector,
             amount,
-            TurnStartedTriggeredEffectTargetResolver.CreateActionSource(context),
             kind: Kind);
     }
 }
@@ -283,26 +273,13 @@ public sealed record ApplyStatusOnTurnStartedTriggeredEffectAction
         var durationTurns = DurationTurnsProvider.ResolveAmount(context);
         var charges = ChargesProvider.ResolveAmount(context);
 
-        if (stacks < 0 || durationTurns < 0 || charges < 0)
-            return Array.Empty<IEffectRequest>();
-
-        if (stacks == 0 && durationTurns == 0 && charges == 0)
-            return Array.Empty<IEffectRequest>();
-
-        var targetIds = TurnStartedTriggeredEffectTargetResolver.ResolveTargets(
-            context,
-            TargetSelector);
-
-        if (targetIds.Count == 0)
-            return Array.Empty<IEffectRequest>();
-
-        return TriggeredEffectActionRequestFactory.BuildApplyStatusRequests(
-            targetIds,
+        return TriggeredEffectActionBuilder.BuildApplyStatusRequests(
+            TurnStartedTriggeredEffectTargetResolver.CreateActionBuildContext(context),
+            TargetSelector,
             StatusDefinitionId,
             stacks,
             durationTurns,
-            charges,
-            TurnStartedTriggeredEffectTargetResolver.CreateActionSource(context));
+            charges);
     }
 }
 
@@ -334,18 +311,9 @@ public sealed record DrawCardsOnTurnStartedTriggeredEffectAction
 
         var count = AmountProvider.ResolveAmount(context);
 
-        if (count <= 0)
-            return Array.Empty<IEffectRequest>();
-
-        var targetIds = TurnStartedTriggeredEffectTargetResolver.ResolveTargets(
-            context,
-            TargetSelector);
-
-        if (targetIds.Count == 0)
-            return Array.Empty<IEffectRequest>();
-
-        return TriggeredEffectActionRequestFactory.BuildDrawCardsRequests(
-            targetIds,
+        return TriggeredEffectActionBuilder.BuildDrawCardsRequests(
+            TurnStartedTriggeredEffectTargetResolver.CreateActionBuildContext(context),
+            TargetSelector,
             count);
     }
 }
@@ -396,6 +364,11 @@ public sealed class TurnStartedTriggeredEffectHandler
         }
     }
 }
+
+
+
+
+
 
 
 
