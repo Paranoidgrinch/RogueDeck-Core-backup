@@ -142,41 +142,24 @@ public static class CardPlayedTriggeredEffectTargetResolver
     {
         ArgumentNullException.ThrowIfNull(context);
 
+        var selectionContext = new CombatantTargetSelectionContext(
+            Combat: context.Combat,
+            Source: context.Source,
+            EventTargetId: context.CombatEvent.TargetCombatantId);
+
         switch (target)
         {
             case CardPlayedTriggeredEffectTarget.Source:
-                return context.Source.IsAlive
-                    ? new[] { context.Source.Id }
-                    : Array.Empty<CombatantId>();
+                return CombatantTargetSelectors.Source.ResolveTargets(selectionContext);
 
             case CardPlayedTriggeredEffectTarget.PlayedCardTarget:
-                if (context.CombatEvent.TargetCombatantId is null)
-                    return Array.Empty<CombatantId>();
-
-                var playedCardTargetId = context.CombatEvent.TargetCombatantId.Value;
-
-                if (!context.Combat.TryGetCombatant(playedCardTargetId, out var playedCardTarget))
-                    return Array.Empty<CombatantId>();
-
-                return playedCardTarget!.IsAlive
-                    ? new[] { playedCardTargetId }
-                    : Array.Empty<CombatantId>();
+                return CombatantTargetSelectors.EventTarget.ResolveTargets(selectionContext);
 
             case CardPlayedTriggeredEffectTarget.AllAllies:
-                return context.Combat.Combatants
-                    .Where(combatant =>
-                        combatant.TeamId == context.Source.TeamId &&
-                        combatant.IsAlive)
-                    .Select(combatant => combatant.Id)
-                    .ToArray();
+                return CombatantTargetSelectors.AllAlliesOfSource.ResolveTargets(selectionContext);
 
             case CardPlayedTriggeredEffectTarget.AllEnemies:
-                return context.Combat.Combatants
-                    .Where(combatant =>
-                        combatant.TeamId != context.Source.TeamId &&
-                        combatant.IsAlive)
-                    .Select(combatant => combatant.Id)
-                    .ToArray();
+                return CombatantTargetSelectors.AllEnemiesOfSource.ResolveTargets(selectionContext);
 
             default:
                 throw new InvalidOperationException(
@@ -384,3 +367,4 @@ public sealed class CardPlayedTriggeredEffectHandler
         }
     }
 }
+

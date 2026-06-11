@@ -87,28 +87,20 @@ public static class TurnEndedTriggeredEffectTargetResolver
     {
         ArgumentNullException.ThrowIfNull(context);
 
+        var selectionContext = new CombatantTargetSelectionContext(
+            Combat: context.Combat,
+            Source: context.TurnCombatant);
+
         switch (target)
         {
             case TurnEndedTriggeredEffectTarget.TurnCombatant:
-                return context.TurnCombatant.IsAlive
-                    ? new[] { context.TurnCombatant.Id }
-                    : Array.Empty<CombatantId>();
+                return CombatantTargetSelectors.Source.ResolveTargets(selectionContext);
 
             case TurnEndedTriggeredEffectTarget.AllAllies:
-                return context.Combat.Combatants
-                    .Where(combatant =>
-                        combatant.TeamId == context.TurnCombatant.TeamId &&
-                        combatant.IsAlive)
-                    .Select(combatant => combatant.Id)
-                    .ToArray();
+                return CombatantTargetSelectors.AllAlliesOfSource.ResolveTargets(selectionContext);
 
             case TurnEndedTriggeredEffectTarget.AllEnemies:
-                return context.Combat.Combatants
-                    .Where(combatant =>
-                        combatant.TeamId != context.TurnCombatant.TeamId &&
-                        combatant.IsAlive)
-                    .Select(combatant => combatant.Id)
-                    .ToArray();
+                return CombatantTargetSelectors.AllEnemiesOfSource.ResolveTargets(selectionContext);
 
             default:
                 throw new InvalidOperationException(
@@ -293,3 +285,4 @@ public sealed class TurnEndedTriggeredEffectHandler
         }
     }
 }
+
