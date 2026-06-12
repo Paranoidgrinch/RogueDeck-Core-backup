@@ -97,6 +97,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
                 registry.RegisterCombatEventHandler(new TrackCardsPlayedThisTurnHandler());
         registry.RegisterCombatEventHandler(new CardPlayedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new CardsDrawnTriggeredEffectHandler());
+        registry.RegisterCombatEventHandler(new DiscardPileShuffledTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new HandDiscardedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new CardExhaustedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new CardBanishedTriggeredEffectHandler());

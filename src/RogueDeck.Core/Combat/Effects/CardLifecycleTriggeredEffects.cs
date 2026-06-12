@@ -213,6 +213,168 @@ public sealed class CardsDrawnTriggeredEffectHandler
     }
 }
 
+public sealed class DiscardPileShuffledTriggeredEffectDefinition : ITriggeredEffectDefinition
+{
+    public TriggeredEffectDefinitionId Id { get; }
+
+    public Type EventType => typeof(DiscardPileShuffledIntoDrawPileCombatEvent);
+
+    public List<IDiscardPileShuffledTriggeredEffectFilter> Filters { get; } = new();
+
+    public List<IDiscardPileShuffledTriggeredEffectAction> Actions { get; } = new();
+
+    public DiscardPileShuffledTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
+    {
+        Id = id;
+    }
+}
+
+public sealed record DiscardPileShuffledTriggeredEffectContext(
+    CombatState Combat,
+    CombatDefinitionRegistry Registry,
+    DiscardPileShuffledIntoDrawPileCombatEvent CombatEvent,
+    CombatantState Source,
+    IReadOnlyCollection<CardInstance> Cards,
+    IReadOnlyCollection<CardDefinition> CardDefinitions);
+
+public interface IDiscardPileShuffledTriggeredEffectFilter
+{
+    bool Matches(DiscardPileShuffledTriggeredEffectContext context);
+}
+
+public interface IDiscardPileShuffledTriggeredEffectAction
+{
+    IReadOnlyCollection<IEffectRequest> BuildEffectRequests(DiscardPileShuffledTriggeredEffectContext context);
+}
+
+public interface IDiscardPileShuffledTriggeredEffectAmountProvider
+{
+    int ResolveAmount(DiscardPileShuffledTriggeredEffectContext context);
+}
+
+public sealed record FixedDiscardPileShuffledTriggeredEffectAmount(int Amount)
+    : IDiscardPileShuffledTriggeredEffectAmountProvider
+{
+    public int ResolveAmount(DiscardPileShuffledTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return Amount;
+    }
+}
+
+public sealed record DiscardPileShuffledCardCountAmount
+    : IDiscardPileShuffledTriggeredEffectAmountProvider
+{
+    public int ResolveAmount(DiscardPileShuffledTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return context.Cards.Count;
+    }
+}
+
+public sealed record DiscardPileShuffledCardDefinitionTriggerFilter(CardDefinitionId CardDefinitionId)
+    : IDiscardPileShuffledTriggeredEffectFilter
+{
+    public bool Matches(DiscardPileShuffledTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return context.CardDefinitions.Any(card => card.Id == CardDefinitionId);
+    }
+}
+
+public sealed record DiscardPileShuffledCardHasTagTriggerFilter(TagId TagId)
+    : IDiscardPileShuffledTriggeredEffectFilter
+{
+    public bool Matches(DiscardPileShuffledTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return context.CardDefinitions.Any(card => card.Tags.Contains(TagId));
+    }
+}
+
+public sealed record GainBlockOnDiscardPileShuffledTriggeredEffectAction
+    : IDiscardPileShuffledTriggeredEffectAction
+{
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public IDiscardPileShuffledTriggeredEffectAmountProvider AmountProvider { get; }
+
+    public GainBlockOnDiscardPileShuffledTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        IDiscardPileShuffledTriggeredEffectAmountProvider amountProvider)
+    {
+        TargetSelector = targetSelector;
+        AmountProvider = amountProvider;
+    }
+
+    public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(DiscardPileShuffledTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return TriggeredEffectActionBuilder.BuildGainBlockRequests(
+            new TriggeredEffectActionBuildContext(
+                new CombatantTargetSelectionContext(
+                    Combat: context.Combat,
+                    Source: context.Source),
+                new TriggeredEffectActionSource(SourceCombatantId: context.Source.Id)),
+            TargetSelector,
+            AmountProvider.ResolveAmount(context));
+    }
+}
+
+public sealed class DiscardPileShuffledTriggeredEffectHandler
+    : CombatEventHandler<DiscardPileShuffledIntoDrawPileCombatEvent>
+{
+    private readonly IReadOnlyCollection<DiscardPileShuffledTriggeredEffectDefinition> _definitions;
+
+    public DiscardPileShuffledTriggeredEffectHandler(params DiscardPileShuffledTriggeredEffectDefinition[] definitions)
+    {
+        ArgumentNullException.ThrowIfNull(definitions);
+
+        if (definitions.Any(definition => definition is null))
+            throw new ArgumentException("Triggered effect definitions cannot contain null.", nameof(definitions));
+
+        _definitions = definitions;
+    }
+
+    protected override void Handle(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        DiscardPileShuffledIntoDrawPileCombatEvent combatEvent)
+    {
+        if (!combat.TryGetCombatant(combatEvent.CombatantId, out var source))
+            return;
+
+        var cards = CardLifecycleTriggeredEffectSupport.ResolveCards(
+            combat,
+            combatEvent.CombatantId,
+            combatEvent.CardInstanceIds);
+        var cardDefinitions = CardLifecycleTriggeredEffectSupport.ResolveCardDefinitions(registry, cards);
+
+        var context = new DiscardPileShuffledTriggeredEffectContext(
+            Combat: combat,
+            Registry: registry,
+            CombatEvent: combatEvent,
+            Source: source!,
+            Cards: cards,
+            CardDefinitions: cardDefinitions);
+
+        var definitions = _definitions.Concat(
+            registry.GetTriggeredEffectDefinitions(typeof(DiscardPileShuffledIntoDrawPileCombatEvent))
+                .OfType<DiscardPileShuffledTriggeredEffectDefinition>());
+
+        TriggeredEffectDefinitionRunner.EnqueueEffectRequests(
+            combat,
+            definitions,
+            definition => definition.Filters.All(filter => filter.Matches(context)),
+            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+    }
+}
+
 public sealed class HandDiscardedTriggeredEffectDefinition : ITriggeredEffectDefinition
 {
     public TriggeredEffectDefinitionId Id { get; }

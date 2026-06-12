@@ -16,6 +16,9 @@ public class CardLifecycleTriggeredEffectTests
             registry.GetCombatEventHandlers(typeof(CardsDrawnCombatEvent)),
             handler => handler is CardsDrawnTriggeredEffectHandler);
         Assert.Contains(
+            registry.GetCombatEventHandlers(typeof(DiscardPileShuffledIntoDrawPileCombatEvent)),
+            handler => handler is DiscardPileShuffledTriggeredEffectHandler);
+        Assert.Contains(
             registry.GetCombatEventHandlers(typeof(HandDiscardedCombatEvent)),
             handler => handler is HandDiscardedTriggeredEffectHandler);
         Assert.Contains(
@@ -162,6 +165,172 @@ public class CardLifecycleTriggeredEffectTests
         combat.EnqueueEvent(new CardsDrawnCombatEvent(
             HeroId,
             new[] { new CardInstanceId("missing_card_instance") }));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(0, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void DiscardPileShuffledTriggeredEffectFiresWhenDiscardPileShufflesIntoDrawPile()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        AddCardToZone(combat, HeroId, StandardCombatIds.StrikeCard, CardZone.DiscardPile);
+
+        var definition = new DiscardPileShuffledTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.discard_shuffle_block"));
+        definition.Actions.Add(
+            new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedDiscardPileShuffledTriggeredEffectAmount(3)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        combat.EnqueueEffect(new DrawCardsEffectRequest(HeroId, Count: 1));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(3, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void DiscardPileShuffledTriggeredEffectActionCanTargetOwnerSource()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        AddCardToZone(combat, HeroId, StandardCombatIds.StrikeCard, CardZone.DiscardPile);
+
+        var definition = new DiscardPileShuffledTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.discard_shuffle_source_block"));
+        definition.Actions.Add(
+            new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedDiscardPileShuffledTriggeredEffectAmount(4)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        combat.EnqueueEffect(new DrawCardsEffectRequest(HeroId, Count: 1));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(4, GetBlock(combat, HeroId));
+        Assert.Equal(0, GetBlock(combat, GoblinId));
+    }
+
+    [Fact]
+    public void DiscardPileShuffledTriggeredEffectCanUseShuffledCardCountAmount()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        AddCardToZone(combat, HeroId, StandardCombatIds.StrikeCard, CardZone.DiscardPile);
+        AddCardToZone(combat, HeroId, StandardCombatIds.DefendCard, CardZone.DiscardPile);
+
+        var definition = new DiscardPileShuffledTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.discard_shuffle_count_block"));
+        definition.Actions.Add(
+            new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new DiscardPileShuffledCardCountAmount()));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        combat.EnqueueEffect(new DrawCardsEffectRequest(HeroId, Count: 1));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(2, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void DiscardPileShuffledTriggeredEffectCanFilterByCardDefinitionId()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        AddCardToZone(combat, HeroId, StandardCombatIds.StrikeCard, CardZone.DiscardPile);
+
+        var matching = new DiscardPileShuffledTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.discard_shuffle_strike_block"));
+        matching.Filters.Add(new DiscardPileShuffledCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
+        matching.Actions.Add(
+            new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedDiscardPileShuffledTriggeredEffectAmount(2)));
+
+        var nonMatching = new DiscardPileShuffledTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.discard_shuffle_defend_block"));
+        nonMatching.Filters.Add(new DiscardPileShuffledCardDefinitionTriggerFilter(StandardCombatIds.DefendCard));
+        nonMatching.Actions.Add(
+            new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedDiscardPileShuffledTriggeredEffectAmount(5)));
+
+        registry.RegisterTriggeredEffectDefinition(matching);
+        registry.RegisterTriggeredEffectDefinition(nonMatching);
+
+        combat.EnqueueEffect(new DrawCardsEffectRequest(HeroId, Count: 1));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(2, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void DiscardPileShuffledTriggeredEffectCanFilterByCardTag()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        AddCardToZone(combat, HeroId, StandardCombatIds.DefendCard, CardZone.DiscardPile);
+
+        var matching = new DiscardPileShuffledTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.discard_shuffle_skill_block"));
+        matching.Filters.Add(new DiscardPileShuffledCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
+        matching.Actions.Add(
+            new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedDiscardPileShuffledTriggeredEffectAmount(2)));
+
+        var nonMatching = new DiscardPileShuffledTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.discard_shuffle_attack_block"));
+        nonMatching.Filters.Add(new DiscardPileShuffledCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
+        nonMatching.Actions.Add(
+            new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedDiscardPileShuffledTriggeredEffectAmount(5)));
+
+        registry.RegisterTriggeredEffectDefinition(matching);
+        registry.RegisterTriggeredEffectDefinition(nonMatching);
+
+        combat.EnqueueEffect(new DrawCardsEffectRequest(HeroId, Count: 1));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(2, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void DiscardPileShuffledTriggeredEffectEmptyShuffledCardCollectionIsSafe()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var definition = new DiscardPileShuffledTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.discard_shuffle_empty"));
+        definition.Actions.Add(
+            new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new DiscardPileShuffledCardCountAmount()));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        combat.EnqueueEvent(new DiscardPileShuffledIntoDrawPileCombatEvent(
+            HeroId,
+            Array.Empty<CardInstanceId>()));
 
         new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
 
