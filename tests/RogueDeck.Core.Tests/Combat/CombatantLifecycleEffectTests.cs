@@ -114,6 +114,141 @@ public class CombatantLifecycleEffectTests
         Assert.DoesNotContain(combat.CombatLog, entry => entry.Type == "CombatantLifecycleChanged");
     }
 
+    [Fact]
+    public void SetCombatantLifecycleStateEmitsLifecycleChangedEventAfterStateChange()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CreateCombatWithHeroAndGoblin();
+
+        var snapshots = new List<LifecycleChangedSnapshot>();
+        registry.RegisterCombatEventHandler(new CaptureLifecycleChangedSnapshotHandler(snapshots));
+
+        var heroId = new CombatantId("hero_001");
+
+        combat.EnqueueEffect(new SetCombatantLifecycleStateEffectRequest(
+            CombatantId: heroId,
+            LifecycleState: CombatantLifecycleState.Downed));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        var snapshot = Assert.Single(snapshots);
+
+        Assert.Equal(heroId, snapshot.CombatantId);
+        Assert.Equal(CombatantLifecycleState.Alive, snapshot.OldState);
+        Assert.Equal(CombatantLifecycleState.Downed, snapshot.NewState);
+        Assert.Equal(CombatantLifecycleState.Downed, snapshot.ObservedCurrentState);
+    }
+
+    [Fact]
+    public void LifecycleHandlerRegisteredBeforeResultHandlerCanQueueEffectsBeforeCombatResultChanges()
+    {
+        var registry = new CombatDefinitionRegistry();
+
+        registry.RegisterEffectRequestHandler(new DealDamageEffectHandler());
+        registry.RegisterEffectRequestHandler(new GainBlockEffectHandler());
+        registry.RegisterEffectRequestHandler(new SetCombatantLifecycleStateEffectHandler());
+        registry.RegisterEffectRequestHandler(new SetCombatResultEffectHandler());
+
+        registry.RegisterCombatEventHandler(new MarkCombatantDownedOnZeroHealthHandler());
+        registry.RegisterCombatEventHandler(
+            new GainBlockWhenCombatantIsDownedHandler(
+                new CombatantId("hero_001"),
+                amount: 4));
+        registry.RegisterCombatEventHandler(new UpdateStandardCombatResultOnLifecycleChangedHandler());
+
+        var combat = CreateCombatWithHeroAndGoblin();
+
+        combat.EnqueueEffect(new DealDamageEffectRequest(
+            TargetCombatantId: new CombatantId("goblin_001"),
+            Amount: 99,
+            SourceCombatantId: new CombatantId("hero_001")));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(CombatResult.Victory, combat.Result);
+
+        Assert.Equal(
+            4,
+            GetBlockOrZero(combat, new CombatantId("hero_001")));
+
+        Assert.Equal(0, combat.PendingEffectCount);
+        Assert.Equal(0, combat.PendingEventCount);
+    }
+
+    private sealed record LifecycleChangedSnapshot(
+        CombatantId CombatantId,
+        CombatantLifecycleState OldState,
+        CombatantLifecycleState NewState,
+        CombatantLifecycleState ObservedCurrentState);
+
+    private sealed class CaptureLifecycleChangedSnapshotHandler
+        : CombatEventHandler<CombatantLifecycleChangedCombatEvent>
+    {
+        private readonly List<LifecycleChangedSnapshot> _snapshots;
+
+        public CaptureLifecycleChangedSnapshotHandler(List<LifecycleChangedSnapshot> snapshots)
+        {
+            _snapshots = snapshots;
+        }
+
+        protected override void Handle(
+            CombatState combat,
+            CombatDefinitionRegistry registry,
+            CombatantLifecycleChangedCombatEvent combatEvent)
+        {
+            var combatant = combat.GetCombatant(combatEvent.CombatantId);
+
+            _snapshots.Add(new LifecycleChangedSnapshot(
+                CombatantId: combatEvent.CombatantId,
+                OldState: combatEvent.OldState,
+                NewState: combatEvent.NewState,
+                ObservedCurrentState: combatant.LifecycleState));
+        }
+    }
+
+    private sealed class GainBlockWhenCombatantIsDownedHandler
+        : CombatEventHandler<CombatantLifecycleChangedCombatEvent>
+    {
+        private readonly CombatantId _targetCombatantId;
+        private readonly int _amount;
+
+        public GainBlockWhenCombatantIsDownedHandler(
+            CombatantId targetCombatantId,
+            int amount)
+        {
+            _targetCombatantId = targetCombatantId;
+            _amount = amount;
+        }
+
+        protected override void Handle(
+            CombatState combat,
+            CombatDefinitionRegistry registry,
+            CombatantLifecycleChangedCombatEvent combatEvent)
+        {
+            if (combatEvent.NewState != CombatantLifecycleState.Downed)
+                return;
+
+            combat.EnqueueEffect(new GainBlockEffectRequest(
+                TargetCombatantId: _targetCombatantId,
+                Amount: _amount,
+                SourceCombatantId: null,
+                SourceCardId: null));
+        }
+    }
+
+    private static int GetBlockOrZero(
+        CombatState combat,
+        CombatantId combatantId)
+    {
+        var combatant = combat.GetCombatant(combatantId);
+
+        return combatant.DefensivePools.TryGetValue(
+            StandardCombatIds.BlockDefensivePool,
+            out var blockPool)
+                ? blockPool.Current
+                : 0;
+    }
+
     private static CombatState CreateCombatWithHeroAndGoblin()
     {
         var combat = new CombatState(
