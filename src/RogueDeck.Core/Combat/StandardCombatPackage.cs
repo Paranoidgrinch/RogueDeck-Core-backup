@@ -92,6 +92,7 @@ registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterCombatEventHandler(new StatusesRemovedByPolarityTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusChargesReducedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusExpiredTriggeredEffectHandler());
+        registry.RegisterCombatEventHandler(new RoundStartedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new TurnStartedTriggeredEffectHandler());
 registry.RegisterCombatEventHandler(new RefillResourceOnTurnStartedHandler(StandardCombatIds.EnergyResource, defaultMax: 3));
 
