@@ -52,6 +52,172 @@ public class RoundLifecycleEventTests
         Assert.DoesNotContain(combat.CombatLog, entry => entry.Type == "RoundStartedEventHandled");
     }
 
+    [Fact]
+    public void RoundEventsAreHandledInOrderAfterNextActiveCombatantIsSelected()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var snapshots = new List<RoundEventSnapshot>();
+
+        registry.RegisterCombatEventHandler(new CaptureRoundEndedSnapshotHandler(snapshots));
+        registry.RegisterCombatEventHandler(new CaptureRoundStartedSnapshotHandler(snapshots));
+
+        var combat = CreateCombatWithHeroAndGoblin();
+        var heroId = new CombatantId("hero_001");
+        var goblinId = new CombatantId("goblin_001");
+
+        combat.SetActiveCombatant(goblinId);
+
+        var processor = new CombatTurnProcessor();
+
+        processor.StartCurrentTurn(combat, registry);
+        processor.EndCurrentTurn(combat, registry);
+
+        Assert.Equal(2, snapshots.Count);
+
+        Assert.Equal("RoundEnded", snapshots[0].EventType);
+        Assert.Equal(1, snapshots[0].EventRound);
+        Assert.Equal(2, snapshots[0].CurrentRound);
+        Assert.Equal(1, snapshots[0].CurrentTurn);
+        Assert.Equal(heroId, snapshots[0].ActiveCombatantId);
+        Assert.Equal(CombatTurnPhase.WaitingToStartTurn, snapshots[0].TurnPhase);
+
+        Assert.Equal("RoundStarted", snapshots[1].EventType);
+        Assert.Equal(2, snapshots[1].EventRound);
+        Assert.Equal(2, snapshots[1].CurrentRound);
+        Assert.Equal(1, snapshots[1].CurrentTurn);
+        Assert.Equal(heroId, snapshots[1].ActiveCombatantId);
+        Assert.Equal(CombatTurnPhase.WaitingToStartTurn, snapshots[1].TurnPhase);
+    }
+
+    [Fact]
+    public void RoundStartedHandlersCanQueueEffectsBeforeNextTurnStarts()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+
+        var heroId = new CombatantId("hero_001");
+        var goblinId = new CombatantId("goblin_001");
+
+        registry.RegisterCombatEventHandler(
+            new GainBlockOnRoundStartedHandler(
+                heroId,
+                amount: 4));
+
+        var combat = CreateCombatWithHeroAndGoblin();
+        combat.SetActiveCombatant(goblinId);
+
+        var processor = new CombatTurnProcessor();
+
+        processor.StartCurrentTurn(combat, registry);
+        processor.EndCurrentTurn(combat, registry);
+
+        Assert.Equal(2, combat.CurrentRound);
+        Assert.Equal(1, combat.CurrentTurn);
+        Assert.Equal(heroId, combat.ActiveCombatantId);
+        Assert.Equal(CombatTurnPhase.WaitingToStartTurn, combat.TurnPhase);
+
+        Assert.Equal(
+            4,
+            GetBlockOrZero(combat, heroId));
+    }
+
+    private sealed record RoundEventSnapshot(
+        string EventType,
+        int EventRound,
+        int CurrentRound,
+        int CurrentTurn,
+        CombatantId? ActiveCombatantId,
+        CombatTurnPhase TurnPhase);
+
+    private sealed class CaptureRoundEndedSnapshotHandler
+        : CombatEventHandler<RoundEndedCombatEvent>
+    {
+        private readonly List<RoundEventSnapshot> _snapshots;
+
+        public CaptureRoundEndedSnapshotHandler(List<RoundEventSnapshot> snapshots)
+        {
+            _snapshots = snapshots;
+        }
+
+        protected override void Handle(
+            CombatState combat,
+            CombatDefinitionRegistry registry,
+            RoundEndedCombatEvent combatEvent)
+        {
+            _snapshots.Add(new RoundEventSnapshot(
+                EventType: "RoundEnded",
+                EventRound: combatEvent.Round,
+                CurrentRound: combat.CurrentRound,
+                CurrentTurn: combat.CurrentTurn,
+                ActiveCombatantId: combat.ActiveCombatantId,
+                TurnPhase: combat.TurnPhase));
+        }
+    }
+
+    private sealed class CaptureRoundStartedSnapshotHandler
+        : CombatEventHandler<RoundStartedCombatEvent>
+    {
+        private readonly List<RoundEventSnapshot> _snapshots;
+
+        public CaptureRoundStartedSnapshotHandler(List<RoundEventSnapshot> snapshots)
+        {
+            _snapshots = snapshots;
+        }
+
+        protected override void Handle(
+            CombatState combat,
+            CombatDefinitionRegistry registry,
+            RoundStartedCombatEvent combatEvent)
+        {
+            _snapshots.Add(new RoundEventSnapshot(
+                EventType: "RoundStarted",
+                EventRound: combatEvent.Round,
+                CurrentRound: combat.CurrentRound,
+                CurrentTurn: combat.CurrentTurn,
+                ActiveCombatantId: combat.ActiveCombatantId,
+                TurnPhase: combat.TurnPhase));
+        }
+    }
+
+    private sealed class GainBlockOnRoundStartedHandler
+        : CombatEventHandler<RoundStartedCombatEvent>
+    {
+        private readonly CombatantId _targetCombatantId;
+        private readonly int _amount;
+
+        public GainBlockOnRoundStartedHandler(
+            CombatantId targetCombatantId,
+            int amount)
+        {
+            _targetCombatantId = targetCombatantId;
+            _amount = amount;
+        }
+
+        protected override void Handle(
+            CombatState combat,
+            CombatDefinitionRegistry registry,
+            RoundStartedCombatEvent combatEvent)
+        {
+            combat.EnqueueEffect(new GainBlockEffectRequest(
+                TargetCombatantId: _targetCombatantId,
+                Amount: _amount,
+                SourceCombatantId: null,
+                SourceCardId: null));
+        }
+    }
+
+    private static int GetBlockOrZero(
+        CombatState combat,
+        CombatantId combatantId)
+    {
+        var combatant = combat.GetCombatant(combatantId);
+
+        return combatant.DefensivePools.TryGetValue(
+            StandardCombatIds.BlockDefensivePool,
+            out var blockPool)
+                ? blockPool.Current
+                : 0;
+    }
+
     private static CombatState CreateCombatWithHeroAndGoblin()
     {
         var combat = new CombatState(
