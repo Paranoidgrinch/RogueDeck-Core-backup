@@ -1,4 +1,4 @@
-﻿namespace RogueDeck.Core.Combat;
+namespace RogueDeck.Core.Combat;
 
 public sealed class StandardCombatPackage : ICombatPackage
 {
@@ -83,6 +83,7 @@ registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterCombatEventHandler(new DamageReceivedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new HealedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new ResourceGainedTriggeredEffectHandler());
+        registry.RegisterCombatEventHandler(new CardCostPaidTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusAppliedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusMergedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusRemovedTriggeredEffectHandler());
@@ -444,36 +445,3 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
         return definition;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
