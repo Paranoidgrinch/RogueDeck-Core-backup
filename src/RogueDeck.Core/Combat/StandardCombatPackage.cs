@@ -110,6 +110,7 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
 registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler());
         registry.RegisterCombatEventHandler(new TriggeredDamageOnDamageDealtHandler());
         registry.RegisterCombatEventHandler(new MarkCombatantDownedOnZeroHealthHandler());
+        registry.RegisterCombatEventHandler(new CombatantDownedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new UpdateStandardCombatResultOnLifecycleChangedHandler());
     }
 
