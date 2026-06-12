@@ -93,6 +93,8 @@ registry.RegisterCombatEventHandler(new DecreaseTimedStatusDurationsOnTurnEndedH
         registry.RegisterCombatEventHandler(new DamageOverTimeOnTurnStartedHandler());
                 registry.RegisterCombatEventHandler(new TrackCardsPlayedThisTurnHandler());
         registry.RegisterCombatEventHandler(new CardPlayedTriggeredEffectHandler());
+        registry.RegisterCombatEventHandler(new CardsDrawnTriggeredEffectHandler());
+        registry.RegisterCombatEventHandler(new HandDiscardedTriggeredEffectHandler());
 registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler());
         registry.RegisterCombatEventHandler(new TriggeredDamageOnDamageDealtHandler());
         registry.RegisterCombatEventHandler(new MarkCombatantDownedOnZeroHealthHandler());
