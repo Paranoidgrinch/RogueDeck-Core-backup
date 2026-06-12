@@ -268,6 +268,111 @@ public class ResourceGainedTriggeredEffectTests
             GetBlockOrZero(combat, HeroId));
     }
 
+    [Fact]
+    public void ResourceGainedTriggeredEffectDoesNotFireWhenStandardTurnStartRefillsResource()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var hero = combat.GetCombatant(HeroId);
+        hero.Resources.Add(
+            StandardCombatIds.EnergyResource,
+            new ValuePoolState(current: 0, max: 3));
+
+        var definition = new ResourceGainedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.resource_gained_not_standard_refill"));
+
+        definition.Filters.Add(
+            new ResourceGainedResourceIdTriggerFilter(StandardCombatIds.EnergyResource));
+
+        definition.Actions.Add(
+            new GainBlockOnResourceGainedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedResourceGainedTriggeredEffectAmount(5)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        new CombatTurnProcessor().StartCurrentTurn(combat, registry);
+
+        Assert.Equal(
+            3,
+            hero.Resources[StandardCombatIds.EnergyResource].Current);
+
+        Assert.Equal(
+            0,
+            GetBlockOrZero(combat, HeroId));
+    }
+
+    [Fact]
+    public void ResourceGainedTriggeredEffectStillFiresForExplicitTurnStartResourceGain()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var definition = new ResourceGainedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.resource_gained_explicit_turn_start_gain"));
+
+        definition.Filters.Add(
+            new ResourceGainedResourceIdTriggerFilter(FuryResourceId));
+
+        definition.Actions.Add(
+            new GainBlockOnResourceGainedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedResourceGainedTriggeredEffectAmount(6)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        registry.RegisterCombatEventHandler(
+            new GainResourceOnTurnStartedHandler(
+                HeroId,
+                FuryResourceId,
+                amount: 2,
+                defaultMax: 3));
+
+        new CombatTurnProcessor().StartCurrentTurn(combat, registry);
+
+        Assert.Equal(
+            2,
+            combat.GetCombatant(HeroId).Resources[FuryResourceId].Current);
+
+        Assert.Equal(
+            6,
+            GetBlockOrZero(combat, HeroId));
+    }
+
+    private sealed class GainResourceOnTurnStartedHandler
+        : CombatEventHandler<TurnStartedCombatEvent>
+    {
+        private readonly CombatantId _combatantId;
+        private readonly ResourceId _resourceId;
+        private readonly int _amount;
+        private readonly int? _defaultMax;
+
+        public GainResourceOnTurnStartedHandler(
+            CombatantId combatantId,
+            ResourceId resourceId,
+            int amount,
+            int? defaultMax)
+        {
+            _combatantId = combatantId;
+            _resourceId = resourceId;
+            _amount = amount;
+            _defaultMax = defaultMax;
+        }
+
+        protected override void Handle(
+            CombatState combat,
+            CombatDefinitionRegistry registry,
+            TurnStartedCombatEvent combatEvent)
+        {
+            combat.EnqueueEffect(new GainResourceEffectRequest(
+                CombatantId: _combatantId,
+                ResourceId: _resourceId,
+                Amount: _amount,
+                DefaultMax: _defaultMax));
+        }
+    }
+
     private static int GetBlockOrZero(
         CombatState combat,
         CombatantId combatantId)
