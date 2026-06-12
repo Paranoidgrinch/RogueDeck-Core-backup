@@ -82,6 +82,7 @@ registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterCombatEventHandler(new DamageDealtTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new DamageReceivedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new HealedTriggeredEffectHandler());
+        registry.RegisterCombatEventHandler(new ResourceGainedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusAppliedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusMergedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusRemovedTriggeredEffectHandler());
