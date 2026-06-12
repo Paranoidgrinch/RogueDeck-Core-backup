@@ -85,6 +85,7 @@ registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterCombatEventHandler(new ResourceGainedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new CardCostPaidTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusApplicationBlockedTriggeredEffectHandler());
+        registry.RegisterCombatEventHandler(new CardInstanceCreatedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusAppliedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusMergedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusRemovedTriggeredEffectHandler());
