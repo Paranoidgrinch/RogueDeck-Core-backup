@@ -89,6 +89,7 @@ registry.RegisterEffectRequestHandler(new MoveCardToZoneEffectHandler());
         registry.RegisterCombatEventHandler(new StatusAppliedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusMergedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusRemovedTriggeredEffectHandler());
+        registry.RegisterCombatEventHandler(new StatusesRemovedByPolarityTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusChargesReducedTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new StatusExpiredTriggeredEffectHandler());
         registry.RegisterCombatEventHandler(new TurnStartedTriggeredEffectHandler());
