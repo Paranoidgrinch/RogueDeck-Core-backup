@@ -18,6 +18,12 @@ public class CardLifecycleTriggeredEffectTests
         Assert.Contains(
             registry.GetCombatEventHandlers(typeof(HandDiscardedCombatEvent)),
             handler => handler is HandDiscardedTriggeredEffectHandler);
+        Assert.Contains(
+            registry.GetCombatEventHandlers(typeof(CardMovedToZoneCombatEvent)),
+            handler => handler is CardExhaustedTriggeredEffectHandler);
+        Assert.Contains(
+            registry.GetCombatEventHandlers(typeof(CardMovedToZoneCombatEvent)),
+            handler => handler is CardBanishedTriggeredEffectHandler);
     }
 
     [Fact]
@@ -298,6 +304,286 @@ public class CardLifecycleTriggeredEffectTests
         combat.EnqueueEvent(new HandDiscardedCombatEvent(
             HeroId,
             new[] { new CardInstanceId("missing_card_instance") }));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(0, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void CardExhaustedTriggeredEffectFiresWhenCardMovesToExhaustPile()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+        var card = AddCardToZone(combat, HeroId, StandardCombatIds.StrikeCard, CardZone.Hand);
+
+        var definition = new CardExhaustedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_exhausted_block"));
+        definition.Actions.Add(
+            new GainBlockOnCardExhaustedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardExhaustedTriggeredEffectAmount(3)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        combat.EnqueueEffect(new MoveCardToZoneEffectRequest(HeroId, card.Id, CardZone.ExhaustPile));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(3, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void CardExhaustedTriggeredEffectCanFilterByCardDefinitionId()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+        var card = AddCardToZone(combat, HeroId, StandardCombatIds.StrikeCard, CardZone.Hand);
+
+        var matching = new CardExhaustedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_exhausted_strike_block"));
+        matching.Filters.Add(new CardExhaustedCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
+        matching.Actions.Add(
+            new GainBlockOnCardExhaustedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardExhaustedTriggeredEffectAmount(2)));
+
+        var nonMatching = new CardExhaustedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_exhausted_defend_block"));
+        nonMatching.Filters.Add(new CardExhaustedCardDefinitionTriggerFilter(StandardCombatIds.DefendCard));
+        nonMatching.Actions.Add(
+            new GainBlockOnCardExhaustedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardExhaustedTriggeredEffectAmount(5)));
+
+        registry.RegisterTriggeredEffectDefinition(matching);
+        registry.RegisterTriggeredEffectDefinition(nonMatching);
+
+        combat.EnqueueEffect(new MoveCardToZoneEffectRequest(HeroId, card.Id, CardZone.ExhaustPile));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(2, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void CardExhaustedTriggeredEffectCanFilterByCardTag()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+        var card = AddCardToZone(combat, HeroId, StandardCombatIds.StrikeCard, CardZone.Hand);
+
+        var matching = new CardExhaustedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_exhausted_attack_block"));
+        matching.Filters.Add(new CardExhaustedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
+        matching.Actions.Add(
+            new GainBlockOnCardExhaustedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardExhaustedTriggeredEffectAmount(2)));
+
+        var nonMatching = new CardExhaustedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_exhausted_skill_block"));
+        nonMatching.Filters.Add(new CardExhaustedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
+        nonMatching.Actions.Add(
+            new GainBlockOnCardExhaustedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardExhaustedTriggeredEffectAmount(5)));
+
+        registry.RegisterTriggeredEffectDefinition(matching);
+        registry.RegisterTriggeredEffectDefinition(nonMatching);
+
+        combat.EnqueueEffect(new MoveCardToZoneEffectRequest(HeroId, card.Id, CardZone.ExhaustPile));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(2, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void CardExhaustedTriggeredEffectActionCanTargetCardOwnerSource()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+        var card = AddCardToZone(combat, HeroId, StandardCombatIds.StrikeCard, CardZone.Hand);
+
+        var definition = new CardExhaustedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_exhausted_source_block"));
+        definition.Actions.Add(
+            new GainBlockOnCardExhaustedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardExhaustedTriggeredEffectAmount(4)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        combat.EnqueueEffect(new MoveCardToZoneEffectRequest(HeroId, card.Id, CardZone.ExhaustPile));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(4, GetBlock(combat, HeroId));
+        Assert.Equal(0, GetBlock(combat, GoblinId));
+    }
+
+    [Fact]
+    public void CardExhaustedTriggeredEffectMissingCardDataIsSafe()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var definition = new CardExhaustedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_exhausted_missing_card"));
+        definition.Filters.Add(new CardExhaustedCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
+        definition.Actions.Add(
+            new GainBlockOnCardExhaustedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardExhaustedTriggeredEffectAmount(3)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        combat.EnqueueEvent(new CardMovedToZoneCombatEvent(
+            HeroId,
+            new CardInstanceId("missing_card_instance"),
+            FromZone: CardZone.Hand,
+            ToZone: CardZone.ExhaustPile));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(0, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void CardBanishedTriggeredEffectFiresWhenCardMovesToBanishedPile()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+        var card = AddCardToZone(combat, HeroId, StandardCombatIds.StrikeCard, CardZone.Hand);
+
+        var definition = new CardBanishedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_banished_block"));
+        definition.Actions.Add(
+            new GainBlockOnCardBanishedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardBanishedTriggeredEffectAmount(3)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        combat.EnqueueEffect(new MoveCardToZoneEffectRequest(HeroId, card.Id, CardZone.BanishedPile));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(3, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void CardBanishedTriggeredEffectCanFilterByCardDefinitionId()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+        var card = AddCardToZone(combat, HeroId, StandardCombatIds.DefendCard, CardZone.Hand);
+
+        var matching = new CardBanishedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_banished_defend_block"));
+        matching.Filters.Add(new CardBanishedCardDefinitionTriggerFilter(StandardCombatIds.DefendCard));
+        matching.Actions.Add(
+            new GainBlockOnCardBanishedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardBanishedTriggeredEffectAmount(2)));
+
+        var nonMatching = new CardBanishedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_banished_strike_block"));
+        nonMatching.Filters.Add(new CardBanishedCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
+        nonMatching.Actions.Add(
+            new GainBlockOnCardBanishedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardBanishedTriggeredEffectAmount(5)));
+
+        registry.RegisterTriggeredEffectDefinition(matching);
+        registry.RegisterTriggeredEffectDefinition(nonMatching);
+
+        combat.EnqueueEffect(new MoveCardToZoneEffectRequest(HeroId, card.Id, CardZone.BanishedPile));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(2, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void CardBanishedTriggeredEffectCanFilterByCardTag()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+        var card = AddCardToZone(combat, HeroId, StandardCombatIds.DefendCard, CardZone.Hand);
+
+        var matching = new CardBanishedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_banished_skill_block"));
+        matching.Filters.Add(new CardBanishedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
+        matching.Actions.Add(
+            new GainBlockOnCardBanishedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardBanishedTriggeredEffectAmount(2)));
+
+        var nonMatching = new CardBanishedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_banished_attack_block"));
+        nonMatching.Filters.Add(new CardBanishedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
+        nonMatching.Actions.Add(
+            new GainBlockOnCardBanishedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardBanishedTriggeredEffectAmount(5)));
+
+        registry.RegisterTriggeredEffectDefinition(matching);
+        registry.RegisterTriggeredEffectDefinition(nonMatching);
+
+        combat.EnqueueEffect(new MoveCardToZoneEffectRequest(HeroId, card.Id, CardZone.BanishedPile));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(2, GetBlock(combat, HeroId));
+    }
+
+    [Fact]
+    public void CardBanishedTriggeredEffectActionCanTargetCardOwnerSource()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+        var card = AddCardToZone(combat, HeroId, StandardCombatIds.StrikeCard, CardZone.Hand);
+
+        var definition = new CardBanishedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_banished_source_block"));
+        definition.Actions.Add(
+            new GainBlockOnCardBanishedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardBanishedTriggeredEffectAmount(4)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        combat.EnqueueEffect(new MoveCardToZoneEffectRequest(HeroId, card.Id, CardZone.BanishedPile));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+
+        Assert.Equal(4, GetBlock(combat, HeroId));
+        Assert.Equal(0, GetBlock(combat, GoblinId));
+    }
+
+    [Fact]
+    public void CardBanishedTriggeredEffectMissingCardDataIsSafe()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var definition = new CardBanishedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.card_banished_missing_card"));
+        definition.Filters.Add(new CardBanishedCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
+        definition.Actions.Add(
+            new GainBlockOnCardBanishedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedCardBanishedTriggeredEffectAmount(3)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        combat.EnqueueEvent(new CardMovedToZoneCombatEvent(
+            HeroId,
+            new CardInstanceId("missing_card_instance"),
+            FromZone: CardZone.Hand,
+            ToZone: CardZone.BanishedPile));
 
         new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
 

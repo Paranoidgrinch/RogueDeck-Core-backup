@@ -370,3 +370,331 @@ public sealed class HandDiscardedTriggeredEffectHandler
             definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
     }
 }
+
+public sealed class CardExhaustedTriggeredEffectDefinition : ITriggeredEffectDefinition
+{
+    public TriggeredEffectDefinitionId Id { get; }
+
+    public Type EventType => typeof(CardMovedToZoneCombatEvent);
+
+    public List<ICardExhaustedTriggeredEffectFilter> Filters { get; } = new();
+
+    public List<ICardExhaustedTriggeredEffectAction> Actions { get; } = new();
+
+    public CardExhaustedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
+    {
+        Id = id;
+    }
+}
+
+public sealed record CardExhaustedTriggeredEffectContext(
+    CombatState Combat,
+    CombatDefinitionRegistry Registry,
+    CardMovedToZoneCombatEvent CombatEvent,
+    CombatantState Source,
+    CardInstance? Card,
+    CardDefinition? CardDefinition);
+
+public interface ICardExhaustedTriggeredEffectFilter
+{
+    bool Matches(CardExhaustedTriggeredEffectContext context);
+}
+
+public interface ICardExhaustedTriggeredEffectAction
+{
+    IReadOnlyCollection<IEffectRequest> BuildEffectRequests(CardExhaustedTriggeredEffectContext context);
+}
+
+public interface ICardExhaustedTriggeredEffectAmountProvider
+{
+    int ResolveAmount(CardExhaustedTriggeredEffectContext context);
+}
+
+public sealed record FixedCardExhaustedTriggeredEffectAmount(int Amount)
+    : ICardExhaustedTriggeredEffectAmountProvider
+{
+    public int ResolveAmount(CardExhaustedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return Amount;
+    }
+}
+
+public sealed record CardExhaustedCardCountAmount
+    : ICardExhaustedTriggeredEffectAmountProvider
+{
+    public int ResolveAmount(CardExhaustedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return context.Card is null ? 0 : 1;
+    }
+}
+
+public sealed record CardExhaustedCardDefinitionTriggerFilter(CardDefinitionId CardDefinitionId)
+    : ICardExhaustedTriggeredEffectFilter
+{
+    public bool Matches(CardExhaustedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return context.CardDefinition?.Id == CardDefinitionId;
+    }
+}
+
+public sealed record CardExhaustedCardHasTagTriggerFilter(TagId TagId)
+    : ICardExhaustedTriggeredEffectFilter
+{
+    public bool Matches(CardExhaustedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return context.CardDefinition?.Tags.Contains(TagId) == true;
+    }
+}
+
+public sealed record GainBlockOnCardExhaustedTriggeredEffectAction
+    : ICardExhaustedTriggeredEffectAction
+{
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public ICardExhaustedTriggeredEffectAmountProvider AmountProvider { get; }
+
+    public GainBlockOnCardExhaustedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        ICardExhaustedTriggeredEffectAmountProvider amountProvider)
+    {
+        TargetSelector = targetSelector;
+        AmountProvider = amountProvider;
+    }
+
+    public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(CardExhaustedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return TriggeredEffectActionBuilder.BuildGainBlockRequests(
+            CardLifecycleTriggeredEffectSupport.CreateActionBuildContext(context.Combat, context.Source),
+            TargetSelector,
+            AmountProvider.ResolveAmount(context));
+    }
+}
+
+public sealed class CardExhaustedTriggeredEffectHandler
+    : CombatEventHandler<CardMovedToZoneCombatEvent>
+{
+    private readonly IReadOnlyCollection<CardExhaustedTriggeredEffectDefinition> _definitions;
+
+    public CardExhaustedTriggeredEffectHandler(params CardExhaustedTriggeredEffectDefinition[] definitions)
+    {
+        ArgumentNullException.ThrowIfNull(definitions);
+
+        if (definitions.Any(definition => definition is null))
+            throw new ArgumentException("Triggered effect definitions cannot contain null.", nameof(definitions));
+
+        _definitions = definitions;
+    }
+
+    protected override void Handle(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        CardMovedToZoneCombatEvent combatEvent)
+    {
+        if (combatEvent.ToZone != CardZone.ExhaustPile)
+            return;
+
+        if (!combat.TryGetCombatant(combatEvent.CombatantId, out var source))
+            return;
+
+        var card = CardLifecycleTriggeredEffectSupport.ResolveCards(
+            combat,
+            combatEvent.CombatantId,
+            new[] { combatEvent.CardInstanceId })
+            .SingleOrDefault();
+        var cardDefinition = card is not null && registry.TryGetCard(card.DefinitionId, out var definition)
+            ? definition
+            : null;
+
+        var context = new CardExhaustedTriggeredEffectContext(
+            Combat: combat,
+            Registry: registry,
+            CombatEvent: combatEvent,
+            Source: source!,
+            Card: card,
+            CardDefinition: cardDefinition);
+
+        var definitions = _definitions.Concat(
+            registry.GetTriggeredEffectDefinitions(typeof(CardMovedToZoneCombatEvent))
+                .OfType<CardExhaustedTriggeredEffectDefinition>());
+
+        TriggeredEffectDefinitionRunner.EnqueueEffectRequests(
+            combat,
+            definitions,
+            definition => definition.Filters.All(filter => filter.Matches(context)),
+            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+    }
+}
+
+public sealed class CardBanishedTriggeredEffectDefinition : ITriggeredEffectDefinition
+{
+    public TriggeredEffectDefinitionId Id { get; }
+
+    public Type EventType => typeof(CardMovedToZoneCombatEvent);
+
+    public List<ICardBanishedTriggeredEffectFilter> Filters { get; } = new();
+
+    public List<ICardBanishedTriggeredEffectAction> Actions { get; } = new();
+
+    public CardBanishedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
+    {
+        Id = id;
+    }
+}
+
+public sealed record CardBanishedTriggeredEffectContext(
+    CombatState Combat,
+    CombatDefinitionRegistry Registry,
+    CardMovedToZoneCombatEvent CombatEvent,
+    CombatantState Source,
+    CardInstance? Card,
+    CardDefinition? CardDefinition);
+
+public interface ICardBanishedTriggeredEffectFilter
+{
+    bool Matches(CardBanishedTriggeredEffectContext context);
+}
+
+public interface ICardBanishedTriggeredEffectAction
+{
+    IReadOnlyCollection<IEffectRequest> BuildEffectRequests(CardBanishedTriggeredEffectContext context);
+}
+
+public interface ICardBanishedTriggeredEffectAmountProvider
+{
+    int ResolveAmount(CardBanishedTriggeredEffectContext context);
+}
+
+public sealed record FixedCardBanishedTriggeredEffectAmount(int Amount)
+    : ICardBanishedTriggeredEffectAmountProvider
+{
+    public int ResolveAmount(CardBanishedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return Amount;
+    }
+}
+
+public sealed record CardBanishedCardCountAmount
+    : ICardBanishedTriggeredEffectAmountProvider
+{
+    public int ResolveAmount(CardBanishedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return context.Card is null ? 0 : 1;
+    }
+}
+
+public sealed record CardBanishedCardDefinitionTriggerFilter(CardDefinitionId CardDefinitionId)
+    : ICardBanishedTriggeredEffectFilter
+{
+    public bool Matches(CardBanishedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return context.CardDefinition?.Id == CardDefinitionId;
+    }
+}
+
+public sealed record CardBanishedCardHasTagTriggerFilter(TagId TagId)
+    : ICardBanishedTriggeredEffectFilter
+{
+    public bool Matches(CardBanishedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return context.CardDefinition?.Tags.Contains(TagId) == true;
+    }
+}
+
+public sealed record GainBlockOnCardBanishedTriggeredEffectAction
+    : ICardBanishedTriggeredEffectAction
+{
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public ICardBanishedTriggeredEffectAmountProvider AmountProvider { get; }
+
+    public GainBlockOnCardBanishedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        ICardBanishedTriggeredEffectAmountProvider amountProvider)
+    {
+        TargetSelector = targetSelector;
+        AmountProvider = amountProvider;
+    }
+
+    public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(CardBanishedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return TriggeredEffectActionBuilder.BuildGainBlockRequests(
+            CardLifecycleTriggeredEffectSupport.CreateActionBuildContext(context.Combat, context.Source),
+            TargetSelector,
+            AmountProvider.ResolveAmount(context));
+    }
+}
+
+public sealed class CardBanishedTriggeredEffectHandler
+    : CombatEventHandler<CardMovedToZoneCombatEvent>
+{
+    private readonly IReadOnlyCollection<CardBanishedTriggeredEffectDefinition> _definitions;
+
+    public CardBanishedTriggeredEffectHandler(params CardBanishedTriggeredEffectDefinition[] definitions)
+    {
+        ArgumentNullException.ThrowIfNull(definitions);
+
+        if (definitions.Any(definition => definition is null))
+            throw new ArgumentException("Triggered effect definitions cannot contain null.", nameof(definitions));
+
+        _definitions = definitions;
+    }
+
+    protected override void Handle(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        CardMovedToZoneCombatEvent combatEvent)
+    {
+        if (combatEvent.ToZone != CardZone.BanishedPile)
+            return;
+
+        if (!combat.TryGetCombatant(combatEvent.CombatantId, out var source))
+            return;
+
+        var card = CardLifecycleTriggeredEffectSupport.ResolveCards(
+            combat,
+            combatEvent.CombatantId,
+            new[] { combatEvent.CardInstanceId })
+            .SingleOrDefault();
+        var cardDefinition = card is not null && registry.TryGetCard(card.DefinitionId, out var definition)
+            ? definition
+            : null;
+
+        var context = new CardBanishedTriggeredEffectContext(
+            Combat: combat,
+            Registry: registry,
+            CombatEvent: combatEvent,
+            Source: source!,
+            Card: card,
+            CardDefinition: cardDefinition);
+
+        var definitions = _definitions.Concat(
+            registry.GetTriggeredEffectDefinitions(typeof(CardMovedToZoneCombatEvent))
+                .OfType<CardBanishedTriggeredEffectDefinition>());
+
+        TriggeredEffectDefinitionRunner.EnqueueEffectRequests(
+            combat,
+            definitions,
+            definition => definition.Filters.All(filter => filter.Matches(context)),
+            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+    }
+}
