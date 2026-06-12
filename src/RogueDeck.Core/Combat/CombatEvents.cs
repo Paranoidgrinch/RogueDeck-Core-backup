@@ -1,4 +1,4 @@
-﻿namespace RogueDeck.Core.Combat;
+namespace RogueDeck.Core.Combat;
 
 public sealed record TurnStartedCombatEvent(
     CombatantId CombatantId,
@@ -17,7 +17,8 @@ public sealed record RoundStartedCombatEvent(
 ) : ICombatEvent;
 
 public sealed record RoundEndedCombatEvent(
-    int Round
+    int Round,
+    CombatantId? LastActiveCombatantId
 ) : ICombatEvent;
 
 public sealed record ResourceGainedCombatEvent(
@@ -166,14 +167,3 @@ public sealed record CombatantLifecycleChangedCombatEvent(
     CombatantLifecycleState OldState,
     CombatantLifecycleState NewState
 ) : ICombatEvent;
-
-
-
-
-
-
-
-
-
-
-

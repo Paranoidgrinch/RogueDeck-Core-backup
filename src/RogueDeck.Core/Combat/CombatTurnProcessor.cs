@@ -158,7 +158,9 @@ public sealed class CombatTurnProcessor
             if (nextIndex <= currentIndex)
             {
                 combat.EnqueueEvent(
-                    new RoundEndedCombatEvent(combat.CurrentRound));
+                    new RoundEndedCombatEvent(
+                    combat.CurrentRound,
+                    combat.ActiveCombatantId));
 
                 combat.AdvanceRound();
 
