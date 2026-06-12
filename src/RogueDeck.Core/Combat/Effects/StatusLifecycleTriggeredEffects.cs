@@ -365,6 +365,193 @@ public sealed class StatusRemovedTriggeredEffectHandler
     }
 }
 
+public sealed class StatusChargesReducedTriggeredEffectDefinition : ITriggeredEffectDefinition
+{
+    public TriggeredEffectDefinitionId Id { get; }
+
+    public Type EventType => typeof(StatusChargesReducedCombatEvent);
+
+    public List<IStatusChargesReducedTriggeredEffectFilter> Filters { get; } = new();
+
+    public List<IStatusChargesReducedTriggeredEffectAction> Actions { get; } = new();
+
+    public StatusChargesReducedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
+    {
+        Id = id;
+    }
+}
+
+public sealed record StatusChargesReducedTriggeredEffectContext(
+    CombatState Combat,
+    CombatDefinitionRegistry Registry,
+    StatusChargesReducedCombatEvent CombatEvent,
+    CombatantState TargetCombatant,
+    CombatantState? SourceCombatant);
+
+public interface IStatusChargesReducedTriggeredEffectFilter
+{
+    bool Matches(StatusChargesReducedTriggeredEffectContext context);
+}
+
+public interface IStatusChargesReducedTriggeredEffectAction
+{
+    IReadOnlyCollection<IEffectRequest> BuildEffectRequests(StatusChargesReducedTriggeredEffectContext context);
+}
+
+public interface IStatusChargesReducedTriggeredEffectAmountProvider
+{
+    int ResolveAmount(StatusChargesReducedTriggeredEffectContext context);
+}
+
+public sealed record FixedStatusChargesReducedTriggeredEffectAmount(int Amount)
+    : IStatusChargesReducedTriggeredEffectAmountProvider
+{
+    public int ResolveAmount(StatusChargesReducedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return Amount;
+    }
+}
+
+public sealed class StatusChargesReducedChargeCountAmount
+    : IStatusChargesReducedTriggeredEffectAmountProvider
+{
+    public int ResolveAmount(StatusChargesReducedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return Math.Max(0, context.CombatEvent.OldCharges - context.CombatEvent.NewCharges);
+    }
+}
+
+public sealed record StatusChargesReducedStatusDefinitionTriggerFilter(StatusDefinitionId StatusDefinitionId)
+    : IStatusChargesReducedTriggeredEffectFilter
+{
+    public bool Matches(StatusChargesReducedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return context.CombatEvent.StatusDefinitionId == StatusDefinitionId;
+    }
+}
+
+public static class StatusChargesReducedTriggeredEffectTargetResolver
+{
+    public static CombatantTargetSelectionContext CreateSelectionContext(
+        StatusChargesReducedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new CombatantTargetSelectionContext(
+            Combat: context.Combat,
+            Source: context.SourceCombatant ?? context.TargetCombatant,
+            EventTargetId: context.CombatEvent.TargetCombatantId);
+    }
+
+    public static TriggeredEffectActionSource CreateActionSource(
+        StatusChargesReducedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new TriggeredEffectActionSource();
+    }
+
+    public static TriggeredEffectActionBuildContext CreateActionBuildContext(
+        StatusChargesReducedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return new TriggeredEffectActionBuildContext(
+            TargetSelectionContext: CreateSelectionContext(context),
+            Source: CreateActionSource(context));
+    }
+
+    public static bool ShouldSuppressMissingSourceTarget(
+        StatusChargesReducedTriggeredEffectContext context,
+        ICombatantTargetSelector targetSelector)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return TriggeredEffectTargetSelectorGuards.ShouldSuppressMissingSourceTarget(
+            context.SourceCombatant,
+            targetSelector);
+    }
+}
+
+public sealed record GainBlockOnStatusChargesReducedTriggeredEffectAction
+    : IStatusChargesReducedTriggeredEffectAction
+{
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public IStatusChargesReducedTriggeredEffectAmountProvider AmountProvider { get; }
+
+    public GainBlockOnStatusChargesReducedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        IStatusChargesReducedTriggeredEffectAmountProvider amountProvider)
+    {
+        TargetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
+        AmountProvider = amountProvider ?? throw new ArgumentNullException(nameof(amountProvider));
+    }
+
+    public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(StatusChargesReducedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        if (StatusChargesReducedTriggeredEffectTargetResolver.ShouldSuppressMissingSourceTarget(context, TargetSelector))
+            return Array.Empty<IEffectRequest>();
+
+        var amount = AmountProvider.ResolveAmount(context);
+
+        return TriggeredEffectActionBuilder.BuildGainBlockRequests(
+            StatusChargesReducedTriggeredEffectTargetResolver.CreateActionBuildContext(context),
+            TargetSelector,
+            amount);
+    }
+}
+
+public sealed class StatusChargesReducedTriggeredEffectHandler
+    : CombatEventHandler<StatusChargesReducedCombatEvent>
+{
+    private readonly IReadOnlyCollection<StatusChargesReducedTriggeredEffectDefinition> _definitions;
+
+    public StatusChargesReducedTriggeredEffectHandler(params StatusChargesReducedTriggeredEffectDefinition[] definitions)
+    {
+        ArgumentNullException.ThrowIfNull(definitions);
+
+        if (definitions.Any(definition => definition is null))
+            throw new ArgumentException("Triggered effect definitions cannot contain null.", nameof(definitions));
+
+        _definitions = definitions.ToArray();
+    }
+
+    protected override void Handle(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        StatusChargesReducedCombatEvent combatEvent)
+    {
+        if (!combat.TryGetCombatant(combatEvent.TargetCombatantId, out var targetCombatant))
+            return;
+
+        var context = new StatusChargesReducedTriggeredEffectContext(
+            Combat: combat,
+            Registry: registry,
+            CombatEvent: combatEvent,
+            TargetCombatant: targetCombatant!,
+            SourceCombatant: null);
+
+        var definitions = _definitions.Concat(
+            registry.GetTriggeredEffectDefinitions(typeof(StatusChargesReducedCombatEvent))
+                .OfType<StatusChargesReducedTriggeredEffectDefinition>());
+
+        TriggeredEffectDefinitionRunner.EnqueueEffectRequests(
+            combat,
+            definitions,
+            definition => definition.Filters.All(filter => filter.Matches(context)),
+            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+    }
+}
+
 public sealed class StatusExpiredTriggeredEffectDefinition : ITriggeredEffectDefinition
 {
     public TriggeredEffectDefinitionId Id { get; }

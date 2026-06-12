@@ -23,6 +23,10 @@ public class StatusLifecycleTriggeredEffectTests
         Assert.Contains(
             registry.GetCombatEventHandlers(typeof(StatusMergedCombatEvent)),
             handler => handler is StatusMergedTriggeredEffectHandler);
+
+        Assert.Contains(
+            registry.GetCombatEventHandlers(typeof(StatusChargesReducedCombatEvent)),
+            handler => handler is StatusChargesReducedTriggeredEffectHandler);
     }
 
     [Fact]
@@ -99,6 +103,154 @@ public class StatusLifecycleTriggeredEffectTests
         Assert.Equal(
             heroHealthBefore,
             combat.GetCombatant(HeroId).Health.Current);
+    }
+
+    [Fact]
+    public void StatusChargesReducedTriggeredEffectCanTargetEventTarget()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        ApplyStatus(
+            combat,
+            registry,
+            HeroId,
+            StandardCombatIds.WeakStatus,
+            charges: 3);
+
+        var definition = new StatusChargesReducedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.status_charges_reduced_gain_block"));
+
+        definition.Actions.Add(
+            new GainBlockOnStatusChargesReducedTriggeredEffectAction(
+                CombatantTargetSelectors.EventTarget,
+                new FixedStatusChargesReducedTriggeredEffectAmount(4)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        DecreaseFirstStatusCharges(
+            combat,
+            registry,
+            HeroId);
+
+        Assert.Equal(
+            4,
+            GetBlockOrZero(combat, HeroId));
+    }
+
+    [Fact]
+    public void StatusChargesReducedTriggeredEffectFiltersByStatusDefinitionId()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        ApplyStatus(
+            combat,
+            registry,
+            HeroId,
+            StandardCombatIds.WeakStatus,
+            charges: 3);
+
+        var matching = new StatusChargesReducedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.status_charges_reduced_matching"));
+
+        matching.Filters.Add(
+            new StatusChargesReducedStatusDefinitionTriggerFilter(StandardCombatIds.WeakStatus));
+
+        matching.Actions.Add(
+            new GainBlockOnStatusChargesReducedTriggeredEffectAction(
+                CombatantTargetSelectors.EventTarget,
+                new FixedStatusChargesReducedTriggeredEffectAmount(2)));
+
+        var nonMatching = new StatusChargesReducedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.status_charges_reduced_non_matching"));
+
+        nonMatching.Filters.Add(
+            new StatusChargesReducedStatusDefinitionTriggerFilter(StandardCombatIds.PoisonStatus));
+
+        nonMatching.Actions.Add(
+            new GainBlockOnStatusChargesReducedTriggeredEffectAction(
+                CombatantTargetSelectors.EventTarget,
+                new FixedStatusChargesReducedTriggeredEffectAmount(5)));
+
+        registry.RegisterTriggeredEffectDefinition(matching);
+        registry.RegisterTriggeredEffectDefinition(nonMatching);
+
+        DecreaseFirstStatusCharges(
+            combat,
+            registry,
+            HeroId);
+
+        Assert.Equal(
+            2,
+            GetBlockOrZero(combat, HeroId));
+    }
+
+    [Fact]
+    public void StatusChargesReducedTriggeredEffectAmountUsesReducedChargeCount()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        ApplyStatus(
+            combat,
+            registry,
+            HeroId,
+            StandardCombatIds.WeakStatus,
+            charges: 5);
+
+        var definition = new StatusChargesReducedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.status_charges_reduced_amount"));
+
+        definition.Actions.Add(
+            new GainBlockOnStatusChargesReducedTriggeredEffectAction(
+                CombatantTargetSelectors.EventTarget,
+                new StatusChargesReducedChargeCountAmount()));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        DecreaseFirstStatusCharges(
+            combat,
+            registry,
+            HeroId,
+            amount: 2);
+
+        Assert.Equal(
+            2,
+            GetBlockOrZero(combat, HeroId));
+    }
+
+    [Fact]
+    public void StatusChargesReducedTriggeredEffectSourceSelectorDoesNotTargetWhenSourceIsMissing()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        ApplyStatus(
+            combat,
+            registry,
+            HeroId,
+            StandardCombatIds.WeakStatus,
+            charges: 3);
+
+        var definition = new StatusChargesReducedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.status_charges_reduced_missing_source"));
+
+        definition.Actions.Add(
+            new GainBlockOnStatusChargesReducedTriggeredEffectAction(
+                CombatantTargetSelectors.Source,
+                new FixedStatusChargesReducedTriggeredEffectAmount(3)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        DecreaseFirstStatusCharges(
+            combat,
+            registry,
+            HeroId);
+
+        Assert.Equal(
+            0,
+            GetBlockOrZero(combat, HeroId));
     }
 
     [Fact]
@@ -345,6 +497,22 @@ public class StatusLifecycleTriggeredEffectTests
         combat.EnqueueEffect(new RemoveStatusEffectRequest(
             TargetCombatantId: targetId,
             StatusDefinitionId: statusId));
+
+        new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
+    }
+
+    private static void DecreaseFirstStatusCharges(
+        CombatState combat,
+        CombatDefinitionRegistry registry,
+        CombatantId targetId,
+        int amount = 1)
+    {
+        var status = Assert.Single(combat.GetCombatant(targetId).Statuses);
+
+        combat.EnqueueEffect(new DecreaseStatusChargesEffectRequest(
+            TargetCombatantId: targetId,
+            StatusInstanceId: status.Id,
+            Amount: amount));
 
         new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
     }
