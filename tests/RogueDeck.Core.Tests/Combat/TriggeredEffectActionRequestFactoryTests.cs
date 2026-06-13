@@ -71,5 +71,34 @@ public class TriggeredEffectActionRequestFactoryTests
         Assert.Equal(1, request.DurationTurns);
         Assert.Equal(0, request.Charges);
     }
-}
 
+    [Fact]
+    public void HealFactoryCanUseActionSource()
+    {
+        var requests = TriggeredEffectActionRequestFactory.BuildHealRequests(
+            new[] { TargetId },
+            amount: 6,
+            new TriggeredEffectActionSource(
+                SourceCombatantId: SourceId,
+                SourceCardId: CardId));
+
+        var request = Assert.IsType<HealEffectRequest>(
+            Assert.Single(requests));
+
+        Assert.Equal(TargetId, request.TargetCombatantId);
+        Assert.Equal(6, request.Amount);
+        Assert.Equal(SourceId, request.SourceCombatantId);
+        Assert.Equal(CardId, request.SourceCardId);
+    }
+
+    [Fact]
+    public void HealFactoryReturnsEmptyForNonPositiveAmount()
+    {
+        var requests = TriggeredEffectActionRequestFactory.BuildHealRequests(
+            new[] { TargetId },
+            amount: 0,
+            TriggeredEffectActionSource.None);
+
+        Assert.Empty(requests);
+    }
+}

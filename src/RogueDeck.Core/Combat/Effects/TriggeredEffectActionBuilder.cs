@@ -1,4 +1,4 @@
-﻿namespace RogueDeck.Core.Combat;
+namespace RogueDeck.Core.Combat;
 
 public static class TriggeredEffectActionBuilder
 {
@@ -40,6 +40,25 @@ public static class TriggeredEffectActionBuilder
             amount,
             context.Source,
             kind);
+    }
+
+    public static IReadOnlyCollection<IEffectRequest> BuildHealRequests(
+        TriggeredEffectActionBuildContext context,
+        ICombatantTargetSelector targetSelector,
+        int amount)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(targetSelector);
+
+        if (amount <= 0)
+            return Array.Empty<IEffectRequest>();
+
+        var targetIds = ResolveTargets(context, targetSelector);
+
+        return TriggeredEffectActionRequestFactory.BuildHealRequests(
+            targetIds,
+            amount,
+            context.Source);
     }
 
     public static IReadOnlyCollection<IEffectRequest> BuildDrawCardsRequests(

@@ -74,4 +74,50 @@ public class TriggeredEffectActionBuilderTests
 
         Assert.Empty(requests);
     }
+
+    [Fact]
+    public void BuildHealRequestsResolvesTargetsAndUsesSource()
+    {
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var buildContext = new TriggeredEffectActionBuildContext(
+            new CombatantTargetSelectionContext(
+                Combat: combat,
+                Source: combat.GetCombatant(HeroId)),
+            new TriggeredEffectActionSource(
+                SourceCombatantId: HeroId,
+                SourceCardId: CardId));
+
+        var requests = TriggeredEffectActionBuilder.BuildHealRequests(
+            buildContext,
+            CombatantTargetSelectors.Source,
+            amount: 5);
+
+        var request = Assert.IsType<HealEffectRequest>(
+            Assert.Single(requests));
+
+        Assert.Equal(HeroId, request.TargetCombatantId);
+        Assert.Equal(5, request.Amount);
+        Assert.Equal(HeroId, request.SourceCombatantId);
+        Assert.Equal(CardId, request.SourceCardId);
+    }
+
+    [Fact]
+    public void BuildHealRequestsReturnsEmptyForNonPositiveAmount()
+    {
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var buildContext = new TriggeredEffectActionBuildContext(
+            new CombatantTargetSelectionContext(
+                Combat: combat,
+                Source: combat.GetCombatant(HeroId)),
+            TriggeredEffectActionSource.None);
+
+        var requests = TriggeredEffectActionBuilder.BuildHealRequests(
+            buildContext,
+            CombatantTargetSelectors.Source,
+            amount: 0);
+
+        Assert.Empty(requests);
+    }
 }

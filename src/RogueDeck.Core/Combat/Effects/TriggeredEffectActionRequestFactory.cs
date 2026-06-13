@@ -1,4 +1,4 @@
-﻿namespace RogueDeck.Core.Combat;
+namespace RogueDeck.Core.Combat;
 
 public static class TriggeredEffectActionRequestFactory
 {
@@ -71,6 +71,40 @@ public static class TriggeredEffectActionRequestFactory
                 SourceCombatantId: sourceCombatantId,
                 SourceCardId: sourceCardId,
                 Kind: kind))
+            .ToArray();
+    }
+
+    public static IReadOnlyCollection<IEffectRequest> BuildHealRequests(
+        IReadOnlyCollection<CombatantId> targetIds,
+        int amount,
+        TriggeredEffectActionSource source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return BuildHealRequests(
+            targetIds,
+            amount,
+            sourceCombatantId: source.SourceCombatantId,
+            sourceCardId: source.SourceCardId);
+    }
+
+    public static IReadOnlyCollection<IEffectRequest> BuildHealRequests(
+        IReadOnlyCollection<CombatantId> targetIds,
+        int amount,
+        CombatantId? sourceCombatantId = null,
+        CardDefinitionId? sourceCardId = null)
+    {
+        ArgumentNullException.ThrowIfNull(targetIds);
+
+        if (amount <= 0 || targetIds.Count == 0)
+            return Array.Empty<IEffectRequest>();
+
+        return targetIds
+            .Select(targetId => (IEffectRequest)new HealEffectRequest(
+                TargetCombatantId: targetId,
+                Amount: amount,
+                SourceCombatantId: sourceCombatantId,
+                SourceCardId: sourceCardId))
             .ToArray();
     }
 
