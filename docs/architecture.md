@@ -480,3 +480,11 @@ Phase 2 is complete when the combat lifecycle can:
 Phase 2 should still not introduce cards, deck zones, energy, enemy AI, map state, rewards, or run progression.
 
 Those belong to later phases.
+
+## Current combat-effect recipe architecture
+
+The typed combat-effect recipe architecture is documented in
+[Combat Effect Recipes](combat-effect-recipes.md).
+
+The older phase sections above record the engine's incremental development and
+are not an exhaustive inventory of every currently implemented subsystem.
