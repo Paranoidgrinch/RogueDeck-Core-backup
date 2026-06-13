@@ -244,6 +244,37 @@ public class CombatArchitectureGuardTests
         Assert.DoesNotContain("DealDamageEffectRequest", source);
     }
 
+    [Fact]
+    public void GainBlockEffectRecipeMustRemainEventAgnosticAndUseSharedBuilder()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var recipePath = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "GainBlockEffectRecipe.cs");
+
+        var source = File.ReadAllText(recipePath);
+
+        Assert.Contains(
+            "TriggeredEffectActionBuilder.BuildGainBlockRequests",
+            source);
+        Assert.DoesNotContain(
+            "TriggeredEffectActionRequestFactory",
+            source);
+        Assert.DoesNotContain(
+            "new GainBlockEffectRequest",
+            source);
+        Assert.DoesNotContain("RoundStarted", source);
+        Assert.DoesNotContain("EffectKind", source);
+        Assert.False(
+            source.Contains(
+                "switch",
+                StringComparison.OrdinalIgnoreCase));
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
