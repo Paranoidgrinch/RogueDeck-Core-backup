@@ -1,4 +1,4 @@
-﻿using RogueDeck.Core.Combat;
+using RogueDeck.Core.Combat;
 
 namespace RogueDeck.Core.Tests;
 
@@ -258,6 +258,83 @@ public class TurnEndedTriggeredEffectTests
 
         Assert.Equal(
             healthBefore,
+            goblin.Health.Current);
+    }
+
+    [Fact]
+    public void TurnEndedTriggeredEffectCanHealTurnCombatant()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var hero = combat.GetCombatant(HeroId);
+        var healthBefore = hero.Health.Max - 5;
+        hero.Health.SetCurrent(healthBefore);
+
+        var definition = new TurnEndedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.turn_end_heal_turn_combatant"));
+
+        definition.Actions.Add(
+            new HealOnTurnEndedTriggeredEffectAction(
+                TurnEndedTriggeredEffectTarget.TurnCombatant,
+                new FixedTurnEndedTriggeredEffectAmount(3)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        ResolveTurnEndedEvent(
+            combat,
+            registry,
+            HeroId);
+
+        Assert.Equal(
+            healthBefore + 3,
+            hero.Health.Current);
+    }
+
+    [Fact]
+    public void TurnEndedTriggeredEffectCanHealAllAllies()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        AddPlayerAlly(combat);
+
+        var hero = combat.GetCombatant(HeroId);
+        var ally = combat.GetCombatant(AllyId);
+        var goblin = combat.GetCombatant(GoblinId);
+
+        var heroHealthBefore = hero.Health.Max - 5;
+        var allyHealthBefore = ally.Health.Max - 4;
+        var goblinHealthBefore = goblin.Health.Current;
+
+        hero.Health.SetCurrent(heroHealthBefore);
+        ally.Health.SetCurrent(allyHealthBefore);
+
+        var definition = new TurnEndedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.turn_end_heal_all_allies"));
+
+        definition.Actions.Add(
+            new HealOnTurnEndedTriggeredEffectAction(
+                TurnEndedTriggeredEffectTarget.AllAllies,
+                new FixedTurnEndedTriggeredEffectAmount(2)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        ResolveTurnEndedEvent(
+            combat,
+            registry,
+            HeroId);
+
+        Assert.Equal(
+            heroHealthBefore + 2,
+            hero.Health.Current);
+
+        Assert.Equal(
+            allyHealthBefore + 2,
+            ally.Health.Current);
+
+        Assert.Equal(
+            goblinHealthBefore,
             goblin.Health.Current);
     }
 
