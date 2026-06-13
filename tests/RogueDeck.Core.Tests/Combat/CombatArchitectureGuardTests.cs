@@ -347,6 +347,56 @@ public class CombatArchitectureGuardTests
                 StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public void RoundEndedRecipePilotMustRemainGenericAndOrdered()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var roundEndedPath = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "RoundEndedTriggeredEffects.cs");
+
+        var source = File.ReadAllText(roundEndedPath);
+        var actionsIndex = source.LastIndexOf(
+            "definition.Actions",
+            StringComparison.Ordinal);
+        var effectsIndex = source.LastIndexOf(
+            "definition.Effects",
+            StringComparison.Ordinal);
+
+        Assert.Contains(
+            "List<ICombatEffectRecipe<RoundEndedTriggeredEffectContext>> Effects",
+            source);
+        Assert.True(actionsIndex >= 0);
+        Assert.True(effectsIndex > actionsIndex);
+        Assert.Contains(
+            "var actionBuildContext =",
+            source);
+        Assert.Contains(
+            "RoundEndedTriggeredEffectTargetResolver.CreateActionBuildContext(context)",
+            source);
+        Assert.Contains(
+            "effect => effect.BuildEffectRequests(",
+            source);
+        Assert.Contains(
+            "combatEvent.LastActiveCombatantId is null",
+            source);
+        Assert.DoesNotContain(
+            "new GainBlockEffectRequest",
+            source);
+        Assert.DoesNotContain(
+            "new HealEffectRequest",
+            source);
+        Assert.DoesNotContain("EffectKind", source);
+        Assert.False(
+            source.Contains(
+                "switch",
+                StringComparison.OrdinalIgnoreCase));
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

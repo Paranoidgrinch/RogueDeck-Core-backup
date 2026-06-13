@@ -10,6 +10,8 @@ public sealed class RoundEndedTriggeredEffectDefinition : ITriggeredEffectDefini
 
     public List<IRoundEndedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<RoundEndedTriggeredEffectContext>> Effects { get; } = new();
+
     public RoundEndedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -222,6 +224,9 @@ public sealed class RoundEndedTriggeredEffectHandler
             CombatEvent: combatEvent,
             LastActiveCombatant: lastActiveCombatant!);
 
+        var actionBuildContext =
+            RoundEndedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(RoundEndedCombatEvent))
                 .OfType<RoundEndedTriggeredEffectDefinition>());
@@ -230,7 +235,11 @@ public sealed class RoundEndedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(
-                action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
