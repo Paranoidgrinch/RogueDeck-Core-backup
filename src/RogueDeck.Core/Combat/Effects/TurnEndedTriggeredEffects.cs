@@ -10,6 +10,8 @@ public sealed class TurnEndedTriggeredEffectDefinition : ITriggeredEffectDefinit
 
     public List<ITurnEndedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<TurnEndedTriggeredEffectContext>> Effects { get; } = new();
+
     public TurnEndedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -391,21 +393,25 @@ public sealed class TurnEndedTriggeredEffectHandler
             CombatEvent: combatEvent,
             TurnCombatant: turnCombatant!);
 
+        var actionBuildContext =
+            TurnEndedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(TurnEndedCombatEvent))
                 .OfType<TurnEndedTriggeredEffectDefinition>());
 
-        foreach (var definition in definitions)
-        {
-            if (definition.Filters.Any(filter => !filter.Matches(context)))
-                continue;
-
-            foreach (var action in definition.Actions)
-            {
-                foreach (var effectRequest in action.BuildEffectRequests(context))
-                    combat.EnqueueEffect(effectRequest);
-            }
-        }
+        TriggeredEffectDefinitionRunner.EnqueueEffectRequests(
+            combat,
+            definitions,
+            definition => definition.Filters.All(
+                filter => filter.Matches(context)),
+            definition => definition.Actions
+                .SelectMany(
+                    action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
 
