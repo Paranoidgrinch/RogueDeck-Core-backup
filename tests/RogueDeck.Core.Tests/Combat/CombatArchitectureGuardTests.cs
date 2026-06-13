@@ -217,6 +217,33 @@ public class CombatArchitectureGuardTests
         Assert.Contains("RegisterCombatEventHandler", source);
     }
 
+    [Fact]
+    public void CombatEffectRecipeContractsMustNotKnowConcreteEventsOrEffects()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var contractsPath = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "CombatEffectRecipeContracts.cs");
+
+        var source = File.ReadAllText(contractsPath);
+
+        Assert.Contains("ICombatValueProvider", source);
+        Assert.Contains("ICombatEffectRecipe", source);
+        Assert.False(
+            source.Contains(
+                "switch",
+                StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain("EffectKind", source);
+        Assert.DoesNotContain("RoundStarted", source);
+        Assert.DoesNotContain("GainBlockEffectRequest", source);
+        Assert.DoesNotContain("HealEffectRequest", source);
+        Assert.DoesNotContain("DealDamageEffectRequest", source);
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
