@@ -313,6 +313,40 @@ public class CombatArchitectureGuardTests
                 StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public void HealEffectRecipeMustRemainEventAgnosticAndUseSharedBuilder()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var recipePath = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "HealEffectRecipe.cs");
+
+        var source = File.ReadAllText(recipePath);
+
+        Assert.Contains(
+            "TriggeredEffectActionBuilder.BuildHealRequests",
+            source);
+        Assert.DoesNotContain(
+            "TriggeredEffectActionRequestFactory",
+            source);
+        Assert.DoesNotContain(
+            "new HealEffectRequest",
+            source);
+        Assert.DoesNotContain("RoundEnded", source);
+        Assert.DoesNotContain("TurnStarted", source);
+        Assert.DoesNotContain("TurnEnded", source);
+        Assert.DoesNotContain("HealedCombatEvent", source);
+        Assert.DoesNotContain("EffectKind", source);
+        Assert.False(
+            source.Contains(
+                "switch",
+                StringComparison.OrdinalIgnoreCase));
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
