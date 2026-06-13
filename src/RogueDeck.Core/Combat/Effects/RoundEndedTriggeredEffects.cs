@@ -147,6 +147,38 @@ public sealed record GainBlockOnRoundEndedTriggeredEffectAction
     }
 }
 
+public sealed record HealOnRoundEndedTriggeredEffectAction
+    : IRoundEndedTriggeredEffectAction
+{
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public IRoundEndedTriggeredEffectAmountProvider AmountProvider { get; }
+
+    public HealOnRoundEndedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        IRoundEndedTriggeredEffectAmountProvider amountProvider)
+    {
+        TargetSelector = targetSelector
+            ?? throw new ArgumentNullException(nameof(targetSelector));
+
+        AmountProvider = amountProvider
+            ?? throw new ArgumentNullException(nameof(amountProvider));
+    }
+
+    public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+        RoundEndedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var amount = AmountProvider.ResolveAmount(context);
+
+        return TriggeredEffectActionBuilder.BuildHealRequests(
+            RoundEndedTriggeredEffectTargetResolver.CreateActionBuildContext(context),
+            TargetSelector,
+            amount);
+    }
+}
+
 public sealed class RoundEndedTriggeredEffectHandler
     : CombatEventHandler<RoundEndedCombatEvent>
 {

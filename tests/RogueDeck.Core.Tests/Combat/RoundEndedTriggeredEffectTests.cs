@@ -212,6 +212,87 @@ public class RoundEndedTriggeredEffectTests
             GetBlockOrZero(combat, GoblinId));
     }
 
+    [Fact]
+    public void RoundEndedTriggeredEffectCanHealLastActiveCombatant()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        var hero = combat.GetCombatant(HeroId);
+        var goblin = combat.GetCombatant(GoblinId);
+
+        var heroHealthBefore = hero.Health.Current;
+        var goblinHealthBefore = goblin.Health.Max - 5;
+
+        goblin.Health.SetCurrent(goblinHealthBefore);
+
+        var definition = new RoundEndedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.round_ended_heal_last_active"));
+
+        definition.Actions.Add(
+            new HealOnRoundEndedTriggeredEffectAction(
+                CombatantTargetSelectors.EventTarget,
+                new FixedRoundEndedTriggeredEffectAmount(3)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        AdvanceFromGoblinTurnToNextRound(
+            combat,
+            registry);
+
+        Assert.Equal(
+            heroHealthBefore,
+            hero.Health.Current);
+
+        Assert.Equal(
+            goblinHealthBefore + 3,
+            goblin.Health.Current);
+    }
+
+    [Fact]
+    public void RoundEndedTriggeredEffectCanHealAllAlliesOfLastActiveCombatant()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndTwoGoblins();
+
+        var hero = combat.GetCombatant(HeroId);
+        var goblin = combat.GetCombatant(GoblinId);
+        var secondGoblin = combat.GetCombatant(SecondGoblinId);
+
+        var heroHealthBefore = hero.Health.Current;
+        var goblinHealthBefore = goblin.Health.Max - 5;
+        var secondGoblinHealthBefore = secondGoblin.Health.Max - 4;
+
+        goblin.Health.SetCurrent(goblinHealthBefore);
+        secondGoblin.Health.SetCurrent(secondGoblinHealthBefore);
+
+        var definition = new RoundEndedTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId("test.round_ended_heal_source_allies"));
+
+        definition.Actions.Add(
+            new HealOnRoundEndedTriggeredEffectAction(
+                CombatantTargetSelectors.AllAlliesOfSource,
+                new FixedRoundEndedTriggeredEffectAmount(2)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        AdvanceFromSecondGoblinTurnToNextRound(
+            combat,
+            registry);
+
+        Assert.Equal(
+            heroHealthBefore,
+            hero.Health.Current);
+
+        Assert.Equal(
+            goblinHealthBefore + 2,
+            goblin.Health.Current);
+
+        Assert.Equal(
+            secondGoblinHealthBefore + 2,
+            secondGoblin.Health.Current);
+    }
+
     private static void AdvanceFromGoblinTurnToNextRound(
         CombatState combat,
         CombatDefinitionRegistry registry)
