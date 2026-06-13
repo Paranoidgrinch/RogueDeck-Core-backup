@@ -486,5 +486,19 @@ Those belong to later phases.
 The typed combat-effect recipe architecture is documented in
 [Combat Effect Recipes](combat-effect-recipes.md).
 
-The older phase sections above record the engine's incremental development and
-are not an exhaustive inventory of every currently implemented subsystem.
+Milestone B, the temporal trigger recipe migration, is complete.
+
+The following temporal definitions support generic `Effects` alongside legacy `Actions`:
+
+- `RoundStartedTriggeredEffectDefinition`
+- `RoundEndedTriggeredEffectDefinition`
+- `TurnStartedTriggeredEffectDefinition`
+- `TurnEndedTriggeredEffectDefinition`
+
+For matching definitions, legacy actions execute first and generic recipes execute afterward. Existing target semantics, effect attribution, lifecycle ordering, queues, resolver, registry, and primitive request handlers remain in place.
+
+Legacy trigger-specific wrappers remain supported. Their removal was not part of milestone B.
+
+Section C must begin with a fresh audit of reactive trigger families and their reentry risks. The completed temporal migration does not authorize recursive trigger combinations without an explicit policy and focused tests.
+
+The older phase sections above record the engine's incremental development and are not an exhaustive inventory of every currently implemented subsystem.
