@@ -1,4 +1,4 @@
-﻿namespace RogueDeck.Core.Combat;
+namespace RogueDeck.Core.Combat;
 
 public sealed class TurnStartedTriggeredEffectDefinition : ITriggeredEffectDefinition
 {
@@ -176,6 +176,44 @@ public sealed record GainBlockOnTurnStartedTriggeredEffectAction
         var amount = AmountProvider.ResolveAmount(context);
 
         return TriggeredEffectActionBuilder.BuildGainBlockRequests(
+            TurnStartedTriggeredEffectTargetResolver.CreateActionBuildContext(context),
+            TargetSelector,
+            amount);
+    }
+}
+
+public sealed record HealOnTurnStartedTriggeredEffectAction
+    : ITurnStartedTriggeredEffectAction
+{
+    public ICombatantTargetSelector TargetSelector { get; }
+
+    public ITurnStartedTriggeredEffectAmountProvider AmountProvider { get; }
+
+    public HealOnTurnStartedTriggeredEffectAction(
+        ICombatantTargetSelector targetSelector,
+        ITurnStartedTriggeredEffectAmountProvider amountProvider)
+    {
+        TargetSelector = targetSelector ?? throw new ArgumentNullException(nameof(targetSelector));
+        AmountProvider = amountProvider ?? throw new ArgumentNullException(nameof(amountProvider));
+    }
+
+    public HealOnTurnStartedTriggeredEffectAction(
+        TurnStartedTriggeredEffectTarget target,
+        ITurnStartedTriggeredEffectAmountProvider amountProvider)
+        : this(
+            TurnStartedTriggeredEffectTargetResolver.ToSelector(target),
+            amountProvider)
+    {
+    }
+
+    public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+        TurnStartedTriggeredEffectContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var amount = AmountProvider.ResolveAmount(context);
+
+        return TriggeredEffectActionBuilder.BuildHealRequests(
             TurnStartedTriggeredEffectTargetResolver.CreateActionBuildContext(context),
             TargetSelector,
             amount);
