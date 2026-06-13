@@ -275,6 +275,44 @@ public class CombatArchitectureGuardTests
                 StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public void RoundStartedRecipePilotMustRemainGenericAndOrdered()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var roundStartedPath = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "RoundStartedTriggeredEffects.cs");
+
+        var source = File.ReadAllText(roundStartedPath);
+        var actionsIndex = source.LastIndexOf(
+            "definition.Actions",
+            StringComparison.Ordinal);
+        var effectsIndex = source.LastIndexOf(
+            "definition.Effects",
+            StringComparison.Ordinal);
+
+        Assert.Contains(
+            "List<ICombatEffectRecipe<RoundStartedTriggeredEffectContext>> Effects",
+            source);
+        Assert.True(actionsIndex >= 0);
+        Assert.True(effectsIndex > actionsIndex);
+        Assert.Contains(
+            "RoundStartedTriggeredEffectTargetResolver.CreateActionBuildContext(context)",
+            source);
+        Assert.DoesNotContain(
+            "new GainBlockEffectRequest",
+            source);
+        Assert.DoesNotContain("EffectKind", source);
+        Assert.False(
+            source.Contains(
+                "switch",
+                StringComparison.OrdinalIgnoreCase));
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

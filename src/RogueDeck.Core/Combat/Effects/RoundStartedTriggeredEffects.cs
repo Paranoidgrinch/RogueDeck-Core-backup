@@ -10,6 +10,8 @@ public sealed class RoundStartedTriggeredEffectDefinition : ITriggeredEffectDefi
 
     public List<IRoundStartedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<RoundStartedTriggeredEffectContext>> Effects { get; } = new();
+
     public RoundStartedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -48,13 +50,20 @@ public sealed record FixedRoundStartedTriggeredEffectAmount(int Amount)
     }
 }
 
-public sealed class RoundStartedCurrentRoundAmount : IRoundStartedTriggeredEffectAmountProvider
+public sealed class RoundStartedCurrentRoundAmount
+    : IRoundStartedTriggeredEffectAmountProvider,
+      ICombatValueProvider<RoundStartedTriggeredEffectContext, int>
 {
     public int ResolveAmount(RoundStartedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return context.CombatEvent.Round;
+    }
+
+    public int Resolve(RoundStartedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -208,6 +217,9 @@ public sealed class RoundStartedTriggeredEffectHandler
             CombatEvent: combatEvent,
             ActiveCombatant: activeCombatant!);
 
+        var actionBuildContext =
+            RoundStartedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(RoundStartedCombatEvent))
                 .OfType<RoundStartedTriggeredEffectDefinition>());
@@ -216,6 +228,11 @@ public sealed class RoundStartedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
