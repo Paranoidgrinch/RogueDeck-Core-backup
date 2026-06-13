@@ -50,13 +50,19 @@ public sealed record FixedRoundEndedTriggeredEffectAmount(int Amount)
 }
 
 public sealed class RoundEndedCompletedRoundAmount
-    : IRoundEndedTriggeredEffectAmountProvider
+    : IRoundEndedTriggeredEffectAmountProvider,
+      ICombatValueProvider<RoundEndedTriggeredEffectContext, int>
 {
     public int ResolveAmount(RoundEndedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return context.CombatEvent.Round;
+    }
+
+    public int Resolve(RoundEndedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 

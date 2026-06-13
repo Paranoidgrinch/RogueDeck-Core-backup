@@ -49,7 +49,8 @@ public sealed record FixedTurnEndedTriggeredEffectAmount(int Amount)
 }
 
 public sealed record TurnEndedCombatantStatusStacksAmount(StatusDefinitionId StatusDefinitionId)
-    : ITurnEndedTriggeredEffectAmountProvider
+    : ITurnEndedTriggeredEffectAmountProvider,
+      ICombatValueProvider<TurnEndedTriggeredEffectContext, int>
 {
     public int ResolveAmount(TurnEndedTriggeredEffectContext context)
     {
@@ -58,6 +59,11 @@ public sealed record TurnEndedCombatantStatusStacksAmount(StatusDefinitionId Sta
         return context.TurnCombatant.Statuses
             .Where(status => status.DefinitionId == StatusDefinitionId)
             .Sum(status => status.Stacks);
+    }
+
+    public int Resolve(TurnEndedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
