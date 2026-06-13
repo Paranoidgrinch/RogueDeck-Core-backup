@@ -10,6 +10,8 @@ public sealed class TurnStartedTriggeredEffectDefinition : ITriggeredEffectDefin
 
     public List<ITurnStartedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<TurnStartedTriggeredEffectContext>> Effects { get; } = new();
+
     public TurnStartedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -391,39 +393,24 @@ public sealed class TurnStartedTriggeredEffectHandler
             CombatEvent: combatEvent,
             TurnCombatant: turnCombatant!);
 
+        var actionBuildContext =
+            TurnStartedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(TurnStartedCombatEvent))
                 .OfType<TurnStartedTriggeredEffectDefinition>());
 
-        foreach (var definition in definitions)
-        {
-            if (definition.Filters.Any(filter => !filter.Matches(context)))
-                continue;
-
-            foreach (var action in definition.Actions)
-            {
-                foreach (var effectRequest in action.BuildEffectRequests(context))
-                    combat.EnqueueEffect(effectRequest);
-            }
-        }
+        TriggeredEffectDefinitionRunner.EnqueueEffectRequests(
+            combat,
+            definitions,
+            definition => definition.Filters.All(
+                filter => filter.Matches(context)),
+            definition => definition.Actions
+                .SelectMany(
+                    action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
