@@ -375,6 +375,8 @@ public sealed class StatusChargesReducedTriggeredEffectDefinition : ITriggeredEf
 
     public List<IStatusChargesReducedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<StatusChargesReducedTriggeredEffectContext>> Effects { get; } = new();
+
     public StatusChargesReducedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -404,7 +406,8 @@ public interface IStatusChargesReducedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedStatusChargesReducedTriggeredEffectAmount(int Amount)
-    : IStatusChargesReducedTriggeredEffectAmountProvider
+    : IStatusChargesReducedTriggeredEffectAmountProvider,
+    ICombatValueProvider<StatusChargesReducedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusChargesReducedTriggeredEffectContext context)
     {
@@ -412,16 +415,27 @@ public sealed record FixedStatusChargesReducedTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(StatusChargesReducedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class StatusChargesReducedChargeCountAmount
-    : IStatusChargesReducedTriggeredEffectAmountProvider
+    : IStatusChargesReducedTriggeredEffectAmountProvider,
+    ICombatValueProvider<StatusChargesReducedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusChargesReducedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return Math.Max(0, context.CombatEvent.OldCharges - context.CombatEvent.NewCharges);
+    }
+
+    public int Resolve(StatusChargesReducedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -540,6 +554,9 @@ public sealed class StatusChargesReducedTriggeredEffectHandler
             TargetCombatant: targetCombatant!,
             SourceCombatant: null);
 
+        var actionBuildContext =
+            StatusChargesReducedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(StatusChargesReducedCombatEvent))
                 .OfType<StatusChargesReducedTriggeredEffectDefinition>());
@@ -548,7 +565,12 @@ public sealed class StatusChargesReducedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
 
