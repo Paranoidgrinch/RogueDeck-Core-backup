@@ -10,6 +10,8 @@ public sealed class StatusRemovedTriggeredEffectDefinition : ITriggeredEffectDef
 
     public List<IStatusRemovedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<StatusRemovedTriggeredEffectContext>> Effects { get; } = new();
+
     public StatusRemovedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -39,7 +41,8 @@ public interface IStatusRemovedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedStatusRemovedTriggeredEffectAmount(int Amount)
-    : IStatusRemovedTriggeredEffectAmountProvider
+    : IStatusRemovedTriggeredEffectAmountProvider,
+    ICombatValueProvider<StatusRemovedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusRemovedTriggeredEffectContext context)
     {
@@ -47,10 +50,16 @@ public sealed record FixedStatusRemovedTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(StatusRemovedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class StatusRemovedCountAmount
-    : IStatusRemovedTriggeredEffectAmountProvider
+    : IStatusRemovedTriggeredEffectAmountProvider,
+    ICombatValueProvider<StatusRemovedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusRemovedTriggeredEffectContext context)
     {
@@ -58,10 +67,16 @@ public sealed class StatusRemovedCountAmount
 
         return context.CombatEvent.StatusInstanceIds.Count;
     }
+
+    public int Resolve(StatusRemovedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record StatusRemovedTargetStatusStacksAmount(StatusDefinitionId StatusDefinitionId)
-    : IStatusRemovedTriggeredEffectAmountProvider
+    : IStatusRemovedTriggeredEffectAmountProvider,
+    ICombatValueProvider<StatusRemovedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusRemovedTriggeredEffectContext context)
     {
@@ -71,10 +86,16 @@ public sealed record StatusRemovedTargetStatusStacksAmount(StatusDefinitionId St
             .Where(status => status.DefinitionId == StatusDefinitionId)
             .Sum(status => status.Stacks);
     }
+
+    public int Resolve(StatusRemovedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record StatusRemovedSourceStatusStacksAmount(StatusDefinitionId StatusDefinitionId)
-    : IStatusRemovedTriggeredEffectAmountProvider
+    : IStatusRemovedTriggeredEffectAmountProvider,
+    ICombatValueProvider<StatusRemovedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusRemovedTriggeredEffectContext context)
     {
@@ -86,6 +107,11 @@ public sealed record StatusRemovedSourceStatusStacksAmount(StatusDefinitionId St
         return context.SourceCombatant.Statuses
             .Where(status => status.DefinitionId == StatusDefinitionId)
             .Sum(status => status.Stacks);
+    }
+
+    public int Resolve(StatusRemovedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -353,6 +379,9 @@ public sealed class StatusRemovedTriggeredEffectHandler
             TargetCombatant: targetCombatant!,
             SourceCombatant: null);
 
+        var actionBuildContext =
+            StatusRemovedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(StatusRemovedCombatEvent))
                 .OfType<StatusRemovedTriggeredEffectDefinition>());
@@ -361,7 +390,12 @@ public sealed class StatusRemovedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
 
