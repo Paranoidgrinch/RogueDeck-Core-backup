@@ -7,22 +7,35 @@ public readonly record struct CombatEffectChainId(long Value)
 
 public sealed class CombatEffectChainContext
 {
+    public const int DefaultMaximumTriggerDepth = 64;
+
     private readonly IReadOnlyList<TriggeredEffectDefinitionId> _triggeredEffectDefinitionIds;
 
     public CombatEffectChainId Id { get; }
 
     public int TriggerDepth => _triggeredEffectDefinitionIds.Count;
 
+    public int MaximumTriggerDepth { get; }
+
     public IReadOnlyList<TriggeredEffectDefinitionId> TriggeredEffectDefinitionIds =>
         _triggeredEffectDefinitionIds;
 
     internal CombatEffectChainContext(
         CombatEffectChainId id,
-        IEnumerable<TriggeredEffectDefinitionId> triggeredEffectDefinitionIds)
+        IEnumerable<TriggeredEffectDefinitionId> triggeredEffectDefinitionIds,
+        int maximumTriggerDepth)
     {
         ArgumentNullException.ThrowIfNull(triggeredEffectDefinitionIds);
 
+        if (maximumTriggerDepth <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(maximumTriggerDepth),
+                "Maximum trigger depth must be greater than zero.");
+        }
+
         Id = id;
+        MaximumTriggerDepth = maximumTriggerDepth;
         _triggeredEffectDefinitionIds =
             Array.AsReadOnly(triggeredEffectDefinitionIds.ToArray());
     }
@@ -48,12 +61,25 @@ public sealed class CombatEffectChainContext
         };
     }
 
+    internal void EnsureCanAppendTriggeredEffectDefinition(
+        TriggeredEffectDefinitionId definitionId)
+    {
+        if (TriggerDepth < MaximumTriggerDepth)
+            return;
+
+        throw new InvalidOperationException(
+            $"Cannot enter triggered effect definition '{definitionId}' because effect chain '{Id}' reached the maximum trigger depth of {MaximumTriggerDepth}.");
+    }
+
     internal CombatEffectChainContext AppendTriggeredEffectDefinition(
         TriggeredEffectDefinitionId definitionId)
     {
+        EnsureCanAppendTriggeredEffectDefinition(definitionId);
+
         return new CombatEffectChainContext(
             Id,
-            _triggeredEffectDefinitionIds.Append(definitionId));
+            _triggeredEffectDefinitionIds.Append(definitionId),
+            MaximumTriggerDepth);
     }
 }
 

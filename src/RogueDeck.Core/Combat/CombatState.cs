@@ -22,6 +22,8 @@ public sealed class CombatState
 
     public int RandomSeed { get; }
 
+    public int MaximumTriggerDepth { get; }
+
     public int RandomStep { get; private set; }
 
     public int NextStatusInstanceNumber { get; private set; } = 1;
@@ -53,10 +55,22 @@ public sealed class CombatState
 
     public int PendingEventCount => _pendingEvents.Count;
 
-    public CombatState(CombatId id, int randomSeed)
+    public CombatState(
+        CombatId id,
+        int randomSeed,
+        int maximumTriggerDepth =
+            CombatEffectChainContext.DefaultMaximumTriggerDepth)
     {
+        if (maximumTriggerDepth <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(maximumTriggerDepth),
+                "Maximum trigger depth must be greater than zero.");
+        }
+
         Id = id;
         RandomSeed = randomSeed;
+        MaximumTriggerDepth = maximumTriggerDepth;
         CurrentRound = 1;
         CurrentTurn = 1;
         TurnPhase = CombatTurnPhase.WaitingToStartTurn;
@@ -252,7 +266,8 @@ public sealed class CombatState
     {
         var effectChain = new CombatEffectChainContext(
             new CombatEffectChainId(_nextEffectChainNumber),
-            Array.Empty<TriggeredEffectDefinitionId>());
+            Array.Empty<TriggeredEffectDefinitionId>(),
+            MaximumTriggerDepth);
 
         _nextEffectChainNumber++;
 
