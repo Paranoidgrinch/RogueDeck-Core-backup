@@ -33,6 +33,21 @@ public sealed class CombatEffectChainContext
         return _triggeredEffectDefinitionIds.Contains(definitionId);
     }
 
+    public bool CanEnterTriggeredEffectDefinition(
+        ITriggeredEffectDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+
+        return definition.ReentryPolicy switch
+        {
+            TriggeredEffectReentryPolicy.SuppressRecursiveReentry =>
+                !ContainsTriggeredEffectDefinition(definition.Id),
+            TriggeredEffectReentryPolicy.AllowRecursiveReentry => true,
+            _ => throw new InvalidOperationException(
+                $"Unsupported triggered effect reentry policy '{definition.ReentryPolicy}'.")
+        };
+    }
+
     internal CombatEffectChainContext AppendTriggeredEffectDefinition(
         TriggeredEffectDefinitionId definitionId)
     {

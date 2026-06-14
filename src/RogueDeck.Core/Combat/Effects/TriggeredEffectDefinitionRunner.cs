@@ -15,6 +15,13 @@ internal static class TriggeredEffectDefinitionRunner
 
         foreach (var definition in definitions)
         {
+            if (definition is ITriggeredEffectDefinition reentryDefinition
+                && combat.CurrentEffectChain is { } currentEffectChain
+                && !currentEffectChain.CanEnterTriggeredEffectDefinition(reentryDefinition))
+            {
+                continue;
+            }
+
             if (!matches(definition))
                 continue;
 

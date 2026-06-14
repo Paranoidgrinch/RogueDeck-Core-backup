@@ -5,11 +5,20 @@ public readonly record struct TriggeredEffectDefinitionId(string value)
     public override string ToString() => value;
 }
 
+public enum TriggeredEffectReentryPolicy
+{
+    SuppressRecursiveReentry = 0,
+    AllowRecursiveReentry = 1
+}
+
 public interface ITriggeredEffectDefinition
 {
     TriggeredEffectDefinitionId Id { get; }
 
     Type EventType { get; }
+
+    TriggeredEffectReentryPolicy ReentryPolicy =>
+        TriggeredEffectReentryPolicy.SuppressRecursiveReentry;
 }
 
 public sealed class CardPlayedTriggeredEffectDefinition : ITriggeredEffectDefinition
