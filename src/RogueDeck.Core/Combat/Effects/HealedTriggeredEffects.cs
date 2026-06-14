@@ -10,6 +10,8 @@ public sealed class HealedTriggeredEffectDefinition : ITriggeredEffectDefinition
 
     public List<IHealedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<HealedTriggeredEffectContext>> Effects { get; } = new();
+
     public HealedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -39,7 +41,8 @@ public interface IHealedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedHealedTriggeredEffectAmount(int Amount)
-    : IHealedTriggeredEffectAmountProvider
+    : IHealedTriggeredEffectAmountProvider,
+      ICombatValueProvider<HealedTriggeredEffectContext, int>
 {
     public int ResolveAmount(HealedTriggeredEffectContext context)
     {
@@ -47,10 +50,16 @@ public sealed record FixedHealedTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(HealedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class HealedAmount
-    : IHealedTriggeredEffectAmountProvider
+    : IHealedTriggeredEffectAmountProvider,
+      ICombatValueProvider<HealedTriggeredEffectContext, int>
 {
     public int ResolveAmount(HealedTriggeredEffectContext context)
     {
@@ -58,16 +67,27 @@ public sealed class HealedAmount
 
         return context.CombatEvent.HealedAmount;
     }
+
+    public int Resolve(HealedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class HealedRequestedAmount
-    : IHealedTriggeredEffectAmountProvider
+    : IHealedTriggeredEffectAmountProvider,
+      ICombatValueProvider<HealedTriggeredEffectContext, int>
 {
     public int ResolveAmount(HealedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return context.CombatEvent.RequestedAmount;
+    }
+
+    public int Resolve(HealedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -215,6 +235,9 @@ public sealed class HealedTriggeredEffectHandler
             TargetCombatant: targetCombatant!,
             SourceCombatant: sourceCombatant);
 
+        var actionBuildContext =
+            HealedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(HealedCombatEvent))
                 .OfType<HealedTriggeredEffectDefinition>());
@@ -223,6 +246,11 @@ public sealed class HealedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
