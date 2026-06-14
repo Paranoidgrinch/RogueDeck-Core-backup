@@ -463,6 +463,148 @@ public class CombatArchitectureGuardTests
             "EffectKind",
             source);
     }
+    [Fact]
+    public void DamageDealtRecipeMigrationRemainsGenericAndOrdered()
+    {
+        var repoRoot = FindRepositoryRoot();
+
+        var path = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "DamageDealtTriggeredEffects.cs");
+
+        var source = File.ReadAllText(path);
+
+        var definitionSource = Slice(
+            source,
+            "public sealed class DamageDealtTriggeredEffectDefinition",
+            "public sealed record DamageDealtTriggeredEffectContext");
+
+        var providerSources = new[]
+        {
+            Slice(
+                source,
+                "public sealed record FixedDamageDealtTriggeredEffectAmount",
+                "public sealed class DamageDealtHealthDamageAmount"),
+            Slice(
+                source,
+                "public sealed class DamageDealtHealthDamageAmount",
+                "public sealed class DamageDealtBlockedDamageAmount"),
+            Slice(
+                source,
+                "public sealed class DamageDealtBlockedDamageAmount",
+                "public sealed class DamageDealtRequestedAmount"),
+            Slice(
+                source,
+                "public sealed class DamageDealtRequestedAmount",
+                "public sealed record DamageDealtSourceStatusStacksAmount"),
+            Slice(
+                source,
+                "public sealed record DamageDealtSourceStatusStacksAmount",
+                "public sealed record DamageDealtTargetStatusStacksAmount"),
+            Slice(
+                source,
+                "public sealed record DamageDealtTargetStatusStacksAmount",
+                "public sealed class DamageDealtHasSourceTriggerFilter")
+        };
+
+        var handlerStart = source.IndexOf(
+            "public sealed class DamageDealtTriggeredEffectHandler",
+            StringComparison.Ordinal);
+
+        Assert.True(
+            handlerStart >= 0,
+            "Missing DamageDealtTriggeredEffectHandler.");
+
+        var handlerSource = source[handlerStart..];
+
+        Assert.Contains(
+            "List<ICombatEffectRecipe<DamageDealtTriggeredEffectContext>> Effects",
+            definitionSource);
+
+        foreach (var providerSource in providerSources)
+        {
+            Assert.Contains(
+                "ICombatValueProvider<DamageDealtTriggeredEffectContext, int>",
+                providerSource);
+
+            Assert.Contains(
+                "public int Resolve(DamageDealtTriggeredEffectContext context)",
+                providerSource);
+        }
+
+        Assert.Contains(
+            "DamageDealtTriggeredEffectTargetResolver.CreateActionBuildContext(context)",
+            handlerSource);
+
+        Assert.Contains(
+            "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
+            handlerSource);
+
+        var actionsIndex = handlerSource.IndexOf(
+            "definition.Actions",
+            StringComparison.Ordinal);
+
+        var effectsIndex = handlerSource.IndexOf(
+            "definition.Effects",
+            StringComparison.Ordinal);
+
+        Assert.True(actionsIndex >= 0);
+        Assert.True(effectsIndex > actionsIndex);
+
+        Assert.DoesNotContain(
+            "combat.EnqueueEffect",
+            handlerSource);
+
+        Assert.DoesNotContain(
+            "new GainBlockEffectRequest",
+            source);
+
+        Assert.DoesNotContain(
+            "new HealEffectRequest",
+            source);
+
+        Assert.DoesNotContain(
+            "DamageReceivedTriggeredEffectDefinition",
+            source);
+
+        Assert.DoesNotContain(
+            "EffectKind",
+            source);
+
+        Assert.False(
+            source.Contains(
+                "switch",
+                StringComparison.OrdinalIgnoreCase));
+
+        static string Slice(
+            string text,
+            string startMarker,
+            string endMarker)
+        {
+            var start = text.IndexOf(
+                startMarker,
+                StringComparison.Ordinal);
+
+            Assert.True(
+                start >= 0,
+                $"Missing start marker: {startMarker}");
+
+            var end = text.IndexOf(
+                endMarker,
+                start,
+                StringComparison.Ordinal);
+
+            Assert.True(
+                end > start,
+                $"Missing end marker: {endMarker}");
+
+            return text[start..end];
+        }
+    }
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
