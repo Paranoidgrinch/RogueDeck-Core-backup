@@ -10,6 +10,8 @@ public sealed class StatusesRemovedByPolarityTriggeredEffectDefinition : ITrigge
 
     public List<IStatusesRemovedByPolarityTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<StatusesRemovedByPolarityTriggeredEffectContext>> Effects { get; } = new();
+
     public StatusesRemovedByPolarityTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -39,7 +41,8 @@ public interface IStatusesRemovedByPolarityTriggeredEffectAmountProvider
 }
 
 public sealed record FixedStatusesRemovedByPolarityTriggeredEffectAmount(int Amount)
-    : IStatusesRemovedByPolarityTriggeredEffectAmountProvider
+    : IStatusesRemovedByPolarityTriggeredEffectAmountProvider,
+    ICombatValueProvider<StatusesRemovedByPolarityTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusesRemovedByPolarityTriggeredEffectContext context)
     {
@@ -47,16 +50,27 @@ public sealed record FixedStatusesRemovedByPolarityTriggeredEffectAmount(int Amo
 
         return Amount;
     }
+
+    public int Resolve(StatusesRemovedByPolarityTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class StatusesRemovedByPolarityRemovedStatusCount
-    : IStatusesRemovedByPolarityTriggeredEffectAmountProvider
+    : IStatusesRemovedByPolarityTriggeredEffectAmountProvider,
+    ICombatValueProvider<StatusesRemovedByPolarityTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusesRemovedByPolarityTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return context.CombatEvent.StatusInstanceIds.Count;
+    }
+
+    public int Resolve(StatusesRemovedByPolarityTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -184,6 +198,9 @@ public sealed class StatusesRemovedByPolarityTriggeredEffectHandler
             CombatEvent: combatEvent,
             TargetCombatant: targetCombatant!);
 
+        var actionBuildContext =
+            StatusesRemovedByPolarityTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(StatusesRemovedByPolarityCombatEvent))
                 .OfType<StatusesRemovedByPolarityTriggeredEffectDefinition>());
@@ -192,6 +209,11 @@ public sealed class StatusesRemovedByPolarityTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }

@@ -1288,6 +1288,133 @@ public class CombatArchitectureGuardTests
         }
     }
 
+    [Fact]
+    public void StatusesRemovedByPolarityRecipeMigrationRemainsGenericAndOrdered()
+    {
+        var repoRoot = FindRepositoryRoot();
+
+        var path = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "StatusesRemovedByPolarityTriggeredEffects.cs");
+
+        var source = File.ReadAllText(path);
+
+        var definitionSource = Slice(
+            source,
+            "public sealed class StatusesRemovedByPolarityTriggeredEffectDefinition",
+            "public sealed record StatusesRemovedByPolarityTriggeredEffectContext");
+
+        var providerSources = new[]
+        {
+            Slice(
+                source,
+                "public sealed record FixedStatusesRemovedByPolarityTriggeredEffectAmount",
+                "public sealed class StatusesRemovedByPolarityRemovedStatusCount"),
+            Slice(
+                source,
+                "public sealed class StatusesRemovedByPolarityRemovedStatusCount",
+                "public sealed record StatusesRemovedByPolarityTriggerFilter")
+        };
+
+        var handlerStart = source.IndexOf(
+            "public sealed class StatusesRemovedByPolarityTriggeredEffectHandler",
+            StringComparison.Ordinal);
+
+        Assert.True(
+            handlerStart >= 0,
+            "Missing StatusesRemovedByPolarityTriggeredEffectHandler.");
+
+        var handlerSource = source[handlerStart..];
+
+        Assert.Contains(
+            "List<ICombatEffectRecipe<StatusesRemovedByPolarityTriggeredEffectContext>> Effects",
+            definitionSource);
+
+        foreach (var providerSource in providerSources)
+        {
+            Assert.Contains(
+                "ICombatValueProvider<StatusesRemovedByPolarityTriggeredEffectContext, int>",
+                providerSource);
+
+            Assert.Contains(
+                "public int Resolve(StatusesRemovedByPolarityTriggeredEffectContext context)",
+                providerSource);
+
+            Assert.Contains(
+                "return ResolveAmount(context);",
+                providerSource);
+        }
+
+        Assert.Contains(
+            "StatusesRemovedByPolarityTriggeredEffectTargetResolver.CreateActionBuildContext(context)",
+            handlerSource);
+
+        Assert.Contains(
+            "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
+            handlerSource);
+
+        var actionsIndex = handlerSource.IndexOf(
+            "definition.Actions",
+            StringComparison.Ordinal);
+
+        var effectsIndex = handlerSource.IndexOf(
+            "definition.Effects",
+            StringComparison.Ordinal);
+
+        Assert.True(actionsIndex >= 0);
+        Assert.True(effectsIndex > actionsIndex);
+
+        Assert.DoesNotContain(
+            "combat.EnqueueEffect",
+            handlerSource);
+
+        Assert.DoesNotContain(
+            "new GainBlockEffectRequest",
+            source);
+
+        Assert.DoesNotContain(
+            "new HealEffectRequest",
+            source);
+
+        Assert.DoesNotContain(
+            "EffectKind",
+            source);
+
+        Assert.False(
+            source.Contains(
+                "switch",
+                StringComparison.OrdinalIgnoreCase));
+
+        static string Slice(
+            string text,
+            string startMarker,
+            string endMarker)
+        {
+            var start = text.IndexOf(
+                startMarker,
+                StringComparison.Ordinal);
+
+            Assert.True(
+                start >= 0,
+                $"Missing start marker: {startMarker}");
+
+            var end = text.IndexOf(
+                endMarker,
+                start,
+                StringComparison.Ordinal);
+
+            Assert.True(
+                end > start,
+                $"Missing end marker: {endMarker}");
+
+            return text[start..end];
+        }
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
