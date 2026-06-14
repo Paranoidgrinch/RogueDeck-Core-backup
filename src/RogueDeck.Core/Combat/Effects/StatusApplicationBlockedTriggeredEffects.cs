@@ -10,6 +10,8 @@ public sealed class StatusApplicationBlockedTriggeredEffectDefinition : ITrigger
 
     public List<IStatusApplicationBlockedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<StatusApplicationBlockedTriggeredEffectContext>> Effects { get; } = new();
+
     public StatusApplicationBlockedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -38,13 +40,19 @@ public interface IStatusApplicationBlockedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedStatusApplicationBlockedTriggeredEffectAmount(int Amount)
-    : IStatusApplicationBlockedTriggeredEffectAmountProvider
+    : IStatusApplicationBlockedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusApplicationBlockedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusApplicationBlockedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return Amount;
+    }
+
+    public int Resolve(StatusApplicationBlockedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -164,6 +172,9 @@ public sealed class StatusApplicationBlockedTriggeredEffectHandler
             CombatEvent: combatEvent,
             TargetCombatant: targetCombatant!);
 
+        var actionBuildContext =
+            StatusApplicationBlockedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(StatusApplicationBlockedCombatEvent))
                 .OfType<StatusApplicationBlockedTriggeredEffectDefinition>());
@@ -172,6 +183,11 @@ public sealed class StatusApplicationBlockedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
