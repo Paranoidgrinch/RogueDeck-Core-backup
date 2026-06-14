@@ -18,8 +18,24 @@ internal static class TriggeredEffectDefinitionRunner
             if (!matches(definition))
                 continue;
 
+            CombatEffectChainContext? triggeredEffectChain = null;
+
             foreach (var effectRequest in buildEffectRequests(definition))
+            {
+                if (definition is ITriggeredEffectDefinition triggeredDefinition)
+                {
+                    triggeredEffectChain ??=
+                        combat.CreateTriggeredEffectChain(triggeredDefinition.Id);
+
+                    combat.EnqueueEffect(
+                        effectRequest,
+                        triggeredEffectChain);
+
+                    continue;
+                }
+
                 combat.EnqueueEffect(effectRequest);
+            }
         }
     }
 }

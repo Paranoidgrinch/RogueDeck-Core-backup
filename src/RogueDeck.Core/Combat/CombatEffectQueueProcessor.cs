@@ -25,9 +25,10 @@ public sealed class CombatEffectQueueProcessor
                 throw new InvalidOperationException(
                     $"Stopped resolving pending effects after reaching the limit of {maxEffectsToResolve} effects.");
 
-            var request = combat.DequeueNextEffect();
+            var entry = combat.DequeueNextEffectEntry();
 
-            _resolver.Resolve(combat, registry, request);
+            using (combat.EnterEffectChain(entry.EffectChain))
+                _resolver.Resolve(combat, registry, entry.Request);
 
             resolvedEffects++;
         }

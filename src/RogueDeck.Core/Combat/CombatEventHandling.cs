@@ -57,11 +57,15 @@ public sealed class CombatEventQueueProcessor
                 throw new InvalidOperationException(
                     $"Stopped resolving pending events after reaching the limit of {maxEventsToResolve} events.");
 
-            var combatEvent = combat.DequeueNextEvent();
-            var handlers = registry.GetCombatEventHandlers(combatEvent.GetType());
+            var entry = combat.DequeueNextEventEntry();
 
-            foreach (var handler in handlers)
-                handler.Handle(combat, registry, combatEvent);
+            using (combat.EnterEffectChain(entry.EffectChain))
+            {
+                var handlers = registry.GetCombatEventHandlers(entry.CombatEvent.GetType());
+
+                foreach (var handler in handlers)
+                    handler.Handle(combat, registry, entry.CombatEvent);
+            }
 
             resolvedEvents++;
         }

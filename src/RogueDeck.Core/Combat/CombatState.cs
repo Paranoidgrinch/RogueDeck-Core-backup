@@ -3,7 +3,10 @@
 public sealed class CombatState
 {
     private readonly Queue<IEffectRequest> _pendingEffects = new();
+    private readonly Queue<CombatEffectChainContext> _pendingEffectChains = new();
     private readonly Queue<ICombatEvent> _pendingEvents = new();
+    private readonly Queue<CombatEffectChainContext> _pendingEventChains = new();
+    private long _nextEffectChainNumber = 1;
 
     public CombatId Id { get; }
 
@@ -37,6 +40,8 @@ public sealed class CombatState
     public IReadOnlyCollection<IEffectRequest> PendingEffects => _pendingEffects;
 
     public IReadOnlyCollection<ICombatEvent> PendingEvents => _pendingEvents;
+
+    public CombatEffectChainContext? CurrentEffectChain { get; private set; }
 
     public List<CombatLogEntry> CombatLog { get; } = new();
 
@@ -152,30 +157,120 @@ public sealed class CombatState
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        EnqueueEffect(
+            request,
+            CurrentEffectChain ?? CreateRootEffectChain());
+    }
+
+    internal void EnqueueEffect(
+        IEffectRequest request,
+        CombatEffectChainContext effectChain)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(effectChain);
+
         _pendingEffects.Enqueue(request);
+        _pendingEffectChains.Enqueue(effectChain);
     }
 
     public IEffectRequest DequeueNextEffect()
     {
+        return DequeueNextEffectEntry().Request;
+    }
+
+    internal PendingEffectQueueEntry DequeueNextEffectEntry()
+    {
+        EnsureEffectQueueMetadataAligned();
+
         if (_pendingEffects.Count == 0)
             throw new InvalidOperationException("Cannot dequeue an effect because there are no pending effects.");
 
-        return _pendingEffects.Dequeue();
+        return new PendingEffectQueueEntry(
+            _pendingEffects.Dequeue(),
+            _pendingEffectChains.Dequeue());
     }
 
     public void EnqueueEvent(ICombatEvent combatEvent)
     {
         ArgumentNullException.ThrowIfNull(combatEvent);
 
+        EnqueueEvent(
+            combatEvent,
+            CurrentEffectChain ?? CreateRootEffectChain());
+    }
+
+    internal void EnqueueEvent(
+        ICombatEvent combatEvent,
+        CombatEffectChainContext effectChain)
+    {
+        ArgumentNullException.ThrowIfNull(combatEvent);
+        ArgumentNullException.ThrowIfNull(effectChain);
+
         _pendingEvents.Enqueue(combatEvent);
+        _pendingEventChains.Enqueue(effectChain);
     }
 
     public ICombatEvent DequeueNextEvent()
     {
+        return DequeueNextEventEntry().CombatEvent;
+    }
+
+    internal PendingEventQueueEntry DequeueNextEventEntry()
+    {
+        EnsureEventQueueMetadataAligned();
+
         if (_pendingEvents.Count == 0)
             throw new InvalidOperationException("Cannot dequeue an event because there are no pending events.");
 
-        return _pendingEvents.Dequeue();
+        return new PendingEventQueueEntry(
+            _pendingEvents.Dequeue(),
+            _pendingEventChains.Dequeue());
+    }
+
+    internal CombatEffectChainContext CreateTriggeredEffectChain(
+        TriggeredEffectDefinitionId definitionId)
+    {
+        var parentChain = CurrentEffectChain ?? CreateRootEffectChain();
+
+        return parentChain.AppendTriggeredEffectDefinition(definitionId);
+    }
+
+    internal IDisposable EnterEffectChain(
+        CombatEffectChainContext effectChain)
+    {
+        ArgumentNullException.ThrowIfNull(effectChain);
+
+        var previousEffectChain = CurrentEffectChain;
+        CurrentEffectChain = effectChain;
+
+        return new EffectChainScope(
+            this,
+            previousEffectChain);
+    }
+
+    private CombatEffectChainContext CreateRootEffectChain()
+    {
+        var effectChain = new CombatEffectChainContext(
+            new CombatEffectChainId(_nextEffectChainNumber),
+            Array.Empty<TriggeredEffectDefinitionId>());
+
+        _nextEffectChainNumber++;
+
+        return effectChain;
+    }
+
+    private void EnsureEffectQueueMetadataAligned()
+    {
+        if (_pendingEffects.Count != _pendingEffectChains.Count)
+            throw new InvalidOperationException(
+                "Pending effect requests and their effect-chain metadata are out of sync.");
+    }
+
+    private void EnsureEventQueueMetadataAligned()
+    {
+        if (_pendingEvents.Count != _pendingEventChains.Count)
+            throw new InvalidOperationException(
+                "Pending combat events and their effect-chain metadata are out of sync.");
     }
 
     public void AdvanceTurn()
@@ -215,6 +310,29 @@ public sealed class CombatState
     public void AddLogEntry(string type, string message)
     {
         CombatLog.Add(new CombatLogEntry(CurrentRound, CurrentTurn, type, message));
+    }
+
+    private sealed class EffectChainScope : IDisposable
+    {
+        private CombatState? _combat;
+        private readonly CombatEffectChainContext? _previousEffectChain;
+
+        public EffectChainScope(
+            CombatState combat,
+            CombatEffectChainContext? previousEffectChain)
+        {
+            _combat = combat;
+            _previousEffectChain = previousEffectChain;
+        }
+
+        public void Dispose()
+        {
+            if (_combat is null)
+                return;
+
+            _combat.CurrentEffectChain = _previousEffectChain;
+            _combat = null;
+        }
     }
 }
 
