@@ -10,6 +10,8 @@ public sealed class DamageReceivedTriggeredEffectDefinition : ITriggeredEffectDe
 
     public List<IDamageReceivedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<DamageReceivedTriggeredEffectContext>> Effects { get; } = new();
+
     public DamageReceivedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -39,7 +41,8 @@ public interface IDamageReceivedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedDamageReceivedTriggeredEffectAmount(int Amount)
-    : IDamageReceivedTriggeredEffectAmountProvider
+    : IDamageReceivedTriggeredEffectAmountProvider,
+      ICombatValueProvider<DamageReceivedTriggeredEffectContext, int>
 {
     public int ResolveAmount(DamageReceivedTriggeredEffectContext context)
     {
@@ -47,10 +50,16 @@ public sealed record FixedDamageReceivedTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(DamageReceivedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class DamageReceivedHealthDamageAmount
-    : IDamageReceivedTriggeredEffectAmountProvider
+    : IDamageReceivedTriggeredEffectAmountProvider,
+      ICombatValueProvider<DamageReceivedTriggeredEffectContext, int>
 {
     public int ResolveAmount(DamageReceivedTriggeredEffectContext context)
     {
@@ -58,10 +67,16 @@ public sealed class DamageReceivedHealthDamageAmount
 
         return context.CombatEvent.HealthDamage;
     }
+
+    public int Resolve(DamageReceivedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class DamageReceivedBlockedDamageAmount
-    : IDamageReceivedTriggeredEffectAmountProvider
+    : IDamageReceivedTriggeredEffectAmountProvider,
+      ICombatValueProvider<DamageReceivedTriggeredEffectContext, int>
 {
     public int ResolveAmount(DamageReceivedTriggeredEffectContext context)
     {
@@ -69,10 +84,16 @@ public sealed class DamageReceivedBlockedDamageAmount
 
         return context.CombatEvent.BlockedDamage;
     }
+
+    public int Resolve(DamageReceivedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class DamageReceivedRequestedAmount
-    : IDamageReceivedTriggeredEffectAmountProvider
+    : IDamageReceivedTriggeredEffectAmountProvider,
+      ICombatValueProvider<DamageReceivedTriggeredEffectContext, int>
 {
     public int ResolveAmount(DamageReceivedTriggeredEffectContext context)
     {
@@ -80,10 +101,16 @@ public sealed class DamageReceivedRequestedAmount
 
         return context.CombatEvent.RequestedAmount;
     }
+
+    public int Resolve(DamageReceivedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record DamageReceivedReceiverStatusStacksAmount(StatusDefinitionId StatusDefinitionId)
-    : IDamageReceivedTriggeredEffectAmountProvider
+    : IDamageReceivedTriggeredEffectAmountProvider,
+      ICombatValueProvider<DamageReceivedTriggeredEffectContext, int>
 {
     public int ResolveAmount(DamageReceivedTriggeredEffectContext context)
     {
@@ -93,10 +120,16 @@ public sealed record DamageReceivedReceiverStatusStacksAmount(StatusDefinitionId
             .Where(status => status.DefinitionId == StatusDefinitionId)
             .Sum(status => status.Stacks);
     }
+
+    public int Resolve(DamageReceivedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record DamageReceivedSourceStatusStacksAmount(StatusDefinitionId StatusDefinitionId)
-    : IDamageReceivedTriggeredEffectAmountProvider
+    : IDamageReceivedTriggeredEffectAmountProvider,
+      ICombatValueProvider<DamageReceivedTriggeredEffectContext, int>
 {
     public int ResolveAmount(DamageReceivedTriggeredEffectContext context)
     {
@@ -108,6 +141,11 @@ public sealed record DamageReceivedSourceStatusStacksAmount(StatusDefinitionId S
         return context.SourceCombatant.Statuses
             .Where(status => status.DefinitionId == StatusDefinitionId)
             .Sum(status => status.Stacks);
+    }
+
+    public int Resolve(DamageReceivedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -373,6 +411,9 @@ public sealed class DamageReceivedTriggeredEffectHandler
             ReceiverCombatant: receiverCombatant!,
             SourceCombatant: sourceCombatant);
 
+        var actionBuildContext =
+            DamageReceivedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(DamageReceivedCombatEvent))
                 .OfType<DamageReceivedTriggeredEffectDefinition>());
@@ -381,6 +422,11 @@ public sealed class DamageReceivedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
