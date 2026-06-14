@@ -2,43 +2,60 @@
 
 ## Status
 
-The typed combat-effect recipe architecture has completed its foundation and temporal-trigger migration.
+The typed combat-effect recipe architecture now includes:
 
-The following temporal definitions support generic `Effects` alongside legacy `Actions`:
+- generic recipe and typed value-provider contracts
+- the completed temporal-trigger migration
+- queue-level effect-chain causality metadata
+- trigger-definition ancestry
+- explicit triggered-effect reentry policies
+- a configurable maximum trigger depth
+- the first bounded reactive-trigger migrations
+
+The following definitions currently support generic `Effects` alongside legacy `Actions`.
+
+### Temporal definitions
 
 - `RoundStartedTriggeredEffectDefinition`
 - `RoundEndedTriggeredEffectDefinition`
 - `TurnStartedTriggeredEffectDefinition`
 - `TurnEndedTriggeredEffectDefinition`
 
-The migration is additive:
+### Reactive definitions
 
-- existing trigger-specific action APIs remain supported
-- no existing public trigger API was removed
-- generic recipes reuse the existing target resolvers and request builders
-- the effect queue, event queue, resolver, registry, and primitive request handlers remain unchanged
-- no central effect-kind switch was introduced
+- `CardCostPaidTriggeredEffectDefinition`
+- `HealedTriggeredEffectDefinition`
+- `ResourceGainedTriggeredEffectDefinition`
+
+The migration remains additive:
+
+- existing trigger-specific `Actions` collections remain supported
+- no public legacy trigger API has been removed
+- generic recipes reuse existing target resolvers and request builders
+- all requests continue through the existing effect queue
+- typed request handlers remain responsible for state mutation
+- no central `EffectKind` switch exists
+- requests are not automatically deduplicated
 
 ## Purpose
 
 Trigger-specific action wrappers create an event-by-effect matrix.
 
-Without recipes, every combination can require another engine type:
+Recipes separate:
 
-- gain block when a turn starts
-- gain block when a round ends
-- heal when a turn ends
-- heal when a card is played
-
-Recipes separate the primitive effect from the event that caused it.
+1. the event that occurred
+2. the event-specific filters
+3. the target selection
+4. the typed value calculation
+5. the primitive effect to request
 
 The intended composition is:
 
-    WHEN event
-    IF event-specific filters match
-    WHO target selector
-    HOW value provider
-    WHAT combat effect recipe
+- WHEN: event-specific typed context
+- IF: event-specific filters
+- WHO: target selector
+- HOW MUCH: typed value provider
+- WHAT: event-independent effect recipe
 
 A new combination of an existing event and an existing primitive effect should not require a new engine class.
 
@@ -46,45 +63,35 @@ A genuinely new primitive effect may still require:
 
 - a new `IEffectRequest`
 - a new typed request handler
-- registration in a package
-- focused tests
-
-## Runtime flow
-
-The accepted runtime flow is:
-
-    event-specific definition
-    -> event-specific context
-    -> filters
-    -> legacy actions
-    -> generic effect recipes
-    -> IEffectRequest
-    -> existing effect queue
-    -> typed request handler
-    -> state mutation
-    -> follow-up combat events
-
-Recipes only build requests. They do not mutate combat state and do not resolve requests directly.
-
-`TriggeredEffectDefinitionRunner` preserves definition order, evaluates the supplied match predicate once per definition, and queues every produced request exactly once.
+- package registration
+- a reusable recipe
+- focused runtime and architecture tests
 
 ## Core contracts
 
-`ICombatValueProvider<TContext, TValue>` resolves a value from a typed context.
+`ICombatValueProvider<TContext, TValue>` resolves a typed value from a typed context.
 
 `ICombatEffectRecipe<TContext>` builds effect requests from:
 
-- the typed event or command context
+- the typed event context
 - `TriggeredEffectActionBuildContext`
 
-The build context preserves two different concepts:
+Recipes build requests only.
+
+They must not:
+
+- mutate combat state
+- resolve requests directly
+- bypass the queue
+- contain a central effect-kind switch
+- reinterpret event attribution
+
+`TriggeredEffectActionBuildContext` preserves two distinct concepts:
 
 - `CombatantTargetSelectionContext.Source` is the targeting anchor
 - `TriggeredEffectActionSource` is effect attribution
 
-These values must not be treated as interchangeable.
-
-The current build-context name is historical. A neutral rename remains deferred until it can be performed without a broad compatibility change.
+These values are not interchangeable.
 
 ## Standard recipes
 
@@ -93,155 +100,240 @@ The current standard recipes are:
 - `GainBlockEffectRecipe<TContext>`
 - `HealEffectRecipe<TContext>`
 
-They delegate to the shared `TriggeredEffectActionBuilder`.
-
-A standard recipe must not:
-
-- construct primitive requests directly when a shared builder already exists
-- know concrete combat events
-- mutate combat state
-- resolve requests directly
-- bypass the existing queue
-- introduce an `EffectKind` enum or central recipe switch
+They delegate primitive request construction to the existing shared builder.
 
 Additional primitive recipes should follow the same pattern.
 
+## Runtime ordering
+
+For every matching recipe-capable definition:
+
+1. reentry policy is evaluated
+2. maximum trigger depth is checked
+3. event-specific filters are evaluated
+4. legacy actions build requests in list order
+5. generic effects build requests afterward in list order
+6. every produced request is queued exactly once
+
+There is no automatic request deduplication.
+
+Equivalent behavior configured in both `Actions` and `Effects` intentionally executes twice.
+
+The compatibility model does not support arbitrary interleaving between the two collections.
+
+## Effect-chain causality
+
+Effect-chain metadata belongs to queue infrastructure.
+
+It does not belong to:
+
+- `IEffectRequest`
+- `ICombatEvent`
+- primitive effect handlers
+
+`CombatEffectChainContext` contains:
+
+- `CombatEffectChainId`
+- ordered triggered-definition ancestry
+- current trigger depth
+- maximum trigger depth
+
+Effects and events produced while a chain is active inherit the same chain.
+
+When a triggered definition produces requests, its definition ID is appended to the child ancestry.
+
+Independent root effects receive independent chain IDs.
+
+## Reentry policy
+
+`ITriggeredEffectDefinition` exposes `TriggeredEffectReentryPolicy`.
+
+The default policy is:
+
+- `SuppressRecursiveReentry`
+
+Under this policy, a definition is skipped when its ID already appears in the active ancestor path.
+
+This blocks direct and indirect return cycles without suppressing independent sibling events.
+
+The explicit alternative is:
+
+- `AllowRecursiveReentry`
+
+Recursive opt-in remains bounded by the maximum trigger depth.
+
+Reentry checks happen before filters.
+
+## Maximum trigger depth
+
+Each `CombatState` has a configurable maximum trigger depth.
+
+The default is:
+
+- `64`
+
+The value is copied into root and child effect-chain contexts.
+
+The depth limit protects against long chains involving different definitions, including chains that do not repeat a definition ID.
+
+The broader queue limits remain final technical safeguards rather than the primary gameplay recursion rule.
+
 ## Value providers
 
-Value providers may be generic or context-specific.
-
-Current reusable examples include:
+Current reusable or migrated providers include:
 
 - `FixedCombatValue<TValue>`
 - `RoundEndedCompletedRoundAmount`
 - `TurnStartedCombatantStatusStacksAmount`
 - `TurnEndedCombatantStatusStacksAmount`
+- `CardCostPaidTotalAmount`
+- `FixedHealedTriggeredEffectAmount`
+- `HealedAmount`
+- `HealedRequestedAmount`
+- `FixedResourceGainedTriggeredEffectAmount`
+- `ResourceGainedAmount`
+- `ResourceGainedNewCurrentAmount`
 
-Temporal providers that already served legacy actions may implement both the legacy amount-provider contract and `ICombatValueProvider<TContext, int>`.
+A legacy provider may also implement `ICombatValueProvider<TContext, int>`.
 
-Their generic `Resolve` method delegates to the existing calculation so legacy and recipe paths preserve identical semantics.
+Its generic `Resolve` method should delegate to its existing calculation.
 
-Event-specific providers are valid because they interpret event-specific data. Effect recipes remain event-agnostic.
+## Targeting and attribution
 
-## Ordering and compatibility semantics
+Recipes reuse the existing target resolver of each trigger family.
 
-For every matching recipe-capable definition:
+### CardCostPaid
 
-1. filters are evaluated
-2. legacy actions execute in list order
-3. generic effects execute afterward in list order
-4. every produced request is queued exactly once
+- the paying combatant is the targeting source
+- the paying combatant is the event target
+- effect attribution uses the paying combatant
+- the paid card definition is not invented as `SourceCardId`
 
-There is no automatic request deduplication.
+### Healed
 
-Configuring the same behavior in both collections intentionally produces both behaviors.
+- the healed combatant is the event target
+- the original healing source remains the targeting source when present
+- the healed combatant remains the targeting fallback when no source exists
+- source combatant and source card attribution are preserved
 
-The two-list compatibility model cannot represent arbitrary interleaving such as:
+### ResourceGained
 
-    legacy action
-    generic effect
-    legacy action
+- the resource owner is the targeting source
+- the resource owner is the event target
+- effect attribution uses the resource owner
+- no source card attribution is invented
 
-Definitions with order-dependent entries should therefore be migrated as a whole or only when their relative order is irrelevant.
+## Completed milestones
 
-Legacy wrappers remain available. Their removal is not part of milestone B.
+### Temporal migration
 
-## Temporal targeting semantics
+The completed temporal migration covers:
 
-The temporal migration preserves the targeting and attribution rules that existed before recipes:
+- `RoundStarted`
+- `RoundEnded`
+- `TurnStarted`
+- `TurnEnded`
 
-- `RoundEnded` uses the last active combatant as its available temporal anchor
-- `TurnStarted` uses the turn combatant as targeting source and effect source
-- `TurnEnded` uses the turn combatant as targeting source and effect source
-- `TurnStarted` and `TurnEnded` do not invent an `EventTargetId`
-- a temporal handler executes neither actions nor recipes when its required combatant context is missing
+It preserves:
 
-Recipes reuse each trigger family's existing target resolver. They do not reinterpret event data.
+- lifecycle-handler order
+- existing target semantics
+- existing attribution
+- public legacy APIs
+- queue-based request resolution
 
-## Lifecycle ordering
+### Reactive foundation
 
-Recipe support does not change lifecycle-handler order.
+The completed reactive foundation includes:
 
-Validated temporal rules include:
+1. a full reactive-trigger audit
+2. `CardCostPaid` recipe support
+3. effect-chain metadata across effect and event queues
+4. definition ancestry
+5. default ancestor-path reentry suppression
+6. explicit recursive opt-in
+7. configurable maximum trigger depth
+8. `Healed` recipe support
+9. `ResourceGained` recipe support
 
-- `TurnStarted` triggered effects remain in their existing position relative to standard turn-start automation
-- `TurnEnded` processing remains hand discard, then triggered effects, then timed-status duration decrease
-- round transition processing remains owned by the existing lifecycle system
+### Healed validation
 
-The recipe layer changes how requests are declared, not when lifecycle events occur.
+Validated behavior includes:
 
-## Completed milestone B: Temporal Trigger Recipe Migration
+- actual healed amount
+- requested heal amount
+- source and target attribution
+- source-card attribution
+- `Heal -> Healed` self-reentry suppression
+- continued chains through different Healed definitions
+- legacy actions before generic effects
 
-Milestone B completed:
+### ResourceGained validation
 
-1. generic recipe and value-provider contracts
-2. `GainBlockEffectRecipe<TContext>`
-3. `HealEffectRecipe<TContext>`
-4. the `RoundStarted` pilot
-5. reusable temporal value-provider adapters
-6. additive recipe support for `RoundEnded`
-7. additive recipe support for `TurnStarted`
-8. additive recipe support for `TurnEnded`
-9. ordering, targeting, compatibility, missing-context, and lifecycle tests
-10. preservation of the existing queues, resolver, registry, primitive handlers, and public legacy APIs
+Validated behavior includes:
 
-## Deferred architecture work
+- actual gained amount
+- new current amount
+- resource-owner targeting and attribution
+- same-definition self-reentry suppression
+- continued chains through different ResourceGained definitions
+- legacy actions before generic effects
 
-Milestone B intentionally does not solve:
+No general runtime `GainResourceEffectRecipe` was added during this migration.
 
-- effect-chain causality metadata
-- explicit gameplay reentry policies
+## Deferred work
+
+The following work remains deferred:
+
+- `DamageDealt` recipe migration
+- `DamageReceived` recipe migration
+- status-application recipe migration
+- status-lifecycle recipe migration
+- card-lifecycle recipe migration
+- general `CardPlayed` recipe migration
+- combatant-lifecycle recipe migration
 - source-free target selection
 - definition build, validation, and freeze phases
-- a neutral rename of `TriggeredEffectActionBuildContext`
-- cards, enemy actions, and abilities using recipes
-- removal of legacy trigger-specific wrappers
-- arbitrary interleaving of legacy actions and generic effects
-
-Potentially recursive combinations remain restricted until explicit reentry semantics exist.
-
-Examples include:
-
-- healed -> heal
-- resource gained -> gain resource
-- card created -> create card
-- status applied -> apply status
-- damage received -> deal damage
-
-## Next bounded milestone: Section C
-
-Section C must begin with a fresh audit of the reactive trigger families before any code is changed.
-
-Candidate families include:
-
-- `DamageDealt`
-- `DamageReceived`
-- `Healed`
-- `StatusApplied`
-- status lifecycle triggers
-- `ResourceGained`
-- card lifecycle and cost-paid triggers
-
-The audit must classify each candidate by:
-
-- available typed context
-- existing filters and value providers
-- source and target semantics
-- lifecycle ordering
-- follow-up events
-- self-trigger and cross-trigger recursion risk
-- whether existing primitive recipes are sufficient
-- whether a new primitive recipe is genuinely required
-
-Section C should migrate one bounded family at a time.
-
-It must preserve legacy actions, reuse the shared runner and builders, and add explicit reentry tests before enabling any self-triggering combination.
-
-Section C must not begin with:
-
-- broad removal of legacy wrappers
-- a central recipe switch
-- card-effect-definition migration
+- broad card-effect-definition migration
 - enemy-command migration
-- source-free targeting
-- recursive trigger combinations without an explicit policy
+- legacy-wrapper removal
+- arbitrary interleaving of actions and recipes
+- broader per-chain activation budgets beyond trigger depth
+
+## Next bounded runtime block
+
+The next block begins with a focused read-only audit of `DamageDealt`.
+
+The audit must verify:
+
+- `DamageDealtCombatEvent`
+- `DamageReceivedCombatEvent`
+- typed trigger context
+- filters and amount providers
+- source and damaged-target semantics
+- source-card attribution
+- damage-kind semantics
+- requested, health, and blocked damage
+- primitive damage requests and handlers
+- follow-up events
+- reflected-damage ordering
+- downed and combat-result ordering
+- existing tests and architecture guards
+
+The first Damage patch must remain limited to `DamageDealtTriggeredEffectDefinition`.
+
+It should prove:
+
+- same-definition `DamageDealt -> DamageDealt` reentry is suppressed
+- `DamageDealt -> Heal -> Healed` remains allowed
+- the original `DamageReceivedCombatEvent` behavior remains unchanged
+- legacy actions still execute before recipes
+- source, target, card, kind, and amount semantics remain unchanged
+
+It must not simultaneously migrate:
+
+- `DamageReceived`
+- status triggers
+- card lifecycle
+- card-effect definitions
+- enemy commands

@@ -483,22 +483,109 @@ Those belong to later phases.
 
 ## Current combat-effect recipe architecture
 
-The typed combat-effect recipe architecture is documented in
-[Combat Effect Recipes](combat-effect-recipes.md).
+The typed combat-effect recipe architecture is documented in [Combat Effect Recipes](combat-effect-recipes.md).
 
-Milestone B, the temporal trigger recipe migration, is complete.
+Recipe support is currently available for:
 
-The following temporal definitions support generic `Effects` alongside legacy `Actions`:
+### Temporal triggers
 
 - `RoundStartedTriggeredEffectDefinition`
 - `RoundEndedTriggeredEffectDefinition`
 - `TurnStartedTriggeredEffectDefinition`
 - `TurnEndedTriggeredEffectDefinition`
 
-For matching definitions, legacy actions execute first and generic recipes execute afterward. Existing target semantics, effect attribution, lifecycle ordering, queues, resolver, registry, and primitive request handlers remain in place.
+### Reactive triggers
 
-Legacy trigger-specific wrappers remain supported. Their removal was not part of milestone B.
+- `CardCostPaidTriggeredEffectDefinition`
+- `HealedTriggeredEffectDefinition`
+- `ResourceGainedTriggeredEffectDefinition`
 
-Section C must begin with a fresh audit of reactive trigger families and their reentry risks. The completed temporal migration does not authorize recursive trigger combinations without an explicit policy and focused tests.
+For matching definitions:
+
+1. reentry policy is evaluated
+2. maximum trigger depth is checked
+3. filters are evaluated
+4. legacy actions execute in list order
+5. generic recipes execute afterward in list order
+6. every produced request is queued exactly once
+
+Existing targeting, attribution, lifecycle order, resolver dispatch, and typed request handlers remain in place.
+
+Legacy trigger-specific wrappers remain supported.
+
+## Effect-chain and reentry architecture
+
+Effect and event queue entries carry `CombatEffectChainContext`.
+
+The context contains:
+
+- a stable chain ID
+- ordered triggered-definition ancestry
+- current trigger depth
+- maximum trigger depth
+
+This metadata remains outside `IEffectRequest` and `ICombatEvent`.
+
+Follow-up effects and events inherit the active chain.
+
+The default reentry policy is `SuppressRecursiveReentry`.
+
+A definition is skipped when its ID already exists in the current ancestor path.
+
+This prevents direct and indirect return cycles while preserving independent sibling activations.
+
+`AllowRecursiveReentry` is an explicit opt-in and remains bounded by maximum trigger depth.
+
+The default maximum trigger depth is `64`.
+
+It is configurable through `CombatState`.
+
+Reentry and depth checks run before trigger filters.
+
+The broader queue limits remain final technical safeguards.
+
+## Current reactive migration status
+
+The first bounded reactive slice is complete:
+
+- `CardCostPaid` validates a reactive event without an effect-request feedback path.
+- `Healed` validates real `Heal -> Healed` self-reentry suppression.
+- `ResourceGained` validates resource-event self-reentry suppression.
+- different definitions may continue legitimate chains.
+- legacy actions remain before recipes.
+- existing targeting and attribution semantics remain unchanged.
+
+No central recipe switch or effect-kind enum was introduced.
+
+No broad legacy-wrapper removal was performed.
+
+## Next bounded runtime block
+
+The next block should audit and then migrate only `DamageDealtTriggeredEffectDefinition`.
+
+The audit must verify:
+
+- exact event and context semantics
+- filters and value providers
+- target resolution
+- source and card attribution
+- handler order
+- primitive requests
+- follow-up events
+- interaction with `DamageReceived`
+- reflected damage
+- downed processing
+- combat-result processing
+- existing tests and architecture guards
+
+The first Damage patch should prove:
+
+- same-definition damage reentry is suppressed
+- `DamageDealt -> Heal -> Healed` remains allowed
+- the original hit still produces and processes `DamageReceivedCombatEvent`
+- legacy actions remain before recipes
+- source, target, card, kind, and amount semantics remain unchanged
+
+`DamageReceived`, status triggers, card lifecycle, card-effect definitions, and enemy commands remain outside that patch.
 
 The older phase sections above record the engine's incremental development and are not an exhaustive inventory of every currently implemented subsystem.
