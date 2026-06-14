@@ -584,6 +584,8 @@ public sealed class StatusExpiredTriggeredEffectDefinition : ITriggeredEffectDef
 
     public List<IStatusExpiredTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<StatusExpiredTriggeredEffectContext>> Effects { get; } = new();
+
     public StatusExpiredTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -613,7 +615,8 @@ public interface IStatusExpiredTriggeredEffectAmountProvider
 }
 
 public sealed record FixedStatusExpiredTriggeredEffectAmount(int Amount)
-    : IStatusExpiredTriggeredEffectAmountProvider
+    : IStatusExpiredTriggeredEffectAmountProvider,
+    ICombatValueProvider<StatusExpiredTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusExpiredTriggeredEffectContext context)
     {
@@ -621,10 +624,16 @@ public sealed record FixedStatusExpiredTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(StatusExpiredTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record StatusExpiredTargetStatusStacksAmount(StatusDefinitionId StatusDefinitionId)
-    : IStatusExpiredTriggeredEffectAmountProvider
+    : IStatusExpiredTriggeredEffectAmountProvider,
+    ICombatValueProvider<StatusExpiredTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusExpiredTriggeredEffectContext context)
     {
@@ -634,10 +643,16 @@ public sealed record StatusExpiredTargetStatusStacksAmount(StatusDefinitionId St
             .Where(status => status.DefinitionId == StatusDefinitionId)
             .Sum(status => status.Stacks);
     }
+
+    public int Resolve(StatusExpiredTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record StatusExpiredSourceStatusStacksAmount(StatusDefinitionId StatusDefinitionId)
-    : IStatusExpiredTriggeredEffectAmountProvider
+    : IStatusExpiredTriggeredEffectAmountProvider,
+    ICombatValueProvider<StatusExpiredTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusExpiredTriggeredEffectContext context)
     {
@@ -649,6 +664,11 @@ public sealed record StatusExpiredSourceStatusStacksAmount(StatusDefinitionId St
         return context.SourceCombatant.Statuses
             .Where(status => status.DefinitionId == StatusDefinitionId)
             .Sum(status => status.Stacks);
+    }
+
+    public int Resolve(StatusExpiredTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -916,6 +936,9 @@ public sealed class StatusExpiredTriggeredEffectHandler
             TargetCombatant: targetCombatant!,
             SourceCombatant: null);
 
+        var actionBuildContext =
+            StatusExpiredTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(StatusExpiredCombatEvent))
                 .OfType<StatusExpiredTriggeredEffectDefinition>());
@@ -924,7 +947,12 @@ public sealed class StatusExpiredTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
 

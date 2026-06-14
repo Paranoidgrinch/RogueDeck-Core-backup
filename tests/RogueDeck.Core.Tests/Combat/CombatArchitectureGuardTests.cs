@@ -1415,6 +1415,142 @@ public class CombatArchitectureGuardTests
         }
     }
 
+    [Fact]
+    public void StatusExpiredRecipeMigrationRemainsGenericAndOrdered()
+    {
+        var repoRoot = FindRepositoryRoot();
+
+        var path = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "StatusLifecycleTriggeredEffects.cs");
+
+        var source = File.ReadAllText(path);
+
+        var familySource = Slice(
+            source,
+            "public sealed class StatusExpiredTriggeredEffectDefinition",
+            "public sealed class StatusMergedTriggeredEffectDefinition");
+
+        var definitionSource = Slice(
+            familySource,
+            "public sealed class StatusExpiredTriggeredEffectDefinition",
+            "public sealed record StatusExpiredTriggeredEffectContext");
+
+        var providerSources = new[]
+        {
+            Slice(
+                familySource,
+                "public sealed record FixedStatusExpiredTriggeredEffectAmount",
+                "public sealed record StatusExpiredTargetStatusStacksAmount"),
+            Slice(
+                familySource,
+                "public sealed record StatusExpiredTargetStatusStacksAmount",
+                "public sealed record StatusExpiredSourceStatusStacksAmount"),
+            Slice(
+                familySource,
+                "public sealed record StatusExpiredSourceStatusStacksAmount",
+                "public sealed class StatusExpiredHasSourceTriggerFilter")
+        };
+
+        var handlerStart = familySource.IndexOf(
+            "public sealed class StatusExpiredTriggeredEffectHandler",
+            StringComparison.Ordinal);
+
+        Assert.True(
+            handlerStart >= 0,
+            "Missing StatusExpiredTriggeredEffectHandler.");
+
+        var handlerSource = familySource[handlerStart..];
+
+        Assert.Contains(
+            "List<ICombatEffectRecipe<StatusExpiredTriggeredEffectContext>> Effects",
+            definitionSource);
+
+        foreach (var providerSource in providerSources)
+        {
+            Assert.Contains(
+                "ICombatValueProvider<StatusExpiredTriggeredEffectContext, int>",
+                providerSource);
+
+            Assert.Contains(
+                "public int Resolve(StatusExpiredTriggeredEffectContext context)",
+                providerSource);
+
+            Assert.Contains(
+                "return ResolveAmount(context);",
+                providerSource);
+        }
+
+        Assert.Contains(
+            "StatusExpiredTriggeredEffectTargetResolver.CreateActionBuildContext(context)",
+            handlerSource);
+
+        Assert.Contains(
+            "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
+            handlerSource);
+
+        var actionsIndex = handlerSource.IndexOf(
+            "definition.Actions",
+            StringComparison.Ordinal);
+
+        var effectsIndex = handlerSource.IndexOf(
+            "definition.Effects",
+            StringComparison.Ordinal);
+
+        Assert.True(actionsIndex >= 0);
+        Assert.True(effectsIndex > actionsIndex);
+
+        Assert.DoesNotContain(
+            "combat.EnqueueEffect",
+            handlerSource);
+
+        Assert.DoesNotContain(
+            "new GainBlockEffectRequest",
+            familySource);
+
+        Assert.DoesNotContain(
+            "new HealEffectRequest",
+            familySource);
+
+        Assert.DoesNotContain(
+            "EffectKind",
+            familySource);
+
+        Assert.False(
+            familySource.Contains(
+                "switch",
+                StringComparison.OrdinalIgnoreCase));
+
+        static string Slice(
+            string text,
+            string startMarker,
+            string endMarker)
+        {
+            var start = text.IndexOf(
+                startMarker,
+                StringComparison.Ordinal);
+
+            Assert.True(
+                start >= 0,
+                $"Missing start marker: {startMarker}");
+
+            var end = text.IndexOf(
+                endMarker,
+                start,
+                StringComparison.Ordinal);
+
+            Assert.True(
+                end > start,
+                $"Missing end marker: {endMarker}");
+
+            return text[start..end];
+        }
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
