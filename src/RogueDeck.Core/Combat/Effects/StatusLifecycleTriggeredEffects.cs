@@ -916,6 +916,8 @@ public sealed class StatusMergedTriggeredEffectDefinition : ITriggeredEffectDefi
 
     public List<IStatusMergedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<StatusMergedTriggeredEffectContext>> Effects { get; } = new();
+
     public StatusMergedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -945,7 +947,8 @@ public interface IStatusMergedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedStatusMergedTriggeredEffectAmount(int Amount)
-    : IStatusMergedTriggeredEffectAmountProvider
+    : IStatusMergedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusMergedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusMergedTriggeredEffectContext context)
     {
@@ -953,10 +956,16 @@ public sealed record FixedStatusMergedTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(StatusMergedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class StatusMergedStacksAmount
-    : IStatusMergedTriggeredEffectAmountProvider
+    : IStatusMergedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusMergedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusMergedTriggeredEffectContext context)
     {
@@ -964,10 +973,16 @@ public sealed class StatusMergedStacksAmount
 
         return context.CombatEvent.Stacks;
     }
+
+    public int Resolve(StatusMergedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class StatusMergedDurationTurnsAmount
-    : IStatusMergedTriggeredEffectAmountProvider
+    : IStatusMergedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusMergedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusMergedTriggeredEffectContext context)
     {
@@ -975,10 +990,16 @@ public sealed class StatusMergedDurationTurnsAmount
 
         return context.CombatEvent.DurationTurns;
     }
+
+    public int Resolve(StatusMergedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class StatusMergedChargesAmount
-    : IStatusMergedTriggeredEffectAmountProvider
+    : IStatusMergedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusMergedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusMergedTriggeredEffectContext context)
     {
@@ -986,10 +1007,16 @@ public sealed class StatusMergedChargesAmount
 
         return context.CombatEvent.Charges;
     }
+
+    public int Resolve(StatusMergedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record StatusMergedTargetStatusStacksAmount(StatusDefinitionId StatusDefinitionId)
-    : IStatusMergedTriggeredEffectAmountProvider
+    : IStatusMergedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusMergedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusMergedTriggeredEffectContext context)
     {
@@ -999,10 +1026,16 @@ public sealed record StatusMergedTargetStatusStacksAmount(StatusDefinitionId Sta
             .Where(status => status.DefinitionId == StatusDefinitionId)
             .Sum(status => status.Stacks);
     }
+
+    public int Resolve(StatusMergedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record StatusMergedSourceStatusStacksAmount(StatusDefinitionId StatusDefinitionId)
-    : IStatusMergedTriggeredEffectAmountProvider
+    : IStatusMergedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusMergedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusMergedTriggeredEffectContext context)
     {
@@ -1014,6 +1047,11 @@ public sealed record StatusMergedSourceStatusStacksAmount(StatusDefinitionId Sta
         return context.SourceCombatant.Statuses
             .Where(status => status.DefinitionId == StatusDefinitionId)
             .Sum(status => status.Stacks);
+    }
+
+    public int Resolve(StatusMergedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -1291,6 +1329,9 @@ public sealed class StatusMergedTriggeredEffectHandler
             TargetCombatant: targetCombatant!,
             SourceCombatant: sourceCombatant);
 
+        var actionBuildContext =
+            StatusMergedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(StatusMergedCombatEvent))
                 .OfType<StatusMergedTriggeredEffectDefinition>());
@@ -1299,6 +1340,11 @@ public sealed class StatusMergedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }

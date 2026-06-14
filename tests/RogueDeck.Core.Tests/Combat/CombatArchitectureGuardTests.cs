@@ -893,6 +893,153 @@ public class CombatArchitectureGuardTests
             return text[start..end];
         }
     }
+    [Fact]
+    public void StatusMergedRecipeMigrationRemainsGenericAndOrdered()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var path = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "StatusLifecycleTriggeredEffects.cs");
+
+        var source = File.ReadAllText(path);
+
+        var familyStart = source.IndexOf(
+            "public sealed class StatusMergedTriggeredEffectDefinition",
+            StringComparison.Ordinal);
+
+        Assert.True(
+            familyStart >= 0,
+            "Missing StatusMergedTriggeredEffectDefinition.");
+
+        var familySource = source[familyStart..];
+
+        var definitionSource = Slice(
+            familySource,
+            "public sealed class StatusMergedTriggeredEffectDefinition",
+            "public sealed record StatusMergedTriggeredEffectContext");
+
+        var providerSources = new[]
+        {
+            Slice(
+                familySource,
+                "public sealed record FixedStatusMergedTriggeredEffectAmount",
+                "public sealed class StatusMergedStacksAmount"),
+            Slice(
+                familySource,
+                "public sealed class StatusMergedStacksAmount",
+                "public sealed class StatusMergedDurationTurnsAmount"),
+            Slice(
+                familySource,
+                "public sealed class StatusMergedDurationTurnsAmount",
+                "public sealed class StatusMergedChargesAmount"),
+            Slice(
+                familySource,
+                "public sealed class StatusMergedChargesAmount",
+                "public sealed record StatusMergedTargetStatusStacksAmount"),
+            Slice(
+                familySource,
+                "public sealed record StatusMergedTargetStatusStacksAmount",
+                "public sealed record StatusMergedSourceStatusStacksAmount"),
+            Slice(
+                familySource,
+                "public sealed record StatusMergedSourceStatusStacksAmount",
+                "public sealed class StatusMergedHasSourceTriggerFilter")
+        };
+
+        var handlerStart = familySource.IndexOf(
+            "public sealed class StatusMergedTriggeredEffectHandler",
+            StringComparison.Ordinal);
+
+        Assert.True(
+            handlerStart >= 0,
+            "Missing StatusMergedTriggeredEffectHandler.");
+
+        var handlerSource = familySource[handlerStart..];
+
+        Assert.Contains(
+            "List<ICombatEffectRecipe<StatusMergedTriggeredEffectContext>> Effects",
+            definitionSource);
+
+        foreach (var providerSource in providerSources)
+        {
+            Assert.Contains(
+                "ICombatValueProvider<StatusMergedTriggeredEffectContext, int>",
+                providerSource);
+
+            Assert.Contains(
+                "public int Resolve(StatusMergedTriggeredEffectContext context)",
+                providerSource);
+        }
+
+        Assert.Contains(
+            "StatusMergedTriggeredEffectTargetResolver.CreateActionBuildContext(context)",
+            handlerSource);
+
+        Assert.Contains(
+            "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
+            handlerSource);
+
+        var actionsIndex = handlerSource.IndexOf(
+            "definition.Actions",
+            StringComparison.Ordinal);
+
+        var effectsIndex = handlerSource.IndexOf(
+            "definition.Effects",
+            StringComparison.Ordinal);
+
+        Assert.True(actionsIndex >= 0);
+        Assert.True(effectsIndex > actionsIndex);
+
+        Assert.DoesNotContain(
+            "combat.EnqueueEffect",
+            handlerSource);
+
+        Assert.DoesNotContain(
+            "new GainBlockEffectRequest",
+            familySource);
+
+        Assert.DoesNotContain(
+            "new HealEffectRequest",
+            familySource);
+
+        Assert.DoesNotContain(
+            "EffectKind",
+            familySource);
+
+        Assert.False(
+            familySource.Contains(
+                "switch",
+                StringComparison.OrdinalIgnoreCase));
+
+        static string Slice(
+            string text,
+            string startMarker,
+            string endMarker)
+        {
+            var start = text.IndexOf(
+                startMarker,
+                StringComparison.Ordinal);
+
+            Assert.True(
+                start >= 0,
+                $"Missing start marker: {startMarker}");
+
+            var end = text.IndexOf(
+                endMarker,
+                start,
+                StringComparison.Ordinal);
+
+            Assert.True(
+                end > start,
+                $"Missing end marker: {endMarker}");
+
+            return text[start..end];
+        }
+    }
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
