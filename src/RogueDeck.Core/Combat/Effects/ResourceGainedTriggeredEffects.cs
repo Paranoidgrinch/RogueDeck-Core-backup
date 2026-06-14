@@ -10,6 +10,8 @@ public sealed class ResourceGainedTriggeredEffectDefinition : ITriggeredEffectDe
 
     public List<IResourceGainedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<ResourceGainedTriggeredEffectContext>> Effects { get; } = new();
+
     public ResourceGainedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -38,7 +40,8 @@ public interface IResourceGainedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedResourceGainedTriggeredEffectAmount(int Amount)
-    : IResourceGainedTriggeredEffectAmountProvider
+    : IResourceGainedTriggeredEffectAmountProvider,
+      ICombatValueProvider<ResourceGainedTriggeredEffectContext, int>
 {
     public int ResolveAmount(ResourceGainedTriggeredEffectContext context)
     {
@@ -46,10 +49,16 @@ public sealed record FixedResourceGainedTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(ResourceGainedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class ResourceGainedAmount
-    : IResourceGainedTriggeredEffectAmountProvider
+    : IResourceGainedTriggeredEffectAmountProvider,
+      ICombatValueProvider<ResourceGainedTriggeredEffectContext, int>
 {
     public int ResolveAmount(ResourceGainedTriggeredEffectContext context)
     {
@@ -57,16 +66,27 @@ public sealed class ResourceGainedAmount
 
         return context.CombatEvent.GainedAmount;
     }
+
+    public int Resolve(ResourceGainedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class ResourceGainedNewCurrentAmount
-    : IResourceGainedTriggeredEffectAmountProvider
+    : IResourceGainedTriggeredEffectAmountProvider,
+      ICombatValueProvider<ResourceGainedTriggeredEffectContext, int>
 {
     public int ResolveAmount(ResourceGainedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return context.CombatEvent.NewCurrent;
+    }
+
+    public int Resolve(ResourceGainedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -194,6 +214,9 @@ public sealed class ResourceGainedTriggeredEffectHandler
             CombatEvent: combatEvent,
             SourceCombatant: sourceCombatant!);
 
+        var actionBuildContext =
+            ResourceGainedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(ResourceGainedCombatEvent))
                 .OfType<ResourceGainedTriggeredEffectDefinition>());
@@ -202,6 +225,11 @@ public sealed class ResourceGainedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
