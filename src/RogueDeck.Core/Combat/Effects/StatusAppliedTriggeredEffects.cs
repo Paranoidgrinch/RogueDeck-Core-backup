@@ -10,6 +10,8 @@ public sealed class StatusAppliedTriggeredEffectDefinition : ITriggeredEffectDef
 
     public List<IStatusAppliedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<StatusAppliedTriggeredEffectContext>> Effects { get; } = new();
+
     public StatusAppliedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -39,7 +41,8 @@ public interface IStatusAppliedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedStatusAppliedTriggeredEffectAmount(int Amount)
-    : IStatusAppliedTriggeredEffectAmountProvider
+    : IStatusAppliedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusAppliedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusAppliedTriggeredEffectContext context)
     {
@@ -47,10 +50,16 @@ public sealed record FixedStatusAppliedTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(StatusAppliedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class StatusAppliedStacksAmount
-    : IStatusAppliedTriggeredEffectAmountProvider
+    : IStatusAppliedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusAppliedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusAppliedTriggeredEffectContext context)
     {
@@ -58,10 +67,16 @@ public sealed class StatusAppliedStacksAmount
 
         return context.CombatEvent.Stacks;
     }
+
+    public int Resolve(StatusAppliedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class StatusAppliedDurationTurnsAmount
-    : IStatusAppliedTriggeredEffectAmountProvider
+    : IStatusAppliedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusAppliedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusAppliedTriggeredEffectContext context)
     {
@@ -69,10 +84,16 @@ public sealed class StatusAppliedDurationTurnsAmount
 
         return context.CombatEvent.DurationTurns;
     }
+
+    public int Resolve(StatusAppliedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed class StatusAppliedChargesAmount
-    : IStatusAppliedTriggeredEffectAmountProvider
+    : IStatusAppliedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusAppliedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusAppliedTriggeredEffectContext context)
     {
@@ -80,10 +101,16 @@ public sealed class StatusAppliedChargesAmount
 
         return context.CombatEvent.Charges;
     }
+
+    public int Resolve(StatusAppliedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record StatusAppliedTargetStatusStacksAmount(StatusDefinitionId StatusDefinitionId)
-    : IStatusAppliedTriggeredEffectAmountProvider
+    : IStatusAppliedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusAppliedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusAppliedTriggeredEffectContext context)
     {
@@ -93,10 +120,16 @@ public sealed record StatusAppliedTargetStatusStacksAmount(StatusDefinitionId St
             .Where(status => status.DefinitionId == StatusDefinitionId)
             .Sum(status => status.Stacks);
     }
+
+    public int Resolve(StatusAppliedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record StatusAppliedSourceStatusStacksAmount(StatusDefinitionId StatusDefinitionId)
-    : IStatusAppliedTriggeredEffectAmountProvider
+    : IStatusAppliedTriggeredEffectAmountProvider,
+      ICombatValueProvider<StatusAppliedTriggeredEffectContext, int>
 {
     public int ResolveAmount(StatusAppliedTriggeredEffectContext context)
     {
@@ -108,6 +141,11 @@ public sealed record StatusAppliedSourceStatusStacksAmount(StatusDefinitionId St
         return context.SourceCombatant.Statuses
             .Where(status => status.DefinitionId == StatusDefinitionId)
             .Sum(status => status.Stacks);
+    }
+
+    public int Resolve(StatusAppliedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -362,6 +400,9 @@ public sealed class StatusAppliedTriggeredEffectHandler
             TargetCombatant: targetCombatant!,
             SourceCombatant: sourceCombatant);
 
+        var actionBuildContext =
+            StatusAppliedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(StatusAppliedCombatEvent))
                 .OfType<StatusAppliedTriggeredEffectDefinition>());
@@ -370,6 +411,11 @@ public sealed class StatusAppliedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
