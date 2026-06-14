@@ -232,6 +232,175 @@ public class CardCostPaidTriggeredEffectTests
             GetBlockOrZero(combat, GoblinId));
     }
 
+    [Fact]
+    public void CardCostPaidGenericGainBlockRecipeFires()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        EnsureEnergy(
+            combat.GetCombatant(HeroId),
+            current: 3,
+            max: 3);
+
+        var definition = new CardCostPaidTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId(
+                "test.card_cost_paid_generic_gain_block"));
+
+        definition.Effects.Add(
+            new GainBlockEffectRecipe<CardCostPaidTriggeredEffectContext>(
+                CombatantTargetSelectors.EventTarget,
+                new FixedCombatValue<int>(4)));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        PlayStrike(combat, registry);
+
+        Assert.Equal(
+            4,
+            GetBlockOrZero(combat, HeroId));
+
+        Assert.Equal(
+            0,
+            GetBlockOrZero(combat, GoblinId));
+    }
+
+    [Fact]
+    public void CardCostPaidGenericHealRecipeUsesTotalPaidAmount()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+        var hero = combat.GetCombatant(HeroId);
+
+        EnsureEnergy(
+            hero,
+            current: 3,
+            max: 3);
+
+        var healthBefore = hero.Health.Max - 3;
+        hero.Health.SetCurrent(healthBefore);
+
+        var definition = new CardCostPaidTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId(
+                "test.card_cost_paid_generic_heal"));
+
+        definition.Effects.Add(
+            new HealEffectRecipe<CardCostPaidTriggeredEffectContext>(
+                CombatantTargetSelectors.EventTarget,
+                new CardCostPaidTotalAmount()));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        PlayStrike(combat, registry);
+
+        Assert.Equal(
+            healthBefore + 1,
+            hero.Health.Current);
+    }
+
+    [Fact]
+    public void CardCostPaidRunsLegacyActionsBeforeGenericEffectsInListOrder()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+
+        EnsureEnergy(
+            combat.GetCombatant(HeroId),
+            current: 3,
+            max: 3);
+
+        var order = new List<string>();
+
+        var definition = new CardCostPaidTriggeredEffectDefinition(
+            new TriggeredEffectDefinitionId(
+                "test.card_cost_paid_order"));
+
+        definition.Actions.Add(
+            new RecordingCardCostPaidAction(
+                order,
+                "legacy-a"));
+
+        definition.Actions.Add(
+            new RecordingCardCostPaidAction(
+                order,
+                "legacy-b"));
+
+        definition.Effects.Add(
+            new RecordingCardCostPaidRecipe(
+                order,
+                "recipe-a"));
+
+        definition.Effects.Add(
+            new RecordingCardCostPaidRecipe(
+                order,
+                "recipe-b"));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        PlayStrike(combat, registry);
+
+        Assert.Equal(
+            new[]
+            {
+                "legacy-a",
+                "legacy-b",
+                "recipe-a",
+                "recipe-b"
+            },
+            order);
+    }
+
+    private sealed class RecordingCardCostPaidAction
+        : ICardCostPaidTriggeredEffectAction
+    {
+        private readonly ICollection<string> _order;
+        private readonly string _entry;
+
+        public RecordingCardCostPaidAction(
+            ICollection<string> order,
+            string entry)
+        {
+            _order = order;
+            _entry = entry;
+        }
+
+        public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+            CardCostPaidTriggeredEffectContext context)
+        {
+            ArgumentNullException.ThrowIfNull(context);
+
+            _order.Add(_entry);
+
+            return Array.Empty<IEffectRequest>();
+        }
+    }
+
+    private sealed class RecordingCardCostPaidRecipe
+        : ICombatEffectRecipe<CardCostPaidTriggeredEffectContext>
+    {
+        private readonly ICollection<string> _order;
+        private readonly string _entry;
+
+        public RecordingCardCostPaidRecipe(
+            ICollection<string> order,
+            string entry)
+        {
+            _order = order;
+            _entry = entry;
+        }
+
+        public IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
+            CardCostPaidTriggeredEffectContext context,
+            TriggeredEffectActionBuildContext buildContext)
+        {
+            ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(buildContext);
+
+            _order.Add(_entry);
+
+            return Array.Empty<IEffectRequest>();
+        }
+    }
     private static void PlayStrike(
         CombatState combat,
         CombatDefinitionRegistry registry)

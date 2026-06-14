@@ -10,6 +10,8 @@ public sealed class CardCostPaidTriggeredEffectDefinition : ITriggeredEffectDefi
 
     public List<ICardCostPaidTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<CardCostPaidTriggeredEffectContext>> Effects { get; } = new();
+
     public CardCostPaidTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -48,13 +50,20 @@ public sealed record FixedCardCostPaidTriggeredEffectAmount(int Amount)
     }
 }
 
-public sealed class CardCostPaidTotalAmount : ICardCostPaidTriggeredEffectAmountProvider
+public sealed class CardCostPaidTotalAmount
+    : ICardCostPaidTriggeredEffectAmountProvider,
+      ICombatValueProvider<CardCostPaidTriggeredEffectContext, int>
 {
     public int ResolveAmount(CardCostPaidTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return context.CombatEvent.Costs.Sum(cost => cost.Amount);
+    }
+
+    public int Resolve(CardCostPaidTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -181,6 +190,9 @@ public sealed class CardCostPaidTriggeredEffectHandler
             CombatEvent: combatEvent,
             SourceCombatant: sourceCombatant!);
 
+        var actionBuildContext =
+            CardCostPaidTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(CardCostPaidCombatEvent))
                 .OfType<CardCostPaidTriggeredEffectDefinition>());
@@ -189,6 +201,11 @@ public sealed class CardCostPaidTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }

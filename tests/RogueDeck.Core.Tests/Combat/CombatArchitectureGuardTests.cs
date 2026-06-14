@@ -397,6 +397,72 @@ public class CombatArchitectureGuardTests
                 StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public void CardCostPaidRecipeMigrationRemainsGenericAndOrdered()
+    {
+        var repoRoot = FindRepositoryRoot();
+
+        var path = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "CardCostPaidTriggeredEffects.cs");
+
+        var source = File.ReadAllText(path);
+
+        var handlerStart = source.IndexOf(
+            "public sealed class CardCostPaidTriggeredEffectHandler",
+            StringComparison.Ordinal);
+
+        Assert.True(handlerStart >= 0);
+
+        var handler = source[handlerStart..];
+
+        var actionsIndex = handler.IndexOf(
+            "definition.Actions",
+            StringComparison.Ordinal);
+
+        var effectsIndex = handler.IndexOf(
+            "definition.Effects",
+            StringComparison.Ordinal);
+
+        Assert.Contains(
+            "List<ICombatEffectRecipe<CardCostPaidTriggeredEffectContext>> Effects",
+            source);
+
+        Assert.Contains(
+            "ICombatValueProvider<CardCostPaidTriggeredEffectContext, int>",
+            source);
+
+        Assert.Contains(
+            "CardCostPaidTriggeredEffectTargetResolver.CreateActionBuildContext(context)",
+            handler);
+
+        Assert.Contains(
+            "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
+            handler);
+
+        Assert.True(actionsIndex >= 0);
+        Assert.True(effectsIndex > actionsIndex);
+
+        Assert.DoesNotContain(
+            "combat.EnqueueEffect",
+            handler);
+
+        Assert.DoesNotContain(
+            "new GainBlockEffectRequest",
+            source);
+
+        Assert.DoesNotContain(
+            "new HealEffectRequest",
+            source);
+
+        Assert.DoesNotContain(
+            "EffectKind",
+            source);
+    }
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
