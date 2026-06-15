@@ -1691,6 +1691,150 @@ public class CombatArchitectureGuardTests
         }
     }
 
+    [Fact]
+    public void CardInstanceCreatedRecipeMigrationRemainsGenericAndOrdered()
+    {
+        var repoRoot = FindRepositoryRoot();
+
+        var path = Path.Combine(
+            repoRoot,
+            "src",
+            "RogueDeck.Core",
+            "Combat",
+            "Effects",
+            "CardInstanceCreatedTriggeredEffects.cs");
+
+        var source = File.ReadAllText(path);
+
+        var definitionSource = Slice(
+            source,
+            "public sealed class CardInstanceCreatedTriggeredEffectDefinition",
+            "public sealed record CardInstanceCreatedTriggeredEffectContext");
+
+        var providerSources = new[]
+        {
+            Slice(
+                source,
+                "public sealed record FixedCardInstanceCreatedTriggeredEffectAmount",
+                "public sealed class CardInstanceCreatedCount"),
+            Slice(
+                source,
+                "public sealed class CardInstanceCreatedCount",
+                "public sealed record CardInstanceCreatedCardDefinitionTriggerFilter")
+        };
+
+        var handlerStart = source.IndexOf(
+            "public sealed class CardInstanceCreatedTriggeredEffectHandler",
+            StringComparison.Ordinal);
+
+        Assert.True(
+            handlerStart >= 0,
+            "Missing CardInstanceCreatedTriggeredEffectHandler.");
+
+        var handlerSource = source[handlerStart..];
+
+        Assert.Contains(
+            "List<ICombatEffectRecipe<CardInstanceCreatedTriggeredEffectContext>> Effects",
+            definitionSource);
+
+        foreach (var providerSource in providerSources)
+        {
+            Assert.Contains(
+                "ICombatValueProvider<CardInstanceCreatedTriggeredEffectContext, int>",
+                providerSource);
+
+            Assert.Contains(
+                "public int Resolve(CardInstanceCreatedTriggeredEffectContext context)",
+                providerSource);
+
+            Assert.Contains(
+                "return ResolveAmount(context);",
+                providerSource);
+        }
+
+        Assert.Contains(
+            "CardInstanceCreatedTriggeredEffectTargetResolver.CreateActionBuildContext(context)",
+            handlerSource);
+
+        Assert.Contains(
+            "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
+            handlerSource);
+
+        Assert.Contains(
+            "effect.BuildEffectRequests(",
+            handlerSource);
+
+        var actionsIndex = handlerSource.IndexOf(
+            "definition.Actions",
+            StringComparison.Ordinal);
+
+        var effectsIndex = handlerSource.IndexOf(
+            "definition.Effects",
+            StringComparison.Ordinal);
+
+        Assert.True(actionsIndex >= 0);
+        Assert.True(effectsIndex > actionsIndex);
+
+        Assert.DoesNotContain(
+            "combat.EnqueueEffect",
+            handlerSource);
+
+        Assert.DoesNotContain(
+            "EffectRequest(",
+            handlerSource);
+
+        var forbiddenConcreteRequests = new[]
+        {
+            "new GainBlockEffectRequest",
+            "new HealEffectRequest",
+            "new DealDamageEffectRequest",
+            "new ApplyStatusEffectRequest",
+            "new DrawCardsEffectRequest",
+            "new CreateCardInstanceEffectRequest"
+        };
+
+        foreach (var forbiddenConcreteRequest in forbiddenConcreteRequests)
+        {
+            Assert.DoesNotContain(
+                forbiddenConcreteRequest,
+                handlerSource);
+        }
+
+        Assert.DoesNotContain(
+            "EffectKind",
+            source);
+
+        Assert.False(
+            source.Contains(
+                "switch",
+                StringComparison.OrdinalIgnoreCase));
+
+        static string Slice(
+            string text,
+            string startMarker,
+            string endMarker)
+        {
+            var start = text.IndexOf(
+                startMarker,
+                StringComparison.Ordinal);
+
+            Assert.True(
+                start >= 0,
+                $"Missing start marker: {startMarker}");
+
+            var end = text.IndexOf(
+                endMarker,
+                start,
+                StringComparison.Ordinal);
+
+            Assert.True(
+                end > start,
+                $"Missing end marker: {endMarker}");
+
+            return text[start..end];
+        }
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

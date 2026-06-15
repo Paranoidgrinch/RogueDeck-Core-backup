@@ -10,6 +10,8 @@ public sealed class CardInstanceCreatedTriggeredEffectDefinition : ITriggeredEff
 
     public List<ICardInstanceCreatedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<CardInstanceCreatedTriggeredEffectContext>> Effects { get; } = new();
+
     public CardInstanceCreatedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -38,7 +40,8 @@ public interface ICardInstanceCreatedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedCardInstanceCreatedTriggeredEffectAmount(int Amount)
-    : ICardInstanceCreatedTriggeredEffectAmountProvider
+    : ICardInstanceCreatedTriggeredEffectAmountProvider,
+      ICombatValueProvider<CardInstanceCreatedTriggeredEffectContext, int>
 {
     public int ResolveAmount(CardInstanceCreatedTriggeredEffectContext context)
     {
@@ -46,15 +49,27 @@ public sealed record FixedCardInstanceCreatedTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(CardInstanceCreatedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
-public sealed class CardInstanceCreatedCount : ICardInstanceCreatedTriggeredEffectAmountProvider
+public sealed class CardInstanceCreatedCount
+    : ICardInstanceCreatedTriggeredEffectAmountProvider,
+      ICombatValueProvider<CardInstanceCreatedTriggeredEffectContext, int>
 {
     public int ResolveAmount(CardInstanceCreatedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return context.CombatEvent.CardInstanceIds.Count;
+    }
+
+    public int Resolve(CardInstanceCreatedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -183,6 +198,9 @@ public sealed class CardInstanceCreatedTriggeredEffectHandler
             CombatEvent: combatEvent,
             OwnerCombatant: ownerCombatant!);
 
+        var actionBuildContext =
+            CardInstanceCreatedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(CardInstanceCreatedCombatEvent))
                 .OfType<CardInstanceCreatedTriggeredEffectDefinition>());
@@ -191,6 +209,11 @@ public sealed class CardInstanceCreatedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
