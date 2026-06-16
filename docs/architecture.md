@@ -511,8 +511,13 @@ Recipe support is currently available for:
 - `CardInstanceCreatedTriggeredEffectDefinition`
 - `CombatantDownedTriggeredEffectDefinition`
 - `CardPlayedTriggeredEffectDefinition`
+- `CardsDrawnTriggeredEffectDefinition`
+- `DiscardPileShuffledTriggeredEffectDefinition`
+- `HandDiscardedTriggeredEffectDefinition`
+- `CardExhaustedTriggeredEffectDefinition`
+- `CardBanishedTriggeredEffectDefinition`
 
-Not yet migrated: the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`).
+Every currently implemented trigger-definition family now supports generic `Effects` recipes. There is no remaining trigger-migration backlog.
 
 For matching definitions:
 
@@ -560,7 +565,7 @@ The broader queue limits remain final technical safeguards.
 
 ## Current reactive migration status
 
-The reactive migration now covers the temporal triggers, `CardCostPaid`, `Healed`, `ResourceGained`, `DamageDealt`, `DamageReceived`, the full status-lifecycle group (`StatusApplied`, `StatusMerged`, `StatusApplicationBlocked`, `StatusChargesReduced`, `StatusesRemovedByPolarity`, `StatusExpired`, `StatusRemoved`), `CardInstanceCreated`, `CombatantDowned`, and `CardPlayed`. See [Combat Effect Recipes](combat-effect-recipes.md) for the per-trigger targeting, attribution, and value-provider detail.
+The reactive migration now covers every implemented trigger-definition family: the temporal triggers, `CardCostPaid`, `Healed`, `ResourceGained`, `DamageDealt`, `DamageReceived`, the full status-lifecycle group (`StatusApplied`, `StatusMerged`, `StatusApplicationBlocked`, `StatusChargesReduced`, `StatusesRemovedByPolarity`, `StatusExpired`, `StatusRemoved`), `CardInstanceCreated`, `CombatantDowned`, `CardPlayed`, and the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`). See [Combat Effect Recipes](combat-effect-recipes.md) for the per-trigger targeting, attribution, and value-provider detail.
 
 Across all of it:
 
@@ -576,8 +581,10 @@ The `CombatantDowned` migration surfaced a separate, pre-existing interaction ra
 
 The `CardPlayed` migration was not purely additive: `CardPlayedTriggeredEffectHandler` previously enqueued its legacy actions' effect requests directly, bypassing `TriggeredEffectDefinitionRunner` and therefore the reentry-suppression and trigger-depth-limit infrastructure every other trigger family already had. The migration switched it onto the shared runner, closing that gap as a side effect of adding `Effects` recipe support. See [Combat Effect Recipes](combat-effect-recipes.md) for detail.
 
+The card-lifecycle migration (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`) completed the trigger-definition backlog. It surfaced one more known inconsistency: `DiscardPileShuffled`'s legacy action builds its own build context inline and omits `EventTargetId`, while its new `Effects` path (and every sibling definition) uses the shared `CardLifecycleTriggeredEffectSupport` helper, which sets it. See [Combat Effect Recipes](combat-effect-recipes.md) for detail.
+
 ## Next bounded runtime block
 
-The remaining trigger migration is the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`). Unlike `CardPlayed`, these already route their legacy actions through `TriggeredEffectDefinitionRunner`, so this should be a purely additive `Effects`-list patch: a read-only audit of the existing event/context/filters/target-resolution/attribution, followed by a patch that adds `Effects` recipe support without touching unrelated triggers, legacy action ordering, or existing tests.
+Every currently implemented trigger-definition family supports generic `Effects` recipes; there is no remaining trigger-migration backlog. The next block should address one of the smaller deferred items in [Combat Effect Recipes](combat-effect-recipes.md) — the `StatusRemoved`/`StatusChargesReduced`/`StatusExpired` guard-parity gap or the `DiscardPileShuffled` `EventTargetId` mismatch are both narrowly scoped fixes. The larger deferred items (broad card-effect-definition migration, enemy-command migration, legacy-wrapper removal) are separate architectural efforts and warrant their own planning pass.
 
 The older phase sections above record the engine's incremental development and are not an exhaustive inventory of every currently implemented subsystem.

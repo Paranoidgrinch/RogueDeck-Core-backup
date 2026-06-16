@@ -38,16 +38,13 @@ The following definitions currently support generic `Effects` alongside legacy `
 - `CardInstanceCreatedTriggeredEffectDefinition`
 - `CombatantDownedTriggeredEffectDefinition`
 - `CardPlayedTriggeredEffectDefinition`
-
-### Not yet migrated
-
-The following definitions still only support legacy `Actions`, with no `Effects` recipe list:
-
 - `CardsDrawnTriggeredEffectDefinition`
 - `DiscardPileShuffledTriggeredEffectDefinition`
 - `HandDiscardedTriggeredEffectDefinition`
 - `CardExhaustedTriggeredEffectDefinition`
 - `CardBanishedTriggeredEffectDefinition`
+
+Every currently implemented `ITriggeredEffectDefinition` now supports generic `Effects` alongside legacy `Actions`. There is no "not yet migrated" trigger-definition list anymore; remaining work is the broader deferred items below (card-effect definitions, enemy commands, the guard-parity gap, etc.), not additional trigger families.
 
 The migration remains additive:
 
@@ -227,6 +224,11 @@ Current reusable or migrated providers include:
 - `FixedCardInstanceCreatedTriggeredEffectAmount`, `CardInstanceCreatedCount`
 - `FixedCombatantDownedTriggeredEffectAmount`
 - `FixedCardPlayedTriggeredEffectAmount`, `CardPlayedSourceStatusStacksAmount`
+- `FixedCardsDrawnTriggeredEffectAmount`, `CardsDrawnCardCountAmount`
+- `FixedDiscardPileShuffledTriggeredEffectAmount`, `DiscardPileShuffledCardCountAmount`
+- `FixedHandDiscardedTriggeredEffectAmount`, `HandDiscardedCardCountAmount`
+- `FixedCardExhaustedTriggeredEffectAmount`, `CardExhaustedCardCountAmount`
+- `FixedCardBanishedTriggeredEffectAmount`, `CardBanishedCardCountAmount`
 
 A legacy provider may also implement `ICombatValueProvider<TContext, int>`.
 
@@ -309,6 +311,16 @@ Recipes reuse the existing target resolver of each trigger family.
 - `CardPlayedTriggeredEffectTarget` (`Source`, `PlayedCardTarget`, `AllAllies`, `AllEnemies`) is a convenience enum predating the generic recipe work; `CardPlayedTriggeredEffectTargetResolver.ToSelector` converts it to an `ICombatantTargetSelector` for use with both legacy actions and generic recipes
 
 **Behavior change in this migration:** unlike every other trigger family, `CardPlayedTriggeredEffectHandler` previously enqueued its legacy `Actions`' effect requests directly (`combat.EnqueueEffect(effectRequest)`), bypassing `TriggeredEffectDefinitionRunner` entirely. This meant `CardPlayed` triggered effects had no reentry suppression and no trigger-depth limit, unlike every other triggered-effect family. The migration switched the handler to route both `Actions` and the new `Effects` through `TriggeredEffectDefinitionRunner.EnqueueEffectRequests`, so `CardPlayed` now gets the same `SuppressRecursiveReentry` default and maximum-trigger-depth protection as every other trigger. No existing test exercised recursive `CardPlayed` reentry (there is no production effect-request path that re-enters `CombatCardPlayProcessor.PlayCard`), so this closes a latent gap rather than fixing an observed bug.
+
+### CardsDrawn / DiscardPileShuffled / HandDiscarded / CardExhausted / CardBanished
+
+All five share `CardLifecycleTriggeredEffectSupport`, an internal helper that resolves the affected `CardInstance`/`CardDefinition` data and builds a `TriggeredEffectActionBuildContext`.
+
+- the card-owning combatant is both the targeting source and the event target
+- effect attribution uses the card-owning combatant as source combatant; no source card is invented
+- `CardExhausted` and `CardBanished` share the same underlying event (`CardMovedToZoneCombatEvent`), filtered by `ToZone` (`ExhaustPile` / `BanishedPile` respectively) in each handler; their `Card`/`CardDefinition` context fields are nullable and `null` when the moved card's data can no longer be resolved
+
+**Known inconsistency:** `GainBlockOnDiscardPileShuffledTriggeredEffectAction` builds its own `TriggeredEffectActionBuildContext` inline instead of calling `CardLifecycleTriggeredEffectSupport.CreateActionBuildContext`, and its inline version omits `EventTargetId`. The other four definitions' legacy actions all go through the shared helper and do set `EventTargetId`. The new `DiscardPileShuffled` `Effects` path always uses the shared helper (for consistency with its own siblings and with every other migrated trigger family), so a recipe using `CombatantTargetSelectors.EventTarget` on `DiscardPileShuffled` resolves a target while the equivalent legacy action does not. This pre-existing inconsistency was found, not introduced, during this migration; `CardLifecycleEffectRecipeMigrationTests.DiscardPileShuffledLegacyActionAndGenericRecipeDisagreeOnEventTargetAttribution` pins the current behavior.
 
 ## Completed milestones
 
@@ -410,12 +422,24 @@ The completed `CardPlayed` migration validated:
 - it switched the handler from a bespoke direct-enqueue loop to `TriggeredEffectDefinitionRunner`, giving `CardPlayed` reentry suppression and trigger-depth limiting for the first time; all existing `CardPlayed` tests passed unchanged under the new routing
 - a `CardPlayed -> Heal -> Healed` chain completes correctly under the new routing
 
+### Card-lifecycle migration
+
+The completed `CardsDrawn` / `DiscardPileShuffled` / `HandDiscarded` / `CardExhausted` / `CardBanished` migration was the last remaining trigger-definition migration. It validated:
+
+- existing targeting, attribution, and filter semantics for all five definitions
+- legacy actions still execute before recipes
+- a `CardsDrawn -> Heal -> Healed` chain completes correctly
+- missing-card-data safety (`CardExhausted`/`CardBanished` with an unresolvable `CardInstanceId`) does not break generic recipes
+- it surfaced, but did not fix, the `DiscardPileShuffled` `EventTargetId` inconsistency described above
+
+With this migration, every currently implemented trigger-definition family supports generic `Effects` recipes. There is no remaining "next trigger family" to migrate.
+
 ## Deferred work
 
 The following work remains deferred:
 
-- card-lifecycle recipe migration (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`)
 - missing-source-target guard parity between legacy `Actions` and generic `Effects` for `StatusRemoved`, `StatusChargesReduced`, and `StatusExpired`
+- `EventTargetId` parity between `DiscardPileShuffled`'s legacy action and its generic recipes
 - source-free target selection
 - definition build, validation, and freeze phases
 - broad card-effect-definition migration
@@ -426,8 +450,4 @@ The following work remains deferred:
 
 ## Next bounded runtime block
 
-The next block should pick one remaining trigger group from the deferred list above and follow the same pattern used for the completed migrations: a read-only audit of the existing event, context, filters, target resolver, and attribution, followed by a patch that adds an `Effects` list and recipe support without touching unrelated triggers, legacy `Actions` ordering, or existing test behavior.
-
-The one remaining candidate is the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`) — five related definitions in one file, already routed through `TriggeredEffectDefinitionRunner` for their legacy `Actions`, so this should be a purely additive `Effects`-list patch with no handler-routing change needed.
-
-Each patch should prove the same invariants as prior migrations: same-definition reentry suppression, unrelated chains remain allowed, legacy actions still execute before recipes, and existing targeting/attribution/test behavior is unchanged.
+All trigger-definition migrations are complete. The next block should pick one of the deferred items above — most likely starting with the two small, low-risk inconsistency fixes (`StatusRemoved`/`StatusChargesReduced`/`StatusExpired` guard parity, and the `DiscardPileShuffled` `EventTargetId` mismatch), since those are narrowly scoped bug fixes rather than new migrations. The larger items (card-effect-definition migration, enemy-command migration, legacy-wrapper removal) are broader architectural work and should get their own dedicated planning pass rather than being treated as "the next bounded block."

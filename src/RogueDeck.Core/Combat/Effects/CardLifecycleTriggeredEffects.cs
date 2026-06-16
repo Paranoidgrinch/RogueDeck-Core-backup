@@ -65,6 +65,8 @@ public sealed class CardsDrawnTriggeredEffectDefinition : ITriggeredEffectDefini
 
     public List<ICardsDrawnTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<CardsDrawnTriggeredEffectContext>> Effects { get; } = new();
+
     public CardsDrawnTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -95,7 +97,8 @@ public interface ICardsDrawnTriggeredEffectAmountProvider
 }
 
 public sealed record FixedCardsDrawnTriggeredEffectAmount(int Amount)
-    : ICardsDrawnTriggeredEffectAmountProvider
+    : ICardsDrawnTriggeredEffectAmountProvider,
+      ICombatValueProvider<CardsDrawnTriggeredEffectContext, int>
 {
     public int ResolveAmount(CardsDrawnTriggeredEffectContext context)
     {
@@ -103,16 +106,27 @@ public sealed record FixedCardsDrawnTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(CardsDrawnTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record CardsDrawnCardCountAmount
-    : ICardsDrawnTriggeredEffectAmountProvider
+    : ICardsDrawnTriggeredEffectAmountProvider,
+      ICombatValueProvider<CardsDrawnTriggeredEffectContext, int>
 {
     public int ResolveAmount(CardsDrawnTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return context.Cards.Count;
+    }
+
+    public int Resolve(CardsDrawnTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -201,6 +215,9 @@ public sealed class CardsDrawnTriggeredEffectHandler
             Cards: cards,
             CardDefinitions: cardDefinitions);
 
+        var actionBuildContext =
+            CardLifecycleTriggeredEffectSupport.CreateActionBuildContext(combat, source!);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(CardsDrawnCombatEvent))
                 .OfType<CardsDrawnTriggeredEffectDefinition>());
@@ -209,7 +226,12 @@ public sealed class CardsDrawnTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
 
@@ -222,6 +244,8 @@ public sealed class DiscardPileShuffledTriggeredEffectDefinition : ITriggeredEff
     public List<IDiscardPileShuffledTriggeredEffectFilter> Filters { get; } = new();
 
     public List<IDiscardPileShuffledTriggeredEffectAction> Actions { get; } = new();
+
+    public List<ICombatEffectRecipe<DiscardPileShuffledTriggeredEffectContext>> Effects { get; } = new();
 
     public DiscardPileShuffledTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -253,7 +277,8 @@ public interface IDiscardPileShuffledTriggeredEffectAmountProvider
 }
 
 public sealed record FixedDiscardPileShuffledTriggeredEffectAmount(int Amount)
-    : IDiscardPileShuffledTriggeredEffectAmountProvider
+    : IDiscardPileShuffledTriggeredEffectAmountProvider,
+      ICombatValueProvider<DiscardPileShuffledTriggeredEffectContext, int>
 {
     public int ResolveAmount(DiscardPileShuffledTriggeredEffectContext context)
     {
@@ -261,16 +286,27 @@ public sealed record FixedDiscardPileShuffledTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(DiscardPileShuffledTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record DiscardPileShuffledCardCountAmount
-    : IDiscardPileShuffledTriggeredEffectAmountProvider
+    : IDiscardPileShuffledTriggeredEffectAmountProvider,
+      ICombatValueProvider<DiscardPileShuffledTriggeredEffectContext, int>
 {
     public int ResolveAmount(DiscardPileShuffledTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return context.Cards.Count;
+    }
+
+    public int Resolve(DiscardPileShuffledTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -363,6 +399,9 @@ public sealed class DiscardPileShuffledTriggeredEffectHandler
             Cards: cards,
             CardDefinitions: cardDefinitions);
 
+        var actionBuildContext =
+            CardLifecycleTriggeredEffectSupport.CreateActionBuildContext(combat, source!);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(DiscardPileShuffledIntoDrawPileCombatEvent))
                 .OfType<DiscardPileShuffledTriggeredEffectDefinition>());
@@ -371,7 +410,12 @@ public sealed class DiscardPileShuffledTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
 
@@ -384,6 +428,8 @@ public sealed class HandDiscardedTriggeredEffectDefinition : ITriggeredEffectDef
     public List<IHandDiscardedTriggeredEffectFilter> Filters { get; } = new();
 
     public List<IHandDiscardedTriggeredEffectAction> Actions { get; } = new();
+
+    public List<ICombatEffectRecipe<HandDiscardedTriggeredEffectContext>> Effects { get; } = new();
 
     public HandDiscardedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -415,7 +461,8 @@ public interface IHandDiscardedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedHandDiscardedTriggeredEffectAmount(int Amount)
-    : IHandDiscardedTriggeredEffectAmountProvider
+    : IHandDiscardedTriggeredEffectAmountProvider,
+      ICombatValueProvider<HandDiscardedTriggeredEffectContext, int>
 {
     public int ResolveAmount(HandDiscardedTriggeredEffectContext context)
     {
@@ -423,16 +470,27 @@ public sealed record FixedHandDiscardedTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(HandDiscardedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record HandDiscardedCardCountAmount
-    : IHandDiscardedTriggeredEffectAmountProvider
+    : IHandDiscardedTriggeredEffectAmountProvider,
+      ICombatValueProvider<HandDiscardedTriggeredEffectContext, int>
 {
     public int ResolveAmount(HandDiscardedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return context.Cards.Count;
+    }
+
+    public int Resolve(HandDiscardedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -521,6 +579,9 @@ public sealed class HandDiscardedTriggeredEffectHandler
             Cards: cards,
             CardDefinitions: cardDefinitions);
 
+        var actionBuildContext =
+            CardLifecycleTriggeredEffectSupport.CreateActionBuildContext(combat, source!);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(HandDiscardedCombatEvent))
                 .OfType<HandDiscardedTriggeredEffectDefinition>());
@@ -529,7 +590,12 @@ public sealed class HandDiscardedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
 
@@ -542,6 +608,8 @@ public sealed class CardExhaustedTriggeredEffectDefinition : ITriggeredEffectDef
     public List<ICardExhaustedTriggeredEffectFilter> Filters { get; } = new();
 
     public List<ICardExhaustedTriggeredEffectAction> Actions { get; } = new();
+
+    public List<ICombatEffectRecipe<CardExhaustedTriggeredEffectContext>> Effects { get; } = new();
 
     public CardExhaustedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -573,7 +641,8 @@ public interface ICardExhaustedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedCardExhaustedTriggeredEffectAmount(int Amount)
-    : ICardExhaustedTriggeredEffectAmountProvider
+    : ICardExhaustedTriggeredEffectAmountProvider,
+      ICombatValueProvider<CardExhaustedTriggeredEffectContext, int>
 {
     public int ResolveAmount(CardExhaustedTriggeredEffectContext context)
     {
@@ -581,16 +650,27 @@ public sealed record FixedCardExhaustedTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(CardExhaustedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record CardExhaustedCardCountAmount
-    : ICardExhaustedTriggeredEffectAmountProvider
+    : ICardExhaustedTriggeredEffectAmountProvider,
+      ICombatValueProvider<CardExhaustedTriggeredEffectContext, int>
 {
     public int ResolveAmount(CardExhaustedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return context.Card is null ? 0 : 1;
+    }
+
+    public int Resolve(CardExhaustedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -685,6 +765,9 @@ public sealed class CardExhaustedTriggeredEffectHandler
             Card: card,
             CardDefinition: cardDefinition);
 
+        var actionBuildContext =
+            CardLifecycleTriggeredEffectSupport.CreateActionBuildContext(combat, source!);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(CardMovedToZoneCombatEvent))
                 .OfType<CardExhaustedTriggeredEffectDefinition>());
@@ -693,7 +776,12 @@ public sealed class CardExhaustedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
 
@@ -706,6 +794,8 @@ public sealed class CardBanishedTriggeredEffectDefinition : ITriggeredEffectDefi
     public List<ICardBanishedTriggeredEffectFilter> Filters { get; } = new();
 
     public List<ICardBanishedTriggeredEffectAction> Actions { get; } = new();
+
+    public List<ICombatEffectRecipe<CardBanishedTriggeredEffectContext>> Effects { get; } = new();
 
     public CardBanishedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -737,7 +827,8 @@ public interface ICardBanishedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedCardBanishedTriggeredEffectAmount(int Amount)
-    : ICardBanishedTriggeredEffectAmountProvider
+    : ICardBanishedTriggeredEffectAmountProvider,
+      ICombatValueProvider<CardBanishedTriggeredEffectContext, int>
 {
     public int ResolveAmount(CardBanishedTriggeredEffectContext context)
     {
@@ -745,16 +836,27 @@ public sealed record FixedCardBanishedTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(CardBanishedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record CardBanishedCardCountAmount
-    : ICardBanishedTriggeredEffectAmountProvider
+    : ICardBanishedTriggeredEffectAmountProvider,
+      ICombatValueProvider<CardBanishedTriggeredEffectContext, int>
 {
     public int ResolveAmount(CardBanishedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return context.Card is null ? 0 : 1;
+    }
+
+    public int Resolve(CardBanishedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -849,6 +951,9 @@ public sealed class CardBanishedTriggeredEffectHandler
             Card: card,
             CardDefinition: cardDefinition);
 
+        var actionBuildContext =
+            CardLifecycleTriggeredEffectSupport.CreateActionBuildContext(combat, source!);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(CardMovedToZoneCombatEvent))
                 .OfType<CardBanishedTriggeredEffectDefinition>());
@@ -857,6 +962,11 @@ public sealed class CardBanishedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
