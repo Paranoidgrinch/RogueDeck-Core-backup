@@ -499,6 +499,18 @@ Recipe support is currently available for:
 - `CardCostPaidTriggeredEffectDefinition`
 - `HealedTriggeredEffectDefinition`
 - `ResourceGainedTriggeredEffectDefinition`
+- `DamageDealtTriggeredEffectDefinition`
+- `DamageReceivedTriggeredEffectDefinition`
+- `StatusAppliedTriggeredEffectDefinition`
+- `StatusMergedTriggeredEffectDefinition`
+- `StatusApplicationBlockedTriggeredEffectDefinition`
+- `StatusChargesReducedTriggeredEffectDefinition`
+- `StatusesRemovedByPolarityTriggeredEffectDefinition`
+- `StatusExpiredTriggeredEffectDefinition`
+- `StatusRemovedTriggeredEffectDefinition`
+- `CardInstanceCreatedTriggeredEffectDefinition`
+
+Not yet migrated: `CardPlayedTriggeredEffectDefinition`, the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`), and `CombatantDownedTriggeredEffectDefinition`.
 
 For matching definitions:
 
@@ -546,46 +558,20 @@ The broader queue limits remain final technical safeguards.
 
 ## Current reactive migration status
 
-The first bounded reactive slice is complete:
+The reactive migration now covers the temporal triggers, `CardCostPaid`, `Healed`, `ResourceGained`, `DamageDealt`, `DamageReceived`, the full status-lifecycle group (`StatusApplied`, `StatusMerged`, `StatusApplicationBlocked`, `StatusChargesReduced`, `StatusesRemovedByPolarity`, `StatusExpired`, `StatusRemoved`), and `CardInstanceCreated`. See [Combat Effect Recipes](combat-effect-recipes.md) for the per-trigger targeting, attribution, and value-provider detail.
 
-- `CardCostPaid` validates a reactive event without an effect-request feedback path.
-- `Healed` validates real `Heal -> Healed` self-reentry suppression.
-- `ResourceGained` validates resource-event self-reentry suppression.
+Across all of it:
+
 - different definitions may continue legitimate chains.
 - legacy actions remain before recipes.
 - existing targeting and attribution semantics remain unchanged.
+- no central recipe switch or effect-kind enum was introduced.
+- no broad legacy-wrapper removal was performed.
 
-No central recipe switch or effect-kind enum was introduced.
-
-No broad legacy-wrapper removal was performed.
+One known gap surfaced during the status migration: `StatusRemoved`, `StatusChargesReduced`, and `StatusExpired` carry no source-combatant data, so their targeting source always falls back to the affected combatant. The legacy `Actions` path guards against a `SourceCombatantTargetSelector` silently targeting that fallback; the generic `Effects` recipe path does not yet apply the same guard. See the "Known gap" note in [Combat Effect Recipes](combat-effect-recipes.md) for detail.
 
 ## Next bounded runtime block
 
-The next block should audit and then migrate only `DamageDealtTriggeredEffectDefinition`.
-
-The audit must verify:
-
-- exact event and context semantics
-- filters and value providers
-- target resolution
-- source and card attribution
-- handler order
-- primitive requests
-- follow-up events
-- interaction with `DamageReceived`
-- reflected damage
-- downed processing
-- combat-result processing
-- existing tests and architecture guards
-
-The first Damage patch should prove:
-
-- same-definition damage reentry is suppressed
-- `DamageDealt -> Heal -> Healed` remains allowed
-- the original hit still produces and processes `DamageReceivedCombatEvent`
-- legacy actions remain before recipes
-- source, target, card, kind, and amount semantics remain unchanged
-
-`DamageReceived`, status triggers, card lifecycle, card-effect definitions, and enemy commands remain outside that patch.
+The remaining trigger migrations are: `CombatantDowned`, the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`), and `CardPlayed`. Each should follow the established pattern: a read-only audit of the existing event/context/filters/target-resolution/attribution, followed by a patch limited to that one trigger group that adds `Effects` recipe support without touching unrelated triggers, legacy action ordering, or existing tests.
 
 The older phase sections above record the engine's incremental development and are not an exhaustive inventory of every currently implemented subsystem.

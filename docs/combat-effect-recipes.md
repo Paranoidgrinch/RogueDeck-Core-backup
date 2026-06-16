@@ -26,6 +26,28 @@ The following definitions currently support generic `Effects` alongside legacy `
 - `CardCostPaidTriggeredEffectDefinition`
 - `HealedTriggeredEffectDefinition`
 - `ResourceGainedTriggeredEffectDefinition`
+- `DamageDealtTriggeredEffectDefinition`
+- `DamageReceivedTriggeredEffectDefinition`
+- `StatusAppliedTriggeredEffectDefinition`
+- `StatusMergedTriggeredEffectDefinition`
+- `StatusApplicationBlockedTriggeredEffectDefinition`
+- `StatusChargesReducedTriggeredEffectDefinition`
+- `StatusesRemovedByPolarityTriggeredEffectDefinition`
+- `StatusExpiredTriggeredEffectDefinition`
+- `StatusRemovedTriggeredEffectDefinition`
+- `CardInstanceCreatedTriggeredEffectDefinition`
+
+### Not yet migrated
+
+The following definitions still only support legacy `Actions`, with no `Effects` recipe list:
+
+- `CardPlayedTriggeredEffectDefinition`
+- `CardsDrawnTriggeredEffectDefinition`
+- `DiscardPileShuffledTriggeredEffectDefinition`
+- `HandDiscardedTriggeredEffectDefinition`
+- `CardExhaustedTriggeredEffectDefinition`
+- `CardBanishedTriggeredEffectDefinition`
+- `CombatantDownedTriggeredEffectDefinition`
 
 The migration remains additive:
 
@@ -193,6 +215,16 @@ Current reusable or migrated providers include:
 - `FixedResourceGainedTriggeredEffectAmount`
 - `ResourceGainedAmount`
 - `ResourceGainedNewCurrentAmount`
+- `FixedDamageDealtTriggeredEffectAmount`, `DamageDealtHealthDamageAmount`, `DamageDealtBlockedDamageAmount`, `DamageDealtRequestedAmount`, `DamageDealtSourceStatusStacksAmount`, `DamageDealtTargetStatusStacksAmount`
+- `FixedDamageReceivedTriggeredEffectAmount`, `DamageReceivedHealthDamageAmount`, `DamageReceivedBlockedDamageAmount`, `DamageReceivedRequestedAmount`, `DamageReceivedReceiverStatusStacksAmount`, `DamageReceivedSourceStatusStacksAmount`
+- `FixedStatusAppliedTriggeredEffectAmount`, `StatusAppliedStacksAmount`, `StatusAppliedDurationTurnsAmount`, `StatusAppliedChargesAmount`, `StatusAppliedTargetStatusStacksAmount`, `StatusAppliedSourceStatusStacksAmount`
+- `FixedStatusMergedTriggeredEffectAmount`, `StatusMergedStacksAmount`, `StatusMergedDurationTurnsAmount`, `StatusMergedChargesAmount`, `StatusMergedTargetStatusStacksAmount`, `StatusMergedSourceStatusStacksAmount`
+- `FixedStatusApplicationBlockedTriggeredEffectAmount`
+- `FixedStatusChargesReducedTriggeredEffectAmount`, `StatusChargesReducedChargeCountAmount`
+- `FixedStatusesRemovedByPolarityTriggeredEffectAmount`, `StatusesRemovedByPolarityRemovedStatusCount`
+- `FixedStatusExpiredTriggeredEffectAmount`, `StatusExpiredTargetStatusStacksAmount`, `StatusExpiredSourceStatusStacksAmount`
+- `FixedStatusRemovedTriggeredEffectAmount`, `StatusRemovedCountAmount`, `StatusRemovedTargetStatusStacksAmount`, `StatusRemovedSourceStatusStacksAmount`
+- `FixedCardInstanceCreatedTriggeredEffectAmount`, `CardInstanceCreatedCount`
 
 A legacy provider may also implement `ICombatValueProvider<TContext, int>`.
 
@@ -222,6 +254,43 @@ Recipes reuse the existing target resolver of each trigger family.
 - the resource owner is the event target
 - effect attribution uses the resource owner
 - no source card attribution is invented
+
+### DamageDealt / DamageReceived
+
+- the damage source is the targeting source when present; the damaged combatant is the fallback
+- the damaged combatant is the event target
+- effect attribution uses the original damage source combatant and source card
+- `DamageDealtTriggeredEffectContext` exposes the dealing side's view (`TargetCombatant` = damaged combatant); `DamageReceivedTriggeredEffectContext` exposes the receiving side's view (`ReceiverCombatant` = damaged combatant). Semantics are otherwise identical.
+
+### StatusApplied / StatusMerged
+
+- the status source combatant is the targeting source when present; the affected combatant is the fallback
+- the affected combatant is the event target
+- effect attribution uses the status's source combatant and source card
+
+### StatusApplicationBlocked
+
+- the combatant that blocked the application is both the targeting source and the event target
+- effect attribution uses that same combatant as source; no source card is invented
+- the blocked status definition and the blocking status definition are available to filters, but are not used for targeting
+
+### StatusesRemovedByPolarity
+
+- the affected combatant is both the targeting source and the event target
+- effect attribution uses `TriggeredEffectActionSource.None`; no source combatant or source card is invented
+
+### StatusRemoved / StatusChargesReduced / StatusExpired
+
+- these events carry no source-combatant data at all (`StatusRemovedCombatEvent`, `StatusChargesReducedCombatEvent`, and `StatusExpiredCombatEvent` have no `SourceCombatantId` field); the handler always passes `SourceCombatant: null`
+- the targeting source therefore always falls back to the affected combatant
+- effect attribution uses an empty `TriggeredEffectActionSource`
+
+**Known gap:** because the targeting source always falls back to the affected combatant for these three triggers, a `SourceCombatantTargetSelector` recipe would resolve to the affected combatant rather than to nothing. The legacy `Actions` path guards against this explicitly (`ShouldSuppressMissingSourceTarget`, suppressing the action when there is no real source and the selector is `SourceCombatantTargetSelector`). The generic `Effects` recipe path does **not** apply this guard yet — a recipe using `SourceCombatantTargetSelector` on one of these three triggers will silently target the affected combatant instead of producing no requests. This parity gap is unresolved and tracked under deferred work.
+
+### CardInstanceCreated
+
+- the card owner is both the targeting source and the event target
+- effect attribution uses the card owner as source combatant; no source card is invented
 
 ## Completed milestones
 
@@ -281,17 +350,37 @@ Validated behavior includes:
 
 No general runtime `GainResourceEffectRecipe` was added during this migration.
 
+### Damage migration
+
+The completed `DamageDealt` / `DamageReceived` migration validated:
+
+- same-definition self-reentry suppression for each trigger independently
+- `DamageDealt -> Heal -> Healed` and similar cross-definition chains remain allowed
+- the original `DamageReceivedCombatEvent` behavior is unchanged by the `DamageDealt` migration
+- source, target, card, kind, and amount semantics are unchanged
+- legacy actions still execute before recipes
+
+### Status migration
+
+The completed status-application and status-lifecycle migration covers `StatusApplied`, `StatusMerged`, `StatusApplicationBlocked`, `StatusChargesReduced`, `StatusesRemovedByPolarity`, `StatusExpired`, and `StatusRemoved`. It validated:
+
+- existing targeting and attribution semantics per trigger, including the self-attribution triggers (`StatusApplicationBlocked`, `StatusesRemovedByPolarity`) and the no-source triggers (`StatusRemoved`, `StatusChargesReduced`, `StatusExpired`)
+- same-definition self-reentry suppression
+- legacy actions still execute before recipes
+- it surfaced, but did not fix, the missing-source-target guard parity gap described above
+
+### Card-instance migration
+
+The completed `CardInstanceCreated` migration validated targeting, attribution, and self-reentry suppression following the same pattern as the other reactive triggers.
+
 ## Deferred work
 
 The following work remains deferred:
 
-- `DamageDealt` recipe migration
-- `DamageReceived` recipe migration
-- status-application recipe migration
-- status-lifecycle recipe migration
-- card-lifecycle recipe migration
+- card-lifecycle recipe migration (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`)
 - general `CardPlayed` recipe migration
-- combatant-lifecycle recipe migration
+- combatant-lifecycle recipe migration (`CombatantDowned`)
+- missing-source-target guard parity between legacy `Actions` and generic `Effects` for `StatusRemoved`, `StatusChargesReduced`, and `StatusExpired`
 - source-free target selection
 - definition build, validation, and freeze phases
 - broad card-effect-definition migration
@@ -302,38 +391,12 @@ The following work remains deferred:
 
 ## Next bounded runtime block
 
-The next block begins with a focused read-only audit of `DamageDealt`.
+The next block should pick one remaining trigger group from the deferred list above and follow the same pattern used for the completed migrations: a read-only audit of the existing event, context, filters, target resolver, and attribution, followed by a patch that adds an `Effects` list and recipe support without touching unrelated triggers, legacy `Actions` ordering, or existing test behavior.
 
-The audit must verify:
+Good candidates, in roughly increasing complexity:
 
-- `DamageDealtCombatEvent`
-- `DamageReceivedCombatEvent`
-- typed trigger context
-- filters and amount providers
-- source and damaged-target semantics
-- source-card attribution
-- damage-kind semantics
-- requested, health, and blocked damage
-- primitive damage requests and handlers
-- follow-up events
-- reflected-damage ordering
-- downed and combat-result ordering
-- existing tests and architecture guards
+- `CombatantDowned` — single definition, narrow scope
+- the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`) — five related definitions in one file
+- `CardPlayed` — defined directly in `TriggeredEffects.cs` alongside the shared `ITriggeredEffectDefinition` interface
 
-The first Damage patch must remain limited to `DamageDealtTriggeredEffectDefinition`.
-
-It should prove:
-
-- same-definition `DamageDealt -> DamageDealt` reentry is suppressed
-- `DamageDealt -> Heal -> Healed` remains allowed
-- the original `DamageReceivedCombatEvent` behavior remains unchanged
-- legacy actions still execute before recipes
-- source, target, card, kind, and amount semantics remain unchanged
-
-It must not simultaneously migrate:
-
-- `DamageReceived`
-- status triggers
-- card lifecycle
-- card-effect definitions
-- enemy commands
+Each patch should prove the same invariants as prior migrations: same-definition reentry suppression, unrelated chains remain allowed, legacy actions still execute before recipes, and existing targeting/attribution/test behavior is unchanged.
