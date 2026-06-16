@@ -36,6 +36,7 @@ The following definitions currently support generic `Effects` alongside legacy `
 - `StatusExpiredTriggeredEffectDefinition`
 - `StatusRemovedTriggeredEffectDefinition`
 - `CardInstanceCreatedTriggeredEffectDefinition`
+- `CombatantDownedTriggeredEffectDefinition`
 
 ### Not yet migrated
 
@@ -47,7 +48,6 @@ The following definitions still only support legacy `Actions`, with no `Effects`
 - `HandDiscardedTriggeredEffectDefinition`
 - `CardExhaustedTriggeredEffectDefinition`
 - `CardBanishedTriggeredEffectDefinition`
-- `CombatantDownedTriggeredEffectDefinition`
 
 The migration remains additive:
 
@@ -225,6 +225,7 @@ Current reusable or migrated providers include:
 - `FixedStatusExpiredTriggeredEffectAmount`, `StatusExpiredTargetStatusStacksAmount`, `StatusExpiredSourceStatusStacksAmount`
 - `FixedStatusRemovedTriggeredEffectAmount`, `StatusRemovedCountAmount`, `StatusRemovedTargetStatusStacksAmount`, `StatusRemovedSourceStatusStacksAmount`
 - `FixedCardInstanceCreatedTriggeredEffectAmount`, `CardInstanceCreatedCount`
+- `FixedCombatantDownedTriggeredEffectAmount`
 
 A legacy provider may also implement `ICombatValueProvider<TContext, int>`.
 
@@ -291,6 +292,14 @@ Recipes reuse the existing target resolver of each trigger family.
 
 - the card owner is both the targeting source and the event target
 - effect attribution uses the card owner as source combatant; no source card is invented
+
+### CombatantDowned
+
+- the downed combatant is both the targeting source and the event target
+- effect attribution uses `TriggeredEffectActionSource.None`; no source combatant or source card is invented
+- the downed combatant is not alive at trigger time, so a target selector that resolves only alive combatants (`SourceCombatantTargetSelector`, `EventTargetCombatantTargetSelector`) resolves to nothing for this trigger; recipes targeting the downed combatant's side typically use `AllAliveCombatants` or `AllEnemiesOfSource`/`AllAlliesOfSource` instead
+
+**Known interaction:** downing the last living enemy (or the last living player-side combatant) changes `CombatResult` away from `Ongoing` in the same processing pass that resolves the `CombatantDowned` chain. Queue processing stops once the result is no longer `Ongoing`, so an effect chain started by a `CombatantDowned` recipe (e.g. `Heal -> Healed -> ...`) only completes if the trigger fires for a combatant that is not the last one on its side. This is existing queue-processor behavior, not something introduced by this migration, but it is easy to trip over when writing `CombatantDowned` recipes or tests.
 
 ## Completed milestones
 
@@ -373,13 +382,22 @@ The completed status-application and status-lifecycle migration covers `StatusAp
 
 The completed `CardInstanceCreated` migration validated targeting, attribution, and self-reentry suppression following the same pattern as the other reactive triggers.
 
+### Combatant-lifecycle migration
+
+The completed `CombatantDowned` migration validated:
+
+- targeting and attribution (downed combatant as both source and event target, no invented attribution)
+- same-definition self-reentry suppression, exercised by a recipe that downs a second combatant of the same team
+- a different definition may continue a legitimate downed-chain
+- legacy actions still execute before recipes
+- it surfaced the `CombatResult`/queue-stop interaction described above; the validating `Heal -> Healed` test downs a non-last enemy specifically to avoid that interaction
+
 ## Deferred work
 
 The following work remains deferred:
 
 - card-lifecycle recipe migration (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`)
 - general `CardPlayed` recipe migration
-- combatant-lifecycle recipe migration (`CombatantDowned`)
 - missing-source-target guard parity between legacy `Actions` and generic `Effects` for `StatusRemoved`, `StatusChargesReduced`, and `StatusExpired`
 - source-free target selection
 - definition build, validation, and freeze phases
@@ -395,7 +413,6 @@ The next block should pick one remaining trigger group from the deferred list ab
 
 Good candidates, in roughly increasing complexity:
 
-- `CombatantDowned` — single definition, narrow scope
 - the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`) — five related definitions in one file
 - `CardPlayed` — defined directly in `TriggeredEffects.cs` alongside the shared `ITriggeredEffectDefinition` interface
 

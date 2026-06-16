@@ -10,6 +10,8 @@ public sealed class CombatantDownedTriggeredEffectDefinition : ITriggeredEffectD
 
     public List<ICombatantDownedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<CombatantDownedTriggeredEffectContext>> Effects { get; } = new();
+
     public CombatantDownedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -38,13 +40,19 @@ public interface ICombatantDownedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedCombatantDownedTriggeredEffectAmount(int Amount)
-    : ICombatantDownedTriggeredEffectAmountProvider
+    : ICombatantDownedTriggeredEffectAmountProvider,
+      ICombatValueProvider<CombatantDownedTriggeredEffectContext, int>
 {
     public int ResolveAmount(CombatantDownedTriggeredEffectContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         return Amount;
+    }
+
+    public int Resolve(CombatantDownedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -175,6 +183,9 @@ public sealed class CombatantDownedTriggeredEffectHandler
             CombatEvent: combatEvent,
             DownedCombatant: downedCombatant!);
 
+        var actionBuildContext =
+            CombatantDownedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(CombatantLifecycleChangedCombatEvent))
                 .OfType<CombatantDownedTriggeredEffectDefinition>());
@@ -183,6 +194,11 @@ public sealed class CombatantDownedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions.SelectMany(action => action.BuildEffectRequests(context)));
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
