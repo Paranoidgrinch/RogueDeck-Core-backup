@@ -510,8 +510,9 @@ Recipe support is currently available for:
 - `StatusRemovedTriggeredEffectDefinition`
 - `CardInstanceCreatedTriggeredEffectDefinition`
 - `CombatantDownedTriggeredEffectDefinition`
+- `CardPlayedTriggeredEffectDefinition`
 
-Not yet migrated: `CardPlayedTriggeredEffectDefinition` and the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`).
+Not yet migrated: the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`).
 
 For matching definitions:
 
@@ -559,7 +560,7 @@ The broader queue limits remain final technical safeguards.
 
 ## Current reactive migration status
 
-The reactive migration now covers the temporal triggers, `CardCostPaid`, `Healed`, `ResourceGained`, `DamageDealt`, `DamageReceived`, the full status-lifecycle group (`StatusApplied`, `StatusMerged`, `StatusApplicationBlocked`, `StatusChargesReduced`, `StatusesRemovedByPolarity`, `StatusExpired`, `StatusRemoved`), `CardInstanceCreated`, and `CombatantDowned`. See [Combat Effect Recipes](combat-effect-recipes.md) for the per-trigger targeting, attribution, and value-provider detail.
+The reactive migration now covers the temporal triggers, `CardCostPaid`, `Healed`, `ResourceGained`, `DamageDealt`, `DamageReceived`, the full status-lifecycle group (`StatusApplied`, `StatusMerged`, `StatusApplicationBlocked`, `StatusChargesReduced`, `StatusesRemovedByPolarity`, `StatusExpired`, `StatusRemoved`), `CardInstanceCreated`, `CombatantDowned`, and `CardPlayed`. See [Combat Effect Recipes](combat-effect-recipes.md) for the per-trigger targeting, attribution, and value-provider detail.
 
 Across all of it:
 
@@ -573,8 +574,10 @@ One known gap surfaced during the status migration: `StatusRemoved`, `StatusChar
 
 The `CombatantDowned` migration surfaced a separate, pre-existing interaction rather than a new gap: downing the last living combatant on a side changes `CombatResult` away from `Ongoing` in the same processing pass, and the queue processor stops once the result is no longer `Ongoing`. A `CombatantDowned` effect chain only runs to completion when the trigger fires for a non-last combatant on its side. See the "Known interaction" note in [Combat Effect Recipes](combat-effect-recipes.md).
 
+The `CardPlayed` migration was not purely additive: `CardPlayedTriggeredEffectHandler` previously enqueued its legacy actions' effect requests directly, bypassing `TriggeredEffectDefinitionRunner` and therefore the reentry-suppression and trigger-depth-limit infrastructure every other trigger family already had. The migration switched it onto the shared runner, closing that gap as a side effect of adding `Effects` recipe support. See [Combat Effect Recipes](combat-effect-recipes.md) for detail.
+
 ## Next bounded runtime block
 
-The remaining trigger migrations are: the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`), and `CardPlayed`. Each should follow the established pattern: a read-only audit of the existing event/context/filters/target-resolution/attribution, followed by a patch limited to that one trigger group that adds `Effects` recipe support without touching unrelated triggers, legacy action ordering, or existing tests.
+The remaining trigger migration is the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`). Unlike `CardPlayed`, these already route their legacy actions through `TriggeredEffectDefinitionRunner`, so this should be a purely additive `Effects`-list patch: a read-only audit of the existing event/context/filters/target-resolution/attribution, followed by a patch that adds `Effects` recipe support without touching unrelated triggers, legacy action ordering, or existing tests.
 
 The older phase sections above record the engine's incremental development and are not an exhaustive inventory of every currently implemented subsystem.

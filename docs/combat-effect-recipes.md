@@ -37,12 +37,12 @@ The following definitions currently support generic `Effects` alongside legacy `
 - `StatusRemovedTriggeredEffectDefinition`
 - `CardInstanceCreatedTriggeredEffectDefinition`
 - `CombatantDownedTriggeredEffectDefinition`
+- `CardPlayedTriggeredEffectDefinition`
 
 ### Not yet migrated
 
 The following definitions still only support legacy `Actions`, with no `Effects` recipe list:
 
-- `CardPlayedTriggeredEffectDefinition`
 - `CardsDrawnTriggeredEffectDefinition`
 - `DiscardPileShuffledTriggeredEffectDefinition`
 - `HandDiscardedTriggeredEffectDefinition`
@@ -226,6 +226,7 @@ Current reusable or migrated providers include:
 - `FixedStatusRemovedTriggeredEffectAmount`, `StatusRemovedCountAmount`, `StatusRemovedTargetStatusStacksAmount`, `StatusRemovedSourceStatusStacksAmount`
 - `FixedCardInstanceCreatedTriggeredEffectAmount`, `CardInstanceCreatedCount`
 - `FixedCombatantDownedTriggeredEffectAmount`
+- `FixedCardPlayedTriggeredEffectAmount`, `CardPlayedSourceStatusStacksAmount`
 
 A legacy provider may also implement `ICombatValueProvider<TContext, int>`.
 
@@ -300,6 +301,14 @@ Recipes reuse the existing target resolver of each trigger family.
 - the downed combatant is not alive at trigger time, so a target selector that resolves only alive combatants (`SourceCombatantTargetSelector`, `EventTargetCombatantTargetSelector`) resolves to nothing for this trigger; recipes targeting the downed combatant's side typically use `AllAliveCombatants` or `AllEnemiesOfSource`/`AllAlliesOfSource` instead
 
 **Known interaction:** downing the last living enemy (or the last living player-side combatant) changes `CombatResult` away from `Ongoing` in the same processing pass that resolves the `CombatantDowned` chain. Queue processing stops once the result is no longer `Ongoing`, so an effect chain started by a `CombatantDowned` recipe (e.g. `Heal -> Healed -> ...`) only completes if the trigger fires for a combatant that is not the last one on its side. This is existing queue-processor behavior, not something introduced by this migration, but it is easy to trip over when writing `CombatantDowned` recipes or tests.
+
+### CardPlayed
+
+- the playing combatant is both the targeting source and the event target's fallback (`EventTargetId` is the played card's target combatant, if any)
+- effect attribution uses the playing combatant as source combatant, and the **played card's own definition ID** as source card; no other trigger family attributes a triggered effect to the card that caused it this way
+- `CardPlayedTriggeredEffectTarget` (`Source`, `PlayedCardTarget`, `AllAllies`, `AllEnemies`) is a convenience enum predating the generic recipe work; `CardPlayedTriggeredEffectTargetResolver.ToSelector` converts it to an `ICombatantTargetSelector` for use with both legacy actions and generic recipes
+
+**Behavior change in this migration:** unlike every other trigger family, `CardPlayedTriggeredEffectHandler` previously enqueued its legacy `Actions`' effect requests directly (`combat.EnqueueEffect(effectRequest)`), bypassing `TriggeredEffectDefinitionRunner` entirely. This meant `CardPlayed` triggered effects had no reentry suppression and no trigger-depth limit, unlike every other triggered-effect family. The migration switched the handler to route both `Actions` and the new `Effects` through `TriggeredEffectDefinitionRunner.EnqueueEffectRequests`, so `CardPlayed` now gets the same `SuppressRecursiveReentry` default and maximum-trigger-depth protection as every other trigger. No existing test exercised recursive `CardPlayed` reentry (there is no production effect-request path that re-enters `CombatCardPlayProcessor.PlayCard`), so this closes a latent gap rather than fixing an observed bug.
 
 ## Completed milestones
 
@@ -392,12 +401,20 @@ The completed `CombatantDowned` migration validated:
 - legacy actions still execute before recipes
 - it surfaced the `CombatResult`/queue-stop interaction described above; the validating `Heal -> Healed` test downs a non-last enemy specifically to avoid that interaction
 
+### CardPlayed migration
+
+The completed `CardPlayed` migration validated:
+
+- existing targeting, attribution, and filter semantics (including the played-card-as-source-card attribution)
+- legacy actions still execute before recipes
+- it switched the handler from a bespoke direct-enqueue loop to `TriggeredEffectDefinitionRunner`, giving `CardPlayed` reentry suppression and trigger-depth limiting for the first time; all existing `CardPlayed` tests passed unchanged under the new routing
+- a `CardPlayed -> Heal -> Healed` chain completes correctly under the new routing
+
 ## Deferred work
 
 The following work remains deferred:
 
 - card-lifecycle recipe migration (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`)
-- general `CardPlayed` recipe migration
 - missing-source-target guard parity between legacy `Actions` and generic `Effects` for `StatusRemoved`, `StatusChargesReduced`, and `StatusExpired`
 - source-free target selection
 - definition build, validation, and freeze phases
@@ -411,9 +428,6 @@ The following work remains deferred:
 
 The next block should pick one remaining trigger group from the deferred list above and follow the same pattern used for the completed migrations: a read-only audit of the existing event, context, filters, target resolver, and attribution, followed by a patch that adds an `Effects` list and recipe support without touching unrelated triggers, legacy `Actions` ordering, or existing test behavior.
 
-Good candidates, in roughly increasing complexity:
-
-- the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`) — five related definitions in one file
-- `CardPlayed` — defined directly in `TriggeredEffects.cs` alongside the shared `ITriggeredEffectDefinition` interface
+The one remaining candidate is the card-lifecycle group (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`) — five related definitions in one file, already routed through `TriggeredEffectDefinitionRunner` for their legacy `Actions`, so this should be a purely additive `Effects`-list patch with no handler-routing change needed.
 
 Each patch should prove the same invariants as prior migrations: same-definition reentry suppression, unrelated chains remain allowed, legacy actions still execute before recipes, and existing targeting/attribution/test behavior is unchanged.

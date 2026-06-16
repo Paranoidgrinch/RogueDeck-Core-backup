@@ -31,6 +31,8 @@ public sealed class CardPlayedTriggeredEffectDefinition : ITriggeredEffectDefini
 
     public List<ICardPlayedTriggeredEffectAction> Actions { get; } = new();
 
+    public List<ICombatEffectRecipe<CardPlayedTriggeredEffectContext>> Effects { get; } = new();
+
     public CardPlayedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
         Id = id;
@@ -60,7 +62,8 @@ public interface ICardPlayedTriggeredEffectAmountProvider
 }
 
 public sealed record FixedCardPlayedTriggeredEffectAmount(int Amount)
-    : ICardPlayedTriggeredEffectAmountProvider
+    : ICardPlayedTriggeredEffectAmountProvider,
+      ICombatValueProvider<CardPlayedTriggeredEffectContext, int>
 {
     public int ResolveAmount(CardPlayedTriggeredEffectContext context)
     {
@@ -68,10 +71,16 @@ public sealed record FixedCardPlayedTriggeredEffectAmount(int Amount)
 
         return Amount;
     }
+
+    public int Resolve(CardPlayedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
+    }
 }
 
 public sealed record CardPlayedSourceStatusStacksAmount(StatusDefinitionId StatusDefinitionId)
-    : ICardPlayedTriggeredEffectAmountProvider
+    : ICardPlayedTriggeredEffectAmountProvider,
+      ICombatValueProvider<CardPlayedTriggeredEffectContext, int>
 {
     public int ResolveAmount(CardPlayedTriggeredEffectContext context)
     {
@@ -80,6 +89,11 @@ public sealed record CardPlayedSourceStatusStacksAmount(StatusDefinitionId Statu
         return context.Source.Statuses
             .Where(status => status.DefinitionId == StatusDefinitionId)
             .Sum(status => status.Stacks);
+    }
+
+    public int Resolve(CardPlayedTriggeredEffectContext context)
+    {
+        return ResolveAmount(context);
     }
 }
 
@@ -453,21 +467,23 @@ public sealed class CardPlayedTriggeredEffectHandler
             Source: source!,
             Card: card);
 
+        var actionBuildContext =
+            CardPlayedTriggeredEffectTargetResolver.CreateActionBuildContext(context);
+
         var definitions = _definitions.Concat(
             registry.GetTriggeredEffectDefinitions(typeof(CardPlayedCombatEvent))
                 .OfType<CardPlayedTriggeredEffectDefinition>());
 
-        foreach (var definition in definitions)
-        {
-            if (definition.Filters.Any(filter => !filter.Matches(context)))
-                continue;
-
-            foreach (var action in definition.Actions)
-            {
-                foreach (var effectRequest in action.BuildEffectRequests(context))
-                    combat.EnqueueEffect(effectRequest);
-            }
-        }
+        TriggeredEffectDefinitionRunner.EnqueueEffectRequests(
+            combat,
+            definitions,
+            definition => definition.Filters.All(filter => filter.Matches(context)),
+            definition => definition.Actions
+                .SelectMany(action => action.BuildEffectRequests(context))
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
+                        context,
+                        actionBuildContext))));
     }
 }
 
