@@ -169,7 +169,7 @@ public static class StatusRemovedTriggeredEffectTargetResolver
 
         return new CombatantTargetSelectionContext(
             Combat: context.Combat,
-            Source: context.SourceCombatant ?? context.TargetCombatant,
+            Source: context.SourceCombatant,
             EventTargetId: context.CombatEvent.TargetCombatantId);
     }
 
@@ -392,10 +392,8 @@ public sealed class StatusRemovedTriggeredEffectHandler
             definition => definition.Filters.All(filter => filter.Matches(context)),
             definition => definition.Actions
                 .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects
-                    .Where(effect => !StatusRemovedTriggeredEffectTargetResolver
-                        .ShouldSuppressMissingSourceTarget(context, effect.TargetSelector))
-                    .SelectMany(effect => effect.BuildEffectRequests(
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
                         context,
                         actionBuildContext))));
     }
@@ -495,7 +493,7 @@ public static class StatusChargesReducedTriggeredEffectTargetResolver
 
         return new CombatantTargetSelectionContext(
             Combat: context.Combat,
-            Source: context.SourceCombatant ?? context.TargetCombatant,
+            Source: context.SourceCombatant,
             EventTargetId: context.CombatEvent.TargetCombatantId);
     }
 
@@ -603,10 +601,8 @@ public sealed class StatusChargesReducedTriggeredEffectHandler
             definition => definition.Filters.All(filter => filter.Matches(context)),
             definition => definition.Actions
                 .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects
-                    .Where(effect => !StatusChargesReducedTriggeredEffectTargetResolver
-                        .ShouldSuppressMissingSourceTarget(context, effect.TargetSelector))
-                    .SelectMany(effect => effect.BuildEffectRequests(
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
                         context,
                         actionBuildContext))));
     }
@@ -764,7 +760,7 @@ public static class StatusExpiredTriggeredEffectTargetResolver
 
         return new CombatantTargetSelectionContext(
             Combat: context.Combat,
-            Source: context.SourceCombatant ?? context.TargetCombatant,
+            Source: context.SourceCombatant,
             EventTargetId: context.CombatEvent.TargetCombatantId);
     }
 
@@ -987,10 +983,8 @@ public sealed class StatusExpiredTriggeredEffectHandler
             definition => definition.Filters.All(filter => filter.Matches(context)),
             definition => definition.Actions
                 .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects
-                    .Where(effect => !StatusExpiredTriggeredEffectTargetResolver
-                        .ShouldSuppressMissingSourceTarget(context, effect.TargetSelector))
-                    .SelectMany(effect => effect.BuildEffectRequests(
+                .Concat(definition.Effects.SelectMany(
+                    effect => effect.BuildEffectRequests(
                         context,
                         actionBuildContext))));
     }
@@ -1199,7 +1193,7 @@ public static class StatusMergedTriggeredEffectTargetResolver
 
         return new CombatantTargetSelectionContext(
             Combat: context.Combat,
-            Source: context.SourceCombatant ?? context.TargetCombatant,
+            Source: context.SourceCombatant,
             EventTargetId: context.CombatEvent.TargetCombatantId);
     }
 

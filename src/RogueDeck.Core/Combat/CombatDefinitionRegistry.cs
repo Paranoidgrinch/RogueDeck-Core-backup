@@ -274,10 +274,15 @@ public IReadOnlyDictionary<StatusDefinitionId, StatusDefinition> StatusDefinitio
     {
         ArgumentNullException.ThrowIfNull(definition);
 
+        if (string.IsNullOrEmpty(definition.Id.value))
+            throw new ArgumentException(
+                "Triggered effect definition ID cannot be empty.", nameof(definition));
+
         if (_triggeredEffectDefinitions.ContainsKey(definition.Id))
             throw new InvalidOperationException(
                 $"Triggered effect definition '{definition.Id}' is already registered.");
 
+        definition.Freeze();
         _triggeredEffectDefinitions.Add(definition.Id, definition);
     }
 

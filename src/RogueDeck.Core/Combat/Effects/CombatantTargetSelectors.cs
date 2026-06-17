@@ -2,7 +2,7 @@
 
 public sealed record CombatantTargetSelectionContext(
     CombatState Combat,
-    CombatantState Source,
+    CombatantState? Source,
     CombatantId? EventTargetId = null);
 
 public interface ICombatantTargetSelector
@@ -15,6 +15,9 @@ public sealed class SourceCombatantTargetSelector : ICombatantTargetSelector
     public IReadOnlyCollection<CombatantId> ResolveTargets(CombatantTargetSelectionContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
+
+        if (context.Source is null)
+            return Array.Empty<CombatantId>();
 
         return context.Source.IsAlive
             ? new[] { context.Source.Id }
@@ -48,6 +51,9 @@ public sealed class AllAlliesOfSourceCombatantTargetSelector : ICombatantTargetS
     {
         ArgumentNullException.ThrowIfNull(context);
 
+        if (context.Source is null)
+            return Array.Empty<CombatantId>();
+
         return context.Combat.Combatants
             .Where(combatant =>
                 combatant.TeamId == context.Source.TeamId &&
@@ -62,6 +68,9 @@ public sealed class AllEnemiesOfSourceCombatantTargetSelector : ICombatantTarget
     public IReadOnlyCollection<CombatantId> ResolveTargets(CombatantTargetSelectionContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
+
+        if (context.Source is null)
+            return Array.Empty<CombatantId>();
 
         return context.Combat.Combatants
             .Where(combatant =>

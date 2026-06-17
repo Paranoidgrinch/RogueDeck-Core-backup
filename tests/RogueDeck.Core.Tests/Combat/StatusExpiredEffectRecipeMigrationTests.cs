@@ -159,7 +159,7 @@ public class StatusExpiredEffectRecipeMigrationTests
 
         Assert.Equal(1, recipe.ActivationCount);
         Assert.Equal(HeroId, recipe.EventTargetId);
-        Assert.Equal(HeroId, recipe.TargetingSourceId);
+        Assert.Null(recipe.TargetingSourceId);
         Assert.Null(recipe.EffectSourceCombatantId);
         Assert.Null(recipe.EffectSourceCardId);
         Assert.Equal(HeroId, recipe.ContextTargetId);
@@ -610,7 +610,7 @@ public class StatusExpiredEffectRecipeMigrationTests
             EventTargetId =
                 buildContext.TargetSelectionContext.EventTargetId;
             TargetingSourceId =
-                buildContext.TargetSelectionContext.Source.Id;
+                buildContext.TargetSelectionContext.Source?.Id;
             EffectSourceCombatantId =
                 buildContext.Source.SourceCombatantId;
             EffectSourceCardId =

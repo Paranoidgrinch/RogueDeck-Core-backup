@@ -19,6 +19,8 @@ public interface ITriggeredEffectDefinition
 
     TriggeredEffectReentryPolicy ReentryPolicy =>
         TriggeredEffectReentryPolicy.SuppressRecursiveReentry;
+
+    void Freeze() { }
 }
 
 public sealed class CardPlayedTriggeredEffectDefinition : ITriggeredEffectDefinition

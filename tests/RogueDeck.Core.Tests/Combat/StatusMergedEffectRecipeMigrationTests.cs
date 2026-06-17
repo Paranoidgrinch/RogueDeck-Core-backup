@@ -335,7 +335,7 @@ public class StatusMergedEffectRecipeMigrationTests
 
         Assert.Equal(1, recipe.ActivationCount);
         Assert.Equal(HeroId, recipe.EventTargetId);
-        Assert.Equal(HeroId, recipe.TargetingSourceId);
+        Assert.Null(recipe.TargetingSourceId);
         Assert.Null(recipe.EffectSourceCombatantId);
         Assert.Null(recipe.EffectSourceCardId);
         Assert.Equal(HeroId, recipe.ContextTargetId);
@@ -877,7 +877,7 @@ public class StatusMergedEffectRecipeMigrationTests
                 buildContext
                     .TargetSelectionContext
                     .Source
-                    .Id;
+                    ?.Id;
 
             EffectSourceCombatantId =
                 buildContext.Source.SourceCombatantId;
