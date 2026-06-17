@@ -23,17 +23,17 @@ public class DamageDealtEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.damage_dealt_recipe_amounts"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<DamageDealtTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new DamageDealtHealthDamageAmount()));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<DamageDealtTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new DamageDealtBlockedDamageAmount()));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<DamageDealtTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new DamageDealtRequestedAmount()));
@@ -94,12 +94,12 @@ public class DamageDealtEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.damage_dealt_recipe_status_amounts"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<DamageDealtTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new DamageDealtSourceStatusStacksAmount(sourceStatusId)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<DamageDealtTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new DamageDealtTargetStatusStacksAmount(targetStatusId)));
@@ -129,22 +129,22 @@ public class DamageDealtEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.damage_dealt_recipe_execution_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingDamageDealtAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingDamageDealtAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingDamageDealtRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingDamageDealtRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -180,7 +180,7 @@ public class DamageDealtEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.damage_dealt_recipe_attribution"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         DealDamage(
@@ -216,7 +216,7 @@ public class DamageDealtEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.damage_dealt_recipe_source_free"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         DealDamage(
@@ -244,7 +244,7 @@ public class DamageDealtEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.damage_dealt_self_reentry"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnDamageDealtTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedDamageDealtTriggeredEffectAmount(1)));
@@ -283,7 +283,7 @@ public class DamageDealtEffectRecipeMigrationTests
         followUpDamage.Filters.Add(
             new ExactHealthDamageFilter(2));
 
-        followUpDamage.Actions.Add(
+        followUpDamage.Steps.Add(
             new DealDamageOnDamageDealtTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedDamageDealtTriggeredEffectAmount(1)));
@@ -295,7 +295,7 @@ public class DamageDealtEffectRecipeMigrationTests
         followUpBlock.Filters.Add(
             new ExactHealthDamageFilter(1));
 
-        followUpBlock.Effects.Add(
+        followUpBlock.Steps.Add(
             new GainBlockEffectRecipe<DamageDealtTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedDamageDealtTriggeredEffectAmount(4)));
@@ -340,7 +340,7 @@ public class DamageDealtEffectRecipeMigrationTests
         damageDefinition.Filters.Add(
             new DamageDealtHasSourceTriggerFilter());
 
-        damageDefinition.Effects.Add(
+        damageDefinition.Steps.Add(
             new HealEffectRecipe<DamageDealtTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedDamageDealtTriggeredEffectAmount(2)));
@@ -349,7 +349,7 @@ public class DamageDealtEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.damage_dealt_recipe_healed_follow_up"));
 
-        healedDefinition.Actions.Add(
+        healedDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -383,7 +383,7 @@ public class DamageDealtEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.damage_dealt_recipe_sibling"));
 
-        damageDealtDefinition.Effects.Add(
+        damageDealtDefinition.Steps.Add(
             new GainBlockEffectRecipe<DamageDealtTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedDamageDealtTriggeredEffectAmount(2)));
@@ -392,7 +392,7 @@ public class DamageDealtEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.damage_received_original_sibling"));
 
-        damageReceivedDefinition.Actions.Add(
+        damageReceivedDefinition.Steps.Add(
             new GainBlockOnDamageReceivedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedDamageReceivedTriggeredEffectAmount(3)));
@@ -425,7 +425,7 @@ public class DamageDealtEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.damage_dealt_recipe_lethal"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<DamageDealtTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedDamageDealtTriggeredEffectAmount(2)));

@@ -8,9 +8,7 @@ public sealed class ResourceGainedTriggeredEffectDefinition : ITriggeredEffectDe
 
     public List<IResourceGainedTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<IResourceGainedTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<ResourceGainedTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<ResourceGainedTriggeredEffectContext>> Steps { get; } = new();
 
     public ResourceGainedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -30,8 +28,14 @@ public interface IResourceGainedTriggeredEffectFilter
 }
 
 public interface IResourceGainedTriggeredEffectAction
+    : ICombatEffectRecipe<ResourceGainedTriggeredEffectContext>
 {
     IReadOnlyCollection<IEffectRequest> BuildEffectRequests(ResourceGainedTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<ResourceGainedTriggeredEffectContext>.BuildEffectRequests(
+        ResourceGainedTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface IResourceGainedTriggeredEffectAmountProvider
@@ -225,11 +229,7 @@ public sealed class ResourceGainedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }

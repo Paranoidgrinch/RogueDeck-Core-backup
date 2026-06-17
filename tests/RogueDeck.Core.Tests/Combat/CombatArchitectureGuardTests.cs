@@ -288,18 +288,14 @@ public class CombatArchitectureGuardTests
             "RoundStartedTriggeredEffects.cs");
 
         var source = File.ReadAllText(roundStartedPath);
-        var actionsIndex = source.LastIndexOf(
-            "definition.Actions",
-            StringComparison.Ordinal);
-        var effectsIndex = source.LastIndexOf(
-            "definition.Effects",
+        var stepsIndex = source.LastIndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<RoundStartedTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<RoundStartedTriggeredEffectContext>> Steps",
             source);
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
         Assert.Contains(
             "RoundStartedTriggeredEffectTargetResolver.CreateActionBuildContext(context)",
             source);
@@ -360,18 +356,14 @@ public class CombatArchitectureGuardTests
             "RoundEndedTriggeredEffects.cs");
 
         var source = File.ReadAllText(roundEndedPath);
-        var actionsIndex = source.LastIndexOf(
-            "definition.Actions",
-            StringComparison.Ordinal);
-        var effectsIndex = source.LastIndexOf(
-            "definition.Effects",
+        var stepsIndex = source.LastIndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<RoundEndedTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<RoundEndedTriggeredEffectContext>> Steps",
             source);
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
         Assert.Contains(
             "var actionBuildContext =",
             source);
@@ -379,7 +371,7 @@ public class CombatArchitectureGuardTests
             "RoundEndedTriggeredEffectTargetResolver.CreateActionBuildContext(context)",
             source);
         Assert.Contains(
-            "effect => effect.BuildEffectRequests(",
+            "step => step.BuildEffectRequests(",
             source);
         Assert.Contains(
             "combatEvent.LastActiveCombatantId is null",
@@ -420,16 +412,12 @@ public class CombatArchitectureGuardTests
 
         var handler = source[handlerStart..];
 
-        var actionsIndex = handler.IndexOf(
-            "definition.Actions",
-            StringComparison.Ordinal);
-
-        var effectsIndex = handler.IndexOf(
-            "definition.Effects",
+        var stepsIndex = handler.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<CardCostPaidTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<CardCostPaidTriggeredEffectContext>> Steps",
             source);
 
         Assert.Contains(
@@ -444,8 +432,7 @@ public class CombatArchitectureGuardTests
             "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
             handler);
 
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",
@@ -522,7 +509,7 @@ public class CombatArchitectureGuardTests
         var handlerSource = source[handlerStart..];
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<DamageDealtTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<DamageDealtTriggeredEffectContext>> Steps",
             definitionSource);
 
         foreach (var providerSource in providerSources)
@@ -544,16 +531,11 @@ public class CombatArchitectureGuardTests
             "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
             handlerSource);
 
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
-            StringComparison.Ordinal);
-
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",
@@ -664,7 +646,7 @@ public class CombatArchitectureGuardTests
         var handlerSource = source[handlerStart..];
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<DamageReceivedTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<DamageReceivedTriggeredEffectContext>> Steps",
             definitionSource);
 
         foreach (var providerSource in providerSources)
@@ -686,16 +668,11 @@ public class CombatArchitectureGuardTests
             "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
             handlerSource);
 
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
-            StringComparison.Ordinal);
-
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",
@@ -806,7 +783,7 @@ public class CombatArchitectureGuardTests
         var handlerSource = source[handlerStart..];
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<StatusAppliedTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<StatusAppliedTriggeredEffectContext>> Steps",
             definitionSource);
 
         foreach (var providerSource in providerSources)
@@ -828,16 +805,11 @@ public class CombatArchitectureGuardTests
             "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
             handlerSource);
 
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
-            StringComparison.Ordinal);
-
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",
@@ -961,7 +933,7 @@ public class CombatArchitectureGuardTests
         var handlerSource = familySource[handlerStart..];
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<StatusMergedTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<StatusMergedTriggeredEffectContext>> Steps",
             definitionSource);
 
         foreach (var providerSource in providerSources)
@@ -983,16 +955,11 @@ public class CombatArchitectureGuardTests
             "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
             handlerSource);
 
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
-            StringComparison.Ordinal);
-
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",
@@ -1076,7 +1043,7 @@ public class CombatArchitectureGuardTests
         var handlerSource = source[handlerStart..];
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<StatusApplicationBlockedTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<StatusApplicationBlockedTriggeredEffectContext>> Steps",
             definitionSource);
 
         Assert.Contains(
@@ -1099,16 +1066,11 @@ public class CombatArchitectureGuardTests
             "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
             handlerSource);
 
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
-            StringComparison.Ordinal);
-
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",
@@ -1204,7 +1166,7 @@ public class CombatArchitectureGuardTests
         var handlerSource = familySource[handlerStart..];
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<StatusChargesReducedTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<StatusChargesReducedTriggeredEffectContext>> Steps",
             definitionSource);
 
         foreach (var providerSource in providerSources)
@@ -1230,16 +1192,11 @@ public class CombatArchitectureGuardTests
             "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
             handlerSource);
 
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
-            StringComparison.Ordinal);
-
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",
@@ -1331,7 +1288,7 @@ public class CombatArchitectureGuardTests
         var handlerSource = source[handlerStart..];
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<StatusesRemovedByPolarityTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<StatusesRemovedByPolarityTriggeredEffectContext>> Steps",
             definitionSource);
 
         foreach (var providerSource in providerSources)
@@ -1357,16 +1314,11 @@ public class CombatArchitectureGuardTests
             "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
             handlerSource);
 
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
-            StringComparison.Ordinal);
-
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",
@@ -1467,7 +1419,7 @@ public class CombatArchitectureGuardTests
         var handlerSource = familySource[handlerStart..];
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<StatusExpiredTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<StatusExpiredTriggeredEffectContext>> Steps",
             definitionSource);
 
         foreach (var providerSource in providerSources)
@@ -1493,16 +1445,11 @@ public class CombatArchitectureGuardTests
             "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
             handlerSource);
 
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
-            StringComparison.Ordinal);
-
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",
@@ -1607,7 +1554,7 @@ public class CombatArchitectureGuardTests
         var handlerSource = familySource[handlerStart..];
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<StatusRemovedTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<StatusRemovedTriggeredEffectContext>> Steps",
             definitionSource);
 
         foreach (var providerSource in providerSources)
@@ -1633,16 +1580,11 @@ public class CombatArchitectureGuardTests
             "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
             handlerSource);
 
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
-            StringComparison.Ordinal);
-
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",
@@ -1734,7 +1676,7 @@ public class CombatArchitectureGuardTests
         var handlerSource = source[handlerStart..];
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<CardInstanceCreatedTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<CardInstanceCreatedTriggeredEffectContext>> Steps",
             definitionSource);
 
         foreach (var providerSource in providerSources)
@@ -1761,19 +1703,14 @@ public class CombatArchitectureGuardTests
             handlerSource);
 
         Assert.Contains(
-            "effect.BuildEffectRequests(",
+            "step.BuildEffectRequests(",
             handlerSource);
 
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
-            StringComparison.Ordinal);
-
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",

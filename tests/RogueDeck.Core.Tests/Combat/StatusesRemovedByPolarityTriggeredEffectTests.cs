@@ -33,7 +33,7 @@ public class StatusesRemovedByPolarityTriggeredEffectTests
         var definition = new StatusesRemovedByPolarityTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.statuses_removed_by_polarity_gain_block"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusesRemovedByPolarityTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusesRemovedByPolarityTriggeredEffectAmount(4)));
@@ -70,7 +70,7 @@ public class StatusesRemovedByPolarityTriggeredEffectTests
         matching.Filters.Add(
             new StatusesRemovedByPolarityTriggerFilter(StatusPolarity.Buff));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnStatusesRemovedByPolarityTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusesRemovedByPolarityTriggeredEffectAmount(2)));
@@ -81,7 +81,7 @@ public class StatusesRemovedByPolarityTriggeredEffectTests
         nonMatching.Filters.Add(
             new StatusesRemovedByPolarityTriggerFilter(StatusPolarity.Debuff));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnStatusesRemovedByPolarityTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusesRemovedByPolarityTriggeredEffectAmount(7)));
@@ -119,7 +119,7 @@ public class StatusesRemovedByPolarityTriggeredEffectTests
         matching.Filters.Add(
             new StatusesRemovedByPolarityTargetTriggerFilter(HeroId));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnStatusesRemovedByPolarityTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusesRemovedByPolarityTriggeredEffectAmount(3)));
@@ -130,7 +130,7 @@ public class StatusesRemovedByPolarityTriggeredEffectTests
         nonMatching.Filters.Add(
             new StatusesRemovedByPolarityTargetTriggerFilter(GoblinId));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnStatusesRemovedByPolarityTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusesRemovedByPolarityTriggeredEffectAmount(8)));
@@ -168,7 +168,7 @@ public class StatusesRemovedByPolarityTriggeredEffectTests
         definition.Filters.Add(
             new StatusesRemovedByPolarityMinimumCountTriggerFilter(MinimumCount: 2));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusesRemovedByPolarityTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusesRemovedByPolarityTriggeredEffectAmount(5)));
@@ -209,7 +209,7 @@ public class StatusesRemovedByPolarityTriggeredEffectTests
         var definition = new StatusesRemovedByPolarityTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.statuses_removed_by_polarity_count_amount"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusesRemovedByPolarityTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new StatusesRemovedByPolarityRemovedStatusCount()));
@@ -243,7 +243,7 @@ public class StatusesRemovedByPolarityTriggeredEffectTests
         var definition = new StatusesRemovedByPolarityTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.statuses_removed_by_polarity_source_selector"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusesRemovedByPolarityTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedStatusesRemovedByPolarityTriggeredEffectAmount(6)));

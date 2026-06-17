@@ -55,7 +55,7 @@ public class TriggeredEffectDirectTargetSelectorTests
         var definition = new TurnStartedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.turn_started_lowest_health_enemy"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnTurnStartedTriggeredEffectAction(
                 CombatantTargetSelectors.LowestHealthEnemyOfSource,
                 new FixedTurnStartedTriggeredEffectAmount(3)));
@@ -102,7 +102,7 @@ public class TriggeredEffectDirectTargetSelectorTests
         var definition = new TurnEndedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.turn_ended_damaged_allies"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnTurnEndedTriggeredEffectAction(
                 CombatantTargetSelectors.AllDamagedAlliesOfSource,
                 statusId,

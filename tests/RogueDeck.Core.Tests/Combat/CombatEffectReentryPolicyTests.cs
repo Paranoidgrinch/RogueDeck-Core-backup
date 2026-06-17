@@ -29,7 +29,7 @@ public class CombatEffectReentryPolicyTests
                 "test.round_started_recursive_reentry"));
 
         definition.Filters.Add(filter);
-        definition.Effects.Add(
+        definition.Steps.Add(
             new DelegateRoundStartedRecipe((context, buildContext) =>
                 new IEffectRequest[]
                 {
@@ -82,7 +82,7 @@ public class CombatEffectReentryPolicyTests
             new TriggeredEffectDefinitionId(
                 "test.round_started_sibling_events"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new DelegateRoundStartedRecipe((context, buildContext) =>
             {
                 activationCount++;
@@ -130,7 +130,7 @@ public class CombatEffectReentryPolicyTests
         var definition = new RoundStartedTriggeredEffectDefinition(
             definitionId);
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new DelegateRoundStartedRecipe((context, buildContext) =>
                 new IEffectRequest[]
                 {

@@ -26,7 +26,7 @@ public class DamageReceivedTriggeredEffectTests
         var definition = new DamageReceivedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.damage_received_gain_block"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDamageReceivedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new DamageReceivedHealthDamageAmount()));
@@ -57,7 +57,7 @@ public class DamageReceivedTriggeredEffectTests
         var definition = new DamageReceivedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.damage_received_apply_status"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnDamageReceivedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 statusId,
@@ -95,7 +95,7 @@ public class DamageReceivedTriggeredEffectTests
 
         definition.Filters.Add(new DamageReceivedHasSourceTriggerFilter());
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnDamageReceivedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 statusId,
@@ -131,7 +131,7 @@ public class DamageReceivedTriggeredEffectTests
         definition.Filters.Add(new DamageReceivedHasSourceTriggerFilter());
         definition.Filters.Add(new DamageReceivedDamageKindTriggerFilter(DamageKind.Direct));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnDamageReceivedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedDamageReceivedTriggeredEffectAmount(2),
@@ -174,7 +174,7 @@ public class DamageReceivedTriggeredEffectTests
 
         definition.Filters.Add(new DamageReceivedReceiverHasStatusTriggerFilter(receiverStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDamageReceivedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new DamageReceivedReceiverStatusStacksAmount(receiverStatusId)));
@@ -214,7 +214,7 @@ public class DamageReceivedTriggeredEffectTests
 
         definition.Filters.Add(new DamageReceivedSourceHasStatusTriggerFilter(sourceStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDamageReceivedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new DamageReceivedSourceStatusStacksAmount(sourceStatusId)));
@@ -245,7 +245,7 @@ public class DamageReceivedTriggeredEffectTests
         definition.Filters.Add(
             new DamageReceivedMinimumHealthDamageTriggerFilter(MinimumHealthDamage: 5));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDamageReceivedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedDamageReceivedTriggeredEffectAmount(3)));
@@ -276,7 +276,7 @@ public class DamageReceivedTriggeredEffectTests
         definition.Filters.Add(
             new DamageReceivedDamageKindTriggerFilter(DamageKind.Direct));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDamageReceivedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedDamageReceivedTriggeredEffectAmount(3)));
@@ -307,7 +307,7 @@ public class DamageReceivedTriggeredEffectTests
 
         definition.Filters.Add(new DamageReceivedHasSourceTriggerFilter());
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnDamageReceivedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedDamageReceivedTriggeredEffectAmount(3)));

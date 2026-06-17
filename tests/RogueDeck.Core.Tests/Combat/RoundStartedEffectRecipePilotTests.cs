@@ -16,7 +16,7 @@ public class RoundStartedEffectRecipePilotTests
             new TriggeredEffectDefinitionId(
                 "test.round_started_generic_gain_block"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<RoundStartedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCombatValue<int>(4)));
@@ -40,12 +40,12 @@ public class RoundStartedEffectRecipePilotTests
             new TriggeredEffectDefinitionId(
                 "test.round_started_legacy_and_generic"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnRoundStartedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundStartedTriggeredEffectAmount(2)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<RoundStartedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCombatValue<int>(3)));
@@ -71,7 +71,7 @@ public class RoundStartedEffectRecipePilotTests
             new RoundStartedMinimumRoundTriggerFilter(
                 MinimumRound: 2));
 
-        matching.Effects.Add(
+        matching.Steps.Add(
             new GainBlockEffectRecipe<RoundStartedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCombatValue<int>(2)));
@@ -84,7 +84,7 @@ public class RoundStartedEffectRecipePilotTests
             new RoundStartedMinimumRoundTriggerFilter(
                 MinimumRound: 3));
 
-        nonMatching.Effects.Add(
+        nonMatching.Steps.Add(
             new GainBlockEffectRecipe<RoundStartedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCombatValue<int>(7)));
@@ -106,7 +106,7 @@ public class RoundStartedEffectRecipePilotTests
             new TriggeredEffectDefinitionId(
                 "test.round_started_generic_current_round"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<RoundStartedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new RoundStartedCurrentRoundAmount()));
@@ -128,22 +128,22 @@ public class RoundStartedEffectRecipePilotTests
             new TriggeredEffectDefinitionId(
                 "test.round_started_execution_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -173,7 +173,7 @@ public class RoundStartedEffectRecipePilotTests
             new TriggeredEffectDefinitionId(
                 "test.round_started_generic_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
 
         registry.RegisterTriggeredEffectDefinition(definition);
 

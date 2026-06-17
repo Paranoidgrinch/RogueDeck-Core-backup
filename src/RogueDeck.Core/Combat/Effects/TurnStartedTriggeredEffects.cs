@@ -8,9 +8,7 @@ public sealed class TurnStartedTriggeredEffectDefinition : ITriggeredEffectDefin
 
     public List<ITurnStartedTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<ITurnStartedTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<TurnStartedTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<TurnStartedTriggeredEffectContext>> Steps { get; } = new();
 
     public TurnStartedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -30,8 +28,14 @@ public interface ITurnStartedTriggeredEffectFilter
 }
 
 public interface ITurnStartedTriggeredEffectAction
+    : ICombatEffectRecipe<TurnStartedTriggeredEffectContext>
 {
     IReadOnlyCollection<IEffectRequest> BuildEffectRequests(TurnStartedTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<TurnStartedTriggeredEffectContext>.BuildEffectRequests(
+        TurnStartedTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface ITurnStartedTriggeredEffectAmountProvider
@@ -405,12 +409,7 @@ public sealed class TurnStartedTriggeredEffectHandler
             definitions,
             definition => definition.Filters.All(
                 filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(
-                    action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }

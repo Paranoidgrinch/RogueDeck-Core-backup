@@ -16,7 +16,7 @@ public class TurnStartedEffectRecipePilotTests
             new TriggeredEffectDefinitionId(
                 "test.turn_started_generic_gain_block"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<TurnStartedTriggeredEffectContext>(
                 CombatantTargetSelectors.AllEnemiesOfSource,
                 new FixedCombatValue<int>(4)));
@@ -59,7 +59,7 @@ public class TurnStartedEffectRecipePilotTests
             new TriggeredEffectDefinitionId(
                 "test.turn_started_generic_heal"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new HealEffectRecipe<TurnStartedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new TurnStartedCombatantStatusStacksAmount(statusId)));
@@ -89,12 +89,12 @@ public class TurnStartedEffectRecipePilotTests
 
         hero.Health.SetCurrent(healthBefore);
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new HealOnTurnStartedTriggeredEffectAction(
                 TurnStartedTriggeredEffectTarget.TurnCombatant,
                 new FixedTurnStartedTriggeredEffectAmount(2)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new HealEffectRecipe<TurnStartedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedCombatValue<int>(3)));
@@ -146,7 +146,7 @@ public class TurnStartedEffectRecipePilotTests
             new TurnStartedCombatantHasStatusTriggerFilter(
                 presentStatusId));
 
-        matching.Effects.Add(matchingRecipe);
+        matching.Steps.Add(matchingRecipe);
 
         var nonMatching = new TurnStartedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId(
@@ -156,7 +156,7 @@ public class TurnStartedEffectRecipePilotTests
             new TurnStartedCombatantHasStatusTriggerFilter(
                 missingStatusId));
 
-        nonMatching.Effects.Add(nonMatchingRecipe);
+        nonMatching.Steps.Add(nonMatchingRecipe);
 
         registry.RegisterTriggeredEffectDefinition(matching);
         registry.RegisterTriggeredEffectDefinition(nonMatching);
@@ -180,22 +180,22 @@ public class TurnStartedEffectRecipePilotTests
             new TriggeredEffectDefinitionId(
                 "test.turn_started_execution_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -228,7 +228,7 @@ public class TurnStartedEffectRecipePilotTests
             new TriggeredEffectDefinitionId(
                 "test.turn_started_generic_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
 
         registry.RegisterTriggeredEffectDefinition(definition);
 
@@ -254,7 +254,7 @@ public class TurnStartedEffectRecipePilotTests
             new TriggeredEffectDefinitionId(
                 "test.turn_started_missing_combatant"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
 
         ICombatEventHandler handler =
             new TurnStartedTriggeredEffectHandler(definition);

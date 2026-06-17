@@ -28,13 +28,13 @@ public class StatusChargesReducedEffectRecipeMigrationTests
             new StatusChargesReducedStatusDefinitionTriggerFilter(
                 StandardCombatIds.WeakStatus));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusChargesReducedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
                     new FixedStatusChargesReducedTriggeredEffectAmount(3)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusChargesReducedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -72,22 +72,22 @@ public class StatusChargesReducedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_charges_reduced_recipe_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingStatusChargesReducedAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingStatusChargesReducedAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingStatusChargesReducedRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingStatusChargesReducedRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -135,7 +135,7 @@ public class StatusChargesReducedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_charges_reduced_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         DecreaseFirstStatusCharges(
@@ -179,7 +179,7 @@ public class StatusChargesReducedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_charges_reduced_recipe_source_fallback"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusChargesReducedTriggeredEffectContext>(
                     CombatantTargetSelectors.Source,
@@ -213,7 +213,7 @@ public class StatusChargesReducedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_charges_reduced_self_reentry"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new DecreaseSameStatusChargesRecipe());
 
         registry.RegisterTriggeredEffectDefinition(definition);
@@ -258,7 +258,7 @@ public class StatusChargesReducedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_charges_reduced_chain_reduce"));
 
-        reducingDefinition.Effects.Add(
+        reducingDefinition.Steps.Add(
             new DecreaseSameStatusChargesRecipe());
 
         var observingDefinition =
@@ -271,7 +271,7 @@ public class StatusChargesReducedEffectRecipeMigrationTests
                 2,
                 1));
 
-        observingDefinition.Effects.Add(
+        observingDefinition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusChargesReducedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -323,7 +323,7 @@ public class StatusChargesReducedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_charges_reduced_recipe_heal"));
 
-        chargesDefinition.Effects.Add(
+        chargesDefinition.Steps.Add(
             new HealEffectRecipe<
                 StatusChargesReducedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -334,7 +334,7 @@ public class StatusChargesReducedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_charges_reduced_healed_follow_up"));
 
-        healedDefinition.Actions.Add(
+        healedDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -380,7 +380,7 @@ public class StatusChargesReducedEffectRecipeMigrationTests
             new StatusChargesReducedStatusDefinitionTriggerFilter(
                 StandardCombatIds.WeakStatus));
 
-        chargesDefinition.Effects.Add(
+        chargesDefinition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusChargesReducedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -395,7 +395,7 @@ public class StatusChargesReducedEffectRecipeMigrationTests
             new StatusExpiredStatusDefinitionTriggerFilter(
                 StandardCombatIds.WeakStatus));
 
-        expiredDefinition.Actions.Add(
+        expiredDefinition.Steps.Add(
             new DealDamageOnStatusExpiredTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusExpiredTriggeredEffectAmount(2)));

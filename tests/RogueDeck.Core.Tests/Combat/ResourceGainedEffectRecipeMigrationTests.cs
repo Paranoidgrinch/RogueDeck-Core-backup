@@ -18,7 +18,7 @@ public class ResourceGainedEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.resource_gained_recipe_actual_amount"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<ResourceGainedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new ResourceGainedAmount()));
@@ -53,7 +53,7 @@ public class ResourceGainedEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.resource_gained_recipe_new_current"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<ResourceGainedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new ResourceGainedNewCurrentAmount()));
@@ -85,7 +85,7 @@ public class ResourceGainedEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.resource_gained_recipe_self_reentry"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
 
         registry.RegisterTriggeredEffectDefinition(definition);
 
@@ -125,7 +125,7 @@ public class ResourceGainedEffectRecipeMigrationTests
             new ExactResourceGainedAmountFilter(
                 expectedAmount: 2));
 
-        gainAgain.Effects.Add(
+        gainAgain.Steps.Add(
             new GainSameResourceRecipe(
                 FuryResourceId,
                 amount: 1));
@@ -138,7 +138,7 @@ public class ResourceGainedEffectRecipeMigrationTests
             new ExactResourceGainedAmountFilter(
                 expectedAmount: 1));
 
-        followUpBlock.Effects.Add(
+        followUpBlock.Steps.Add(
             new GainBlockEffectRecipe<ResourceGainedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedResourceGainedTriggeredEffectAmount(4)));
@@ -179,22 +179,22 @@ public class ResourceGainedEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.resource_gained_recipe_execution_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingResourceGainedAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingResourceGainedAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingResourceGainedRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingResourceGainedRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -230,7 +230,7 @@ public class ResourceGainedEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.resource_gained_recipe_attribution"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
 
         registry.RegisterTriggeredEffectDefinition(definition);
 
@@ -292,7 +292,7 @@ public class ResourceGainedEffectRecipeMigrationTests
             "public sealed class ResourceGainedTriggeredEffectHandler");
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<ResourceGainedTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<ResourceGainedTriggeredEffectContext>> Steps",
             definitionSource);
 
         Assert.Contains(
@@ -327,16 +327,11 @@ public class ResourceGainedEffectRecipeMigrationTests
             "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
             handlerSource);
 
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
-            StringComparison.Ordinal);
-
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",

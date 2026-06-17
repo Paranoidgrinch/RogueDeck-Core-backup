@@ -82,7 +82,7 @@ public class CombatEffectChainDepthLimitTests
 
             definition.Filters.Add(filter);
 
-            definition.Effects.Add(
+            definition.Steps.Add(
                 new DelegateRoundStartedRecipe(
                     (context, buildContext) =>
                     {
@@ -157,7 +157,7 @@ public class CombatEffectChainDepthLimitTests
             new TriggeredEffectDefinitionId(
                 "test.default_recursive_suppression_at_limit"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new DelegateRoundStartedRecipe(
                 (context, buildContext) =>
                     new IEffectRequest[]

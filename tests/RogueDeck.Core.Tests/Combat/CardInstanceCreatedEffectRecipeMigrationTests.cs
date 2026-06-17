@@ -17,12 +17,12 @@ public class CardInstanceCreatedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.card_instance_created_recipe_amounts"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardInstanceCreatedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCardInstanceCreatedTriggeredEffectAmount(2)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardInstanceCreatedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new CardInstanceCreatedCount()));
@@ -119,22 +119,22 @@ public class CardInstanceCreatedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.card_instance_created_recipe_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingCardInstanceCreatedAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingCardInstanceCreatedAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingCardInstanceCreatedRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingCardInstanceCreatedRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -172,12 +172,12 @@ public class CardInstanceCreatedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.card_instance_created_definition_order_first"));
 
-        firstDefinition.Actions.Add(
+        firstDefinition.Steps.Add(
             new RecordingCardInstanceCreatedAction(
                 executionOrder,
                 "first-legacy"));
 
-        firstDefinition.Effects.Add(
+        firstDefinition.Steps.Add(
             new RecordingCardInstanceCreatedRecipe(
                 executionOrder,
                 "first-recipe"));
@@ -187,12 +187,12 @@ public class CardInstanceCreatedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.card_instance_created_definition_order_second"));
 
-        secondDefinition.Actions.Add(
+        secondDefinition.Steps.Add(
             new RecordingCardInstanceCreatedAction(
                 executionOrder,
                 "second-legacy"));
 
-        secondDefinition.Effects.Add(
+        secondDefinition.Steps.Add(
             new RecordingCardInstanceCreatedRecipe(
                 executionOrder,
                 "second-recipe"));
@@ -231,7 +231,7 @@ public class CardInstanceCreatedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.card_instance_created_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         CreateCardInstances(
@@ -284,7 +284,7 @@ public class CardInstanceCreatedEffectRecipeMigrationTests
             new CardInstanceCreatedCardDefinitionTriggerFilter(
                 StandardCombatIds.StrikeCard));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         CreateCardInstances(
@@ -325,7 +325,7 @@ public class CardInstanceCreatedEffectRecipeMigrationTests
             new CardInstanceCreatedCardDefinitionTriggerFilter(
                 StandardCombatIds.StrikeCard));
 
-        creatingDefinition.Effects.Add(creatingRecipe);
+        creatingDefinition.Steps.Add(creatingRecipe);
 
         var observingDefinition = CreateBlockDefinition(
             "test.card_instance_created_chain_observe",
@@ -372,7 +372,7 @@ public class CardInstanceCreatedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.card_instance_created_recipe_heal"));
 
-        createdDefinition.Effects.Add(
+        createdDefinition.Steps.Add(
             new HealEffectRecipe<CardInstanceCreatedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCardInstanceCreatedTriggeredEffectAmount(2)));
@@ -382,7 +382,7 @@ public class CardInstanceCreatedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.card_instance_created_healed_follow_up"));
 
-        healedDefinition.Actions.Add(
+        healedDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -423,7 +423,7 @@ public class CardInstanceCreatedEffectRecipeMigrationTests
             new CardInstanceCreatedToZoneTriggerFilter(
                 CardZone.Hand));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         var createdCardId = new CardInstanceId(
@@ -463,7 +463,7 @@ public class CardInstanceCreatedEffectRecipeMigrationTests
             new CardInstanceCreatedTriggeredEffectDefinition(
                 new TriggeredEffectDefinitionId(id));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardInstanceCreatedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCardInstanceCreatedTriggeredEffectAmount(amount)));

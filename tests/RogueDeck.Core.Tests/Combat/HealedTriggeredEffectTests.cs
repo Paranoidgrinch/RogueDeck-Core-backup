@@ -30,7 +30,7 @@ public class HealedTriggeredEffectTests
         var definition = new HealedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.healed_gain_block"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -55,7 +55,7 @@ public class HealedTriggeredEffectTests
         var definition = new HealedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.healed_amount"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new HealedAmount()));
@@ -81,7 +81,7 @@ public class HealedTriggeredEffectTests
             new TriggeredEffectDefinitionId("test.healed_source_card_matching"));
 
         matching.Filters.Add(new HealedSourceCardTriggerFilter(HealCardId));
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(2)));
@@ -90,7 +90,7 @@ public class HealedTriggeredEffectTests
             new TriggeredEffectDefinitionId("test.healed_source_card_non_matching"));
 
         nonMatching.Filters.Add(new HealedSourceCardTriggerFilter(OtherCardId));
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(5)));
@@ -124,7 +124,7 @@ public class HealedTriggeredEffectTests
         definition.Filters.Add(
             new HealedMinimumAmountTriggerFilter(MinimumHealedAmount: 5));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -151,7 +151,7 @@ public class HealedTriggeredEffectTests
 
         definition.Filters.Add(new HealedSourceCombatantTriggerFilter(GoblinId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -181,7 +181,7 @@ public class HealedTriggeredEffectTests
             new TriggeredEffectDefinitionId("test.healed_missing_source"));
 
         sourceDefinition.Filters.Add(new HealedHasSourceTriggerFilter());
-        sourceDefinition.Actions.Add(
+        sourceDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -190,7 +190,7 @@ public class HealedTriggeredEffectTests
             new TriggeredEffectDefinitionId("test.healed_missing_source_card"));
 
         cardDefinition.Filters.Add(new HealedSourceCardTriggerFilter(HealCardId));
-        cardDefinition.Actions.Add(
+        cardDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(5)));
@@ -216,7 +216,7 @@ public class HealedTriggeredEffectTests
         var definition = new HealedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.healed_requested_amount"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new HealedRequestedAmount()));

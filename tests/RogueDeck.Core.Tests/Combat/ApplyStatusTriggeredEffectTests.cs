@@ -28,7 +28,7 @@ public class ApplyStatusTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.PlayedCardTarget,
                 statusId,
@@ -74,7 +74,7 @@ public class ApplyStatusTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 statusId,
@@ -132,7 +132,7 @@ public class ApplyStatusTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedSourceHasStatusTriggerFilter(counterStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.PlayedCardTarget,
                 appliedStatusId,
@@ -185,7 +185,7 @@ public class ApplyStatusTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.PlayedCardTarget,
                 statusId,
@@ -231,7 +231,7 @@ public class ApplyStatusTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.PlayedCardTarget,
                 statusId,
@@ -274,7 +274,7 @@ public class ApplyStatusTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.PlayedCardTarget,
                 statusId,

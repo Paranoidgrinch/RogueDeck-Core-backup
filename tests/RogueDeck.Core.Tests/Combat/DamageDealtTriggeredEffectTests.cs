@@ -28,7 +28,7 @@ public class DamageDealtTriggeredEffectTests
 
         definition.Filters.Add(new DamageDealtHasSourceTriggerFilter());
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDamageDealtTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new DamageDealtHealthDamageAmount()));
@@ -59,7 +59,7 @@ public class DamageDealtTriggeredEffectTests
         var definition = new DamageDealtTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.damage_dealt_apply_status"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnDamageDealtTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 statusId,
@@ -104,7 +104,7 @@ public class DamageDealtTriggeredEffectTests
 
         definition.Filters.Add(new DamageDealtSourceHasStatusTriggerFilter(sourceStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDamageDealtTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new DamageDealtSourceStatusStacksAmount(sourceStatusId)));
@@ -135,7 +135,7 @@ public class DamageDealtTriggeredEffectTests
         definition.Filters.Add(
             new DamageDealtMinimumHealthDamageTriggerFilter(MinimumHealthDamage: 5));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDamageDealtTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedDamageDealtTriggeredEffectAmount(3)));
@@ -166,7 +166,7 @@ public class DamageDealtTriggeredEffectTests
         definition.Filters.Add(
             new DamageDealtDamageKindTriggerFilter(DamageKind.Direct));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDamageDealtTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedDamageDealtTriggeredEffectAmount(3)));

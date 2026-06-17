@@ -8,9 +8,7 @@ public sealed class CombatantDownedTriggeredEffectDefinition : ITriggeredEffectD
 
     public List<ICombatantDownedTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<ICombatantDownedTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<CombatantDownedTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<CombatantDownedTriggeredEffectContext>> Steps { get; } = new();
 
     public CombatantDownedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -30,8 +28,14 @@ public interface ICombatantDownedTriggeredEffectFilter
 }
 
 public interface ICombatantDownedTriggeredEffectAction
+    : ICombatEffectRecipe<CombatantDownedTriggeredEffectContext>
 {
     IReadOnlyCollection<IEffectRequest> BuildEffectRequests(CombatantDownedTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<CombatantDownedTriggeredEffectContext>.BuildEffectRequests(
+        CombatantDownedTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface ICombatantDownedTriggeredEffectAmountProvider
@@ -194,11 +198,7 @@ public sealed class CombatantDownedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }

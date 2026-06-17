@@ -20,12 +20,12 @@ public class CardLifecycleEffectRecipeMigrationTests
         var definition = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_recipe_amounts"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardsDrawnTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedCardsDrawnTriggeredEffectAmount(2)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardsDrawnTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new CardsDrawnCardCountAmount()));
@@ -78,7 +78,7 @@ public class CardLifecycleEffectRecipeMigrationTests
         var definition = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         combat.EnqueueEffect(new DrawCardsEffectRequest(HeroId, Count: 1));
@@ -107,10 +107,10 @@ public class CardLifecycleEffectRecipeMigrationTests
         var definition = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_recipe_order"));
 
-        definition.Actions.Add(new RecordingCardsDrawnAction(executionOrder, "legacy-a"));
-        definition.Actions.Add(new RecordingCardsDrawnAction(executionOrder, "legacy-b"));
-        definition.Effects.Add(new RecordingCardsDrawnRecipe(executionOrder, "recipe-a"));
-        definition.Effects.Add(new RecordingCardsDrawnRecipe(executionOrder, "recipe-b"));
+        definition.Steps.Add(new RecordingCardsDrawnAction(executionOrder, "legacy-a"));
+        definition.Steps.Add(new RecordingCardsDrawnAction(executionOrder, "legacy-b"));
+        definition.Steps.Add(new RecordingCardsDrawnRecipe(executionOrder, "recipe-a"));
+        definition.Steps.Add(new RecordingCardsDrawnRecipe(executionOrder, "recipe-b"));
 
         registry.RegisterTriggeredEffectDefinition(definition);
 
@@ -133,13 +133,13 @@ public class CardLifecycleEffectRecipeMigrationTests
 
         var firstDefinition = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_definition_order_first"));
-        firstDefinition.Actions.Add(new RecordingCardsDrawnAction(executionOrder, "first-legacy"));
-        firstDefinition.Effects.Add(new RecordingCardsDrawnRecipe(executionOrder, "first-recipe"));
+        firstDefinition.Steps.Add(new RecordingCardsDrawnAction(executionOrder, "first-legacy"));
+        firstDefinition.Steps.Add(new RecordingCardsDrawnRecipe(executionOrder, "first-recipe"));
 
         var secondDefinition = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_definition_order_second"));
-        secondDefinition.Actions.Add(new RecordingCardsDrawnAction(executionOrder, "second-legacy"));
-        secondDefinition.Effects.Add(new RecordingCardsDrawnRecipe(executionOrder, "second-recipe"));
+        secondDefinition.Steps.Add(new RecordingCardsDrawnAction(executionOrder, "second-legacy"));
+        secondDefinition.Steps.Add(new RecordingCardsDrawnRecipe(executionOrder, "second-recipe"));
 
         registry.RegisterTriggeredEffectDefinition(firstDefinition);
         registry.RegisterTriggeredEffectDefinition(secondDefinition);
@@ -165,7 +165,7 @@ public class CardLifecycleEffectRecipeMigrationTests
         var drawnDefinition = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_recipe_heal"));
 
-        drawnDefinition.Effects.Add(
+        drawnDefinition.Steps.Add(
             new HealEffectRecipe<CardsDrawnTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedCardsDrawnTriggeredEffectAmount(2)));
@@ -173,7 +173,7 @@ public class CardLifecycleEffectRecipeMigrationTests
         var healedDefinition = new HealedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_healed_follow_up"));
 
-        healedDefinition.Actions.Add(
+        healedDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -202,12 +202,12 @@ public class CardLifecycleEffectRecipeMigrationTests
         var definition = new DiscardPileShuffledTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.discard_shuffled_recipe_amounts"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<DiscardPileShuffledTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedDiscardPileShuffledTriggeredEffectAmount(2)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<DiscardPileShuffledTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new DiscardPileShuffledCardCountAmount()));
@@ -255,7 +255,7 @@ public class CardLifecycleEffectRecipeMigrationTests
         var definition = new DiscardPileShuffledTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.discard_shuffled_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         combat.EnqueueEffect(new DrawCardsEffectRequest(HeroId, Count: 1));
@@ -279,12 +279,12 @@ public class CardLifecycleEffectRecipeMigrationTests
         var definition = new DiscardPileShuffledTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.discard_shuffled_event_target_agreement"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedDiscardPileShuffledTriggeredEffectAmount(3)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<DiscardPileShuffledTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedDiscardPileShuffledTriggeredEffectAmount(5)));
@@ -312,12 +312,12 @@ public class CardLifecycleEffectRecipeMigrationTests
         var definition = new HandDiscardedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.hand_discarded_recipe_amounts"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<HandDiscardedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedHandDiscardedTriggeredEffectAmount(2)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<HandDiscardedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new HandDiscardedCardCountAmount()));
@@ -365,7 +365,7 @@ public class CardLifecycleEffectRecipeMigrationTests
         var definition = new HandDiscardedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.hand_discarded_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         combat.EnqueueEffect(new DiscardHandEffectRequest(HeroId));
@@ -391,12 +391,12 @@ public class CardLifecycleEffectRecipeMigrationTests
         var definition = new CardExhaustedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_exhausted_recipe_amounts"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardExhaustedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedCardExhaustedTriggeredEffectAmount(2)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardExhaustedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new CardExhaustedCardCountAmount()));
@@ -442,7 +442,7 @@ public class CardLifecycleEffectRecipeMigrationTests
         var definition = new CardExhaustedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_exhausted_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         combat.EnqueueEffect(new MoveCardToZoneEffectRequest(HeroId, card.Id, CardZone.ExhaustPile));
@@ -489,12 +489,12 @@ public class CardLifecycleEffectRecipeMigrationTests
         var definition = new CardBanishedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_banished_recipe_amounts"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardBanishedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedCardBanishedTriggeredEffectAmount(2)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardBanishedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new CardBanishedCardCountAmount()));
@@ -540,7 +540,7 @@ public class CardLifecycleEffectRecipeMigrationTests
         var definition = new CardBanishedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_banished_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         combat.EnqueueEffect(new MoveCardToZoneEffectRequest(HeroId, card.Id, CardZone.BanishedPile));
@@ -559,7 +559,7 @@ public class CardLifecycleEffectRecipeMigrationTests
     {
         var definition = new CardsDrawnTriggeredEffectDefinition(new TriggeredEffectDefinitionId(id));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardsDrawnTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedCardsDrawnTriggeredEffectAmount(amount)));
@@ -571,7 +571,7 @@ public class CardLifecycleEffectRecipeMigrationTests
     {
         var definition = new DiscardPileShuffledTriggeredEffectDefinition(new TriggeredEffectDefinitionId(id));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<DiscardPileShuffledTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedDiscardPileShuffledTriggeredEffectAmount(amount)));
@@ -583,7 +583,7 @@ public class CardLifecycleEffectRecipeMigrationTests
     {
         var definition = new HandDiscardedTriggeredEffectDefinition(new TriggeredEffectDefinitionId(id));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<HandDiscardedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedHandDiscardedTriggeredEffectAmount(amount)));
@@ -595,7 +595,7 @@ public class CardLifecycleEffectRecipeMigrationTests
     {
         var definition = new CardExhaustedTriggeredEffectDefinition(new TriggeredEffectDefinitionId(id));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardExhaustedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedCardExhaustedTriggeredEffectAmount(amount)));
@@ -607,7 +607,7 @@ public class CardLifecycleEffectRecipeMigrationTests
     {
         var definition = new CardBanishedTriggeredEffectDefinition(new TriggeredEffectDefinitionId(id));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardBanishedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedCardBanishedTriggeredEffectAmount(amount)));

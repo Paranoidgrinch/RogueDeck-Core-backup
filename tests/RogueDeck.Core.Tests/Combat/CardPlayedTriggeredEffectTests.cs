@@ -25,7 +25,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new FixedCardPlayedTriggeredEffectAmount(2)));
@@ -65,7 +65,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new FixedCardPlayedTriggeredEffectAmount(2)));
@@ -102,7 +102,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new FixedCardPlayedTriggeredEffectAmount(0)));
@@ -160,7 +160,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedSourceHasStatusTriggerFilter(stackStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new CardPlayedSourceStatusStacksAmount(stackStatusId)));
@@ -205,7 +205,7 @@ public class CardPlayedTriggeredEffectTests
                 StandardCombatIds.SkillCardTag,
                 interval: 3));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new FixedCardPlayedTriggeredEffectAmount(2)));
@@ -249,7 +249,7 @@ public class CardPlayedTriggeredEffectTests
                 StandardCombatIds.SkillCardTag,
                 interval: 3));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new FixedCardPlayedTriggeredEffectAmount(2)));
@@ -315,7 +315,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DrawCardsOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new FixedCardPlayedTriggeredEffectAmount(1)));
@@ -371,7 +371,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedSourceHasStatusTriggerFilter(stackStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DrawCardsOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new CardPlayedSourceStatusStacksAmount(stackStatusId)));
@@ -413,7 +413,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DrawCardsOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new FixedCardPlayedTriggeredEffectAmount(0)));
@@ -520,7 +520,7 @@ public class CardPlayedTriggeredEffectTests
                 StandardCombatIds.SkillCardTag,
                 interval: 3));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DrawCardsOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new CardPlayedSourceStatusStacksAmount(comboStatusId)));
@@ -596,7 +596,7 @@ public class CardPlayedTriggeredEffectTests
                 StandardCombatIds.SkillCardTag,
                 interval: 3));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DrawCardsOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new CardPlayedSourceStatusStacksAmount(comboStatusId)));
@@ -654,7 +654,7 @@ public class CardPlayedTriggeredEffectTests
                 StandardCombatIds.SkillCardTag,
                 interval: 3));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DrawCardsOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new CardPlayedSourceStatusStacksAmount(comboStatusId)));
@@ -709,7 +709,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedSourceHasStatusTriggerFilter(rageLikeStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new CardPlayedSourceStatusStacksAmount(rageLikeStatusId)));
@@ -760,7 +760,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedSourceHasStatusTriggerFilter(rageLikeStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new CardPlayedSourceStatusStacksAmount(rageLikeStatusId)));
@@ -801,7 +801,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedSourceHasStatusTriggerFilter(rageLikeStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new CardPlayedSourceStatusStacksAmount(rageLikeStatusId)));
@@ -836,7 +836,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new FixedCardPlayedTriggeredEffectAmount(2)));
@@ -914,7 +914,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.PlayedCardTarget,
                 new FixedCardPlayedTriggeredEffectAmount(3)));
@@ -966,7 +966,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedSourceHasStatusTriggerFilter(damageStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.PlayedCardTarget,
                 new CardPlayedSourceStatusStacksAmount(damageStatusId)));
@@ -1005,7 +1005,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.PlayedCardTarget,
                 new FixedCardPlayedTriggeredEffectAmount(3)));
@@ -1040,7 +1040,7 @@ public class CardPlayedTriggeredEffectTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.PlayedCardTarget,
                 new FixedCardPlayedTriggeredEffectAmount(0)));

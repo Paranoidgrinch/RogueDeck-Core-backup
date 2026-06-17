@@ -35,23 +35,23 @@ public class StatusRemovedEffectRecipeMigrationTests
             new StatusRemovedStatusDefinitionTriggerFilter(
                 StandardCombatIds.WeakStatus));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<StatusRemovedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusRemovedTriggeredEffectAmount(2)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<StatusRemovedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new StatusRemovedCountAmount()));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<StatusRemovedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new StatusRemovedTargetStatusStacksAmount(
                     StandardCombatIds.RageStatus)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<StatusRemovedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new StatusRemovedSourceStatusStacksAmount(
@@ -172,22 +172,22 @@ public class StatusRemovedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_removed_recipe_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingStatusRemovedAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingStatusRemovedAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingStatusRemovedRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingStatusRemovedRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -236,7 +236,7 @@ public class StatusRemovedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_removed_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         RemoveStatus(
@@ -279,7 +279,7 @@ public class StatusRemovedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_removed_source_fallback"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<StatusRemovedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedStatusRemovedTriggeredEffectAmount(4)));
@@ -321,7 +321,7 @@ public class StatusRemovedEffectRecipeMigrationTests
             new StatusRemovedStatusDefinitionTriggerFilter(
                 StandardCombatIds.WeakStatus));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         RemoveStatus(
@@ -369,7 +369,7 @@ public class StatusRemovedEffectRecipeMigrationTests
             new StatusRemovedStatusDefinitionTriggerFilter(
                 StandardCombatIds.WeakStatus));
 
-        recursiveDefinition.Effects.Add(recursiveRecipe);
+        recursiveDefinition.Steps.Add(recursiveRecipe);
 
         var observingDefinition =
             new StatusRemovedTriggeredEffectDefinition(
@@ -380,7 +380,7 @@ public class StatusRemovedEffectRecipeMigrationTests
             new StatusRemovedStatusDefinitionTriggerFilter(
                 StandardCombatIds.VulnerableStatus));
 
-        observingDefinition.Effects.Add(
+        observingDefinition.Steps.Add(
             new GainBlockEffectRecipe<StatusRemovedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusRemovedTriggeredEffectAmount(4)));
@@ -432,7 +432,7 @@ public class StatusRemovedEffectRecipeMigrationTests
             new StatusRemovedStatusDefinitionTriggerFilter(
                 StandardCombatIds.WeakStatus));
 
-        removedDefinition.Effects.Add(
+        removedDefinition.Steps.Add(
             new HealEffectRecipe<StatusRemovedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusRemovedTriggeredEffectAmount(2)));
@@ -442,7 +442,7 @@ public class StatusRemovedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_removed_healed_follow_up"));
 
-        healedDefinition.Actions.Add(
+        healedDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -465,6 +465,59 @@ public class StatusRemovedEffectRecipeMigrationTests
             GetBlockOrZero(combat, HeroId));
     }
 
+    [Fact]
+    public void StepsAllowArbitraryInterleavingOfActionsAndRecipes()
+    {
+        var registry = CombatTestFactory.CreateStandardRegistry();
+        var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
+        var executionOrder = new List<string>();
+
+        ApplyStatus(
+            combat,
+            registry,
+            HeroId,
+            StandardCombatIds.WeakStatus,
+            durationTurns: 2);
+
+        var definition =
+            new StatusRemovedTriggeredEffectDefinition(
+                new TriggeredEffectDefinitionId(
+                    "test.status_removed_steps_interleaving"));
+
+        // Interleaved order: recipe first, then legacy action, then recipe again
+        definition.Steps.Add(
+            new RecordingStatusRemovedRecipe(
+                executionOrder,
+                "recipe-first"));
+
+        definition.Steps.Add(
+            new RecordingStatusRemovedAction(
+                executionOrder,
+                "action-middle"));
+
+        definition.Steps.Add(
+            new RecordingStatusRemovedRecipe(
+                executionOrder,
+                "recipe-last"));
+
+        registry.RegisterTriggeredEffectDefinition(definition);
+
+        RemoveStatus(
+            combat,
+            registry,
+            HeroId,
+            StandardCombatIds.WeakStatus);
+
+        Assert.Equal(
+            new[]
+            {
+                "recipe-first",
+                "action-middle",
+                "recipe-last"
+            },
+            executionOrder);
+    }
+
     private static StatusRemovedTriggeredEffectDefinition
         CreateBlockDefinition(
             string id,
@@ -474,7 +527,7 @@ public class StatusRemovedEffectRecipeMigrationTests
             new StatusRemovedTriggeredEffectDefinition(
                 new TriggeredEffectDefinitionId(id));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<StatusRemovedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusRemovedTriggeredEffectAmount(amount)));

@@ -28,7 +28,7 @@ public class TurnEndedTriggeredEffectTests
         var definition = new TurnEndedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.turn_end_damage_all_enemies"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnTurnEndedTriggeredEffectAction(
                 TurnEndedTriggeredEffectTarget.AllEnemies,
                 new FixedTurnEndedTriggeredEffectAmount(3)));
@@ -69,7 +69,7 @@ public class TurnEndedTriggeredEffectTests
         var definition = new TurnEndedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.turn_end_apply_status_to_all_allies"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnTurnEndedTriggeredEffectAction(
                 TurnEndedTriggeredEffectTarget.AllAllies,
                 statusId,
@@ -123,7 +123,7 @@ public class TurnEndedTriggeredEffectTests
         definition.Filters.Add(
             new TurnEndedCombatantHasStatusTriggerFilter(counterStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnTurnEndedTriggeredEffectAction(
                 TurnEndedTriggeredEffectTarget.AllEnemies,
                 new TurnEndedCombatantStatusStacksAmount(counterStatusId)));
@@ -165,7 +165,7 @@ public class TurnEndedTriggeredEffectTests
         definition.Filters.Add(
             new TurnEndedCombatantHasStatusTriggerFilter(requiredStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnTurnEndedTriggeredEffectAction(
                 TurnEndedTriggeredEffectTarget.AllEnemies,
                 new FixedTurnEndedTriggeredEffectAmount(3)));
@@ -209,7 +209,7 @@ public class TurnEndedTriggeredEffectTests
         definition.Filters.Add(
             new TurnEndedCombatantHasStatusTriggerFilter(requiredStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnTurnEndedTriggeredEffectAction(
                 TurnEndedTriggeredEffectTarget.TurnCombatant,
                 new FixedTurnEndedTriggeredEffectAmount(3)));
@@ -241,7 +241,7 @@ public class TurnEndedTriggeredEffectTests
         var definition = new TurnEndedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.turn_end_zero_damage"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnTurnEndedTriggeredEffectAction(
                 TurnEndedTriggeredEffectTarget.AllEnemies,
                 new FixedTurnEndedTriggeredEffectAmount(0)));
@@ -274,7 +274,7 @@ public class TurnEndedTriggeredEffectTests
         var definition = new TurnEndedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.turn_end_heal_turn_combatant"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new HealOnTurnEndedTriggeredEffectAction(
                 TurnEndedTriggeredEffectTarget.TurnCombatant,
                 new FixedTurnEndedTriggeredEffectAmount(3)));
@@ -313,7 +313,7 @@ public class TurnEndedTriggeredEffectTests
         var definition = new TurnEndedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.turn_end_heal_all_allies"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new HealOnTurnEndedTriggeredEffectAction(
                 TurnEndedTriggeredEffectTarget.AllAllies,
                 new FixedTurnEndedTriggeredEffectAmount(2)));

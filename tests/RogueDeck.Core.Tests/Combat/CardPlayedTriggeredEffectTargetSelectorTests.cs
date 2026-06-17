@@ -27,7 +27,7 @@ public class CardPlayedTriggeredEffectTargetSelectorTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.AllEnemies,
                 new FixedCardPlayedTriggeredEffectAmount(3)));
@@ -76,7 +76,7 @@ public class CardPlayedTriggeredEffectTargetSelectorTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.AllEnemies,
                 statusId,
@@ -125,7 +125,7 @@ public class CardPlayedTriggeredEffectTargetSelectorTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.AllAllies,
                 new FixedCardPlayedTriggeredEffectAmount(2)));
@@ -170,7 +170,7 @@ public class CardPlayedTriggeredEffectTargetSelectorTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.PlayedCardTarget,
                 new FixedCardPlayedTriggeredEffectAmount(3)));

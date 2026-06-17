@@ -36,7 +36,7 @@ public class CombatantDownedTriggeredEffectTests
         definition.Filters.Add(
             new CombatantDownedTeamTriggerFilter(StandardCombatIds.EnemyTeam));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCombatantDownedTriggeredEffectAction(
                 CombatantTargetSelectors.AllEnemiesOfSource,
                 new FixedCombatantDownedTriggeredEffectAmount(4)));
@@ -64,7 +64,7 @@ public class CombatantDownedTriggeredEffectTests
         var definition = new CombatantDownedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.combatant_downed_not_removed"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCombatantDownedTriggeredEffectAction(
                 CombatantTargetSelectors.AllEnemiesOfSource,
                 new FixedCombatantDownedTriggeredEffectAmount(7)));
@@ -94,7 +94,7 @@ public class CombatantDownedTriggeredEffectTests
         matching.Filters.Add(
             new CombatantDownedCombatantIdTriggerFilter(GoblinId));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnCombatantDownedTriggeredEffectAction(
                 CombatantTargetSelectors.AllEnemiesOfSource,
                 new FixedCombatantDownedTriggeredEffectAmount(2)));
@@ -105,7 +105,7 @@ public class CombatantDownedTriggeredEffectTests
         nonMatching.Filters.Add(
             new CombatantDownedCombatantIdTriggerFilter(HeroId));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnCombatantDownedTriggeredEffectAction(
                 CombatantTargetSelectors.AllEnemiesOfSource,
                 new FixedCombatantDownedTriggeredEffectAmount(9)));
@@ -132,7 +132,7 @@ public class CombatantDownedTriggeredEffectTests
         matching.Filters.Add(
             new CombatantDownedOldStateTriggerFilter(CombatantLifecycleState.Alive));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnCombatantDownedTriggeredEffectAction(
                 CombatantTargetSelectors.AllEnemiesOfSource,
                 new FixedCombatantDownedTriggeredEffectAmount(3)));
@@ -143,7 +143,7 @@ public class CombatantDownedTriggeredEffectTests
         nonMatching.Filters.Add(
             new CombatantDownedOldStateTriggerFilter(CombatantLifecycleState.Dead));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnCombatantDownedTriggeredEffectAction(
                 CombatantTargetSelectors.AllEnemiesOfSource,
                 new FixedCombatantDownedTriggeredEffectAmount(8)));
@@ -167,7 +167,7 @@ public class CombatantDownedTriggeredEffectTests
         var definition = new CombatantDownedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.combatant_downed_all_alive"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCombatantDownedTriggeredEffectAction(
                 CombatantTargetSelectors.AllAliveCombatants,
                 new FixedCombatantDownedTriggeredEffectAmount(5)));

@@ -23,7 +23,7 @@ public class HealedEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.healed_recipe_actual_amount"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<HealedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new HealedAmount()));
@@ -55,7 +55,7 @@ public class HealedEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.healed_recipe_requested_amount"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<HealedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new HealedRequestedAmount()));
@@ -88,7 +88,7 @@ public class HealedEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.healed_recipe_self_reentry"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new HealEffectRecipe<HealedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(1)));
@@ -128,7 +128,7 @@ public class HealedEffectRecipeMigrationTests
         followUpHeal.Filters.Add(
             new ExactHealedAmountFilter(2));
 
-        followUpHeal.Effects.Add(
+        followUpHeal.Steps.Add(
             new HealEffectRecipe<HealedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(1)));
@@ -140,7 +140,7 @@ public class HealedEffectRecipeMigrationTests
         followUpBlock.Filters.Add(
             new ExactHealedAmountFilter(1));
 
-        followUpBlock.Effects.Add(
+        followUpBlock.Steps.Add(
             new GainBlockEffectRecipe<HealedTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(4)));
@@ -182,22 +182,22 @@ public class HealedEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.healed_recipe_execution_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingHealedAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingHealedAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingHealedRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingHealedRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -236,7 +236,7 @@ public class HealedEffectRecipeMigrationTests
             new TriggeredEffectDefinitionId(
                 "test.healed_recipe_attribution"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
 
         registry.RegisterTriggeredEffectDefinition(definition);
 
@@ -296,7 +296,7 @@ public class HealedEffectRecipeMigrationTests
             "public sealed class HealedTriggeredEffectHandler");
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<HealedTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<HealedTriggeredEffectContext>> Steps",
             definitionSource);
 
         Assert.Contains(
@@ -331,16 +331,11 @@ public class HealedEffectRecipeMigrationTests
             "HealedTriggeredEffectTargetResolver.CreateActionBuildContext(context)",
             handlerSource);
 
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
-            StringComparison.Ordinal);
-
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
 
         Assert.DoesNotContain(
             "combat.EnqueueEffect",

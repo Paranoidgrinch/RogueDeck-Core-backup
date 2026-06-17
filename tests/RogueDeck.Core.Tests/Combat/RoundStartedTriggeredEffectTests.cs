@@ -27,7 +27,7 @@ public class RoundStartedTriggeredEffectTests
         var definition = new RoundStartedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.round_started_gain_block"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnRoundStartedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundStartedTriggeredEffectAmount(4)));
@@ -60,7 +60,7 @@ public class RoundStartedTriggeredEffectTests
         matching.Filters.Add(
             new RoundStartedMinimumRoundTriggerFilter(MinimumRound: 2));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnRoundStartedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundStartedTriggeredEffectAmount(2)));
@@ -71,7 +71,7 @@ public class RoundStartedTriggeredEffectTests
         nonMatching.Filters.Add(
             new RoundStartedMinimumRoundTriggerFilter(MinimumRound: 3));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnRoundStartedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundStartedTriggeredEffectAmount(7)));
@@ -98,7 +98,7 @@ public class RoundStartedTriggeredEffectTests
         matching.Filters.Add(
             new RoundStartedEveryNthRoundTriggerFilter(Interval: 2));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnRoundStartedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundStartedTriggeredEffectAmount(3)));
@@ -109,7 +109,7 @@ public class RoundStartedTriggeredEffectTests
         nonMatching.Filters.Add(
             new RoundStartedEveryNthRoundTriggerFilter(Interval: 3));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnRoundStartedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundStartedTriggeredEffectAmount(8)));
@@ -133,7 +133,7 @@ public class RoundStartedTriggeredEffectTests
         var definition = new RoundStartedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.round_started_current_round_amount"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnRoundStartedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new RoundStartedCurrentRoundAmount()));
@@ -156,7 +156,7 @@ public class RoundStartedTriggeredEffectTests
         var definition = new RoundStartedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.round_started_all_alive"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnRoundStartedTriggeredEffectAction(
                 CombatantTargetSelectors.AllAliveCombatants,
                 new FixedRoundStartedTriggeredEffectAmount(5)));
@@ -198,7 +198,7 @@ public class RoundStartedTriggeredEffectTests
         var definition = new RoundStartedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.round_started_heal_active"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new HealOnRoundStartedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundStartedTriggeredEffectAmount(3)));
@@ -236,7 +236,7 @@ public class RoundStartedTriggeredEffectTests
         var definition = new RoundStartedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.round_started_heal_all_alive"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new HealOnRoundStartedTriggeredEffectAction(
                 CombatantTargetSelectors.AllAliveCombatants,
                 new FixedRoundStartedTriggeredEffectAmount(2)));

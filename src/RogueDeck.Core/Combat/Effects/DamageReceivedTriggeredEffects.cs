@@ -8,9 +8,7 @@ public sealed class DamageReceivedTriggeredEffectDefinition : ITriggeredEffectDe
 
     public List<IDamageReceivedTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<IDamageReceivedTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<DamageReceivedTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<DamageReceivedTriggeredEffectContext>> Steps { get; } = new();
 
     public DamageReceivedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -31,8 +29,14 @@ public interface IDamageReceivedTriggeredEffectFilter
 }
 
 public interface IDamageReceivedTriggeredEffectAction
+    : ICombatEffectRecipe<DamageReceivedTriggeredEffectContext>
 {
     IReadOnlyCollection<IEffectRequest> BuildEffectRequests(DamageReceivedTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<DamageReceivedTriggeredEffectContext>.BuildEffectRequests(
+        DamageReceivedTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface IDamageReceivedTriggeredEffectAmountProvider
@@ -422,11 +426,7 @@ public sealed class DamageReceivedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }

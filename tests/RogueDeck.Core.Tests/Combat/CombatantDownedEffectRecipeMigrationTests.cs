@@ -22,7 +22,7 @@ public class CombatantDownedEffectRecipeMigrationTests
         definition.Filters.Add(
             new CombatantDownedTeamTriggerFilter(StandardCombatIds.EnemyTeam));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CombatantDownedTriggeredEffectContext>(
                 CombatantTargetSelectors.AllEnemiesOfSource,
                 new FixedCombatantDownedTriggeredEffectAmount(4)));
@@ -91,22 +91,22 @@ public class CombatantDownedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.combatant_downed_recipe_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingCombatantDownedAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingCombatantDownedAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingCombatantDownedRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingCombatantDownedRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -138,12 +138,12 @@ public class CombatantDownedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.combatant_downed_definition_order_first"));
 
-        firstDefinition.Actions.Add(
+        firstDefinition.Steps.Add(
             new RecordingCombatantDownedAction(
                 executionOrder,
                 "first-legacy"));
 
-        firstDefinition.Effects.Add(
+        firstDefinition.Steps.Add(
             new RecordingCombatantDownedRecipe(
                 executionOrder,
                 "first-recipe"));
@@ -153,12 +153,12 @@ public class CombatantDownedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.combatant_downed_definition_order_second"));
 
-        secondDefinition.Actions.Add(
+        secondDefinition.Steps.Add(
             new RecordingCombatantDownedAction(
                 executionOrder,
                 "second-legacy"));
 
-        secondDefinition.Effects.Add(
+        secondDefinition.Steps.Add(
             new RecordingCombatantDownedRecipe(
                 executionOrder,
                 "second-recipe"));
@@ -191,7 +191,7 @@ public class CombatantDownedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.combatant_downed_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         DownGoblinWithDamage(combat, registry);
@@ -229,7 +229,7 @@ public class CombatantDownedEffectRecipeMigrationTests
         definition.Filters.Add(
             new CombatantDownedTeamTriggerFilter(StandardCombatIds.EnemyTeam));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         DownGoblinWithDamage(combat, registry);
@@ -261,7 +261,7 @@ public class CombatantDownedEffectRecipeMigrationTests
         killingDefinition.Filters.Add(
             new CombatantDownedCombatantIdTriggerFilter(GoblinId));
 
-        killingDefinition.Effects.Add(killingRecipe);
+        killingDefinition.Steps.Add(killingRecipe);
 
         var observingDefinition = CreateBlockDefinition(
             "test.combatant_downed_chain_observe",
@@ -304,7 +304,7 @@ public class CombatantDownedEffectRecipeMigrationTests
         downedDefinition.Filters.Add(
             new CombatantDownedCombatantIdTriggerFilter(GoblinId));
 
-        downedDefinition.Effects.Add(
+        downedDefinition.Steps.Add(
             new HealEffectRecipe<CombatantDownedTriggeredEffectContext>(
                 CombatantTargetSelectors.AllAliveCombatants,
                 new FixedCombatantDownedTriggeredEffectAmount(2)));
@@ -314,7 +314,7 @@ public class CombatantDownedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.combatant_downed_healed_follow_up"));
 
-        healedDefinition.Actions.Add(
+        healedDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -342,7 +342,7 @@ public class CombatantDownedEffectRecipeMigrationTests
             new CombatantDownedTriggeredEffectDefinition(
                 new TriggeredEffectDefinitionId(id));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CombatantDownedTriggeredEffectContext>(
                 CombatantTargetSelectors.AllEnemiesOfSource,
                 new FixedCombatantDownedTriggeredEffectAmount(amount)));

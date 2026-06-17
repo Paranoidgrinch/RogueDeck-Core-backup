@@ -8,9 +8,7 @@ public sealed class StatusRemovedTriggeredEffectDefinition : ITriggeredEffectDef
 
     public List<IStatusRemovedTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<IStatusRemovedTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<StatusRemovedTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<StatusRemovedTriggeredEffectContext>> Steps { get; } = new();
 
     public StatusRemovedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -31,8 +29,14 @@ public interface IStatusRemovedTriggeredEffectFilter
 }
 
 public interface IStatusRemovedTriggeredEffectAction
+    : ICombatEffectRecipe<StatusRemovedTriggeredEffectContext>
 {
     IReadOnlyCollection<IEffectRequest> BuildEffectRequests(StatusRemovedTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<StatusRemovedTriggeredEffectContext>.BuildEffectRequests(
+        StatusRemovedTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface IStatusRemovedTriggeredEffectAmountProvider
@@ -390,12 +394,8 @@ public sealed class StatusRemovedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }
 
@@ -407,9 +407,7 @@ public sealed class StatusChargesReducedTriggeredEffectDefinition : ITriggeredEf
 
     public List<IStatusChargesReducedTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<IStatusChargesReducedTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<StatusChargesReducedTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<StatusChargesReducedTriggeredEffectContext>> Steps { get; } = new();
 
     public StatusChargesReducedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -430,8 +428,14 @@ public interface IStatusChargesReducedTriggeredEffectFilter
 }
 
 public interface IStatusChargesReducedTriggeredEffectAction
+    : ICombatEffectRecipe<StatusChargesReducedTriggeredEffectContext>
 {
     IReadOnlyCollection<IEffectRequest> BuildEffectRequests(StatusChargesReducedTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<StatusChargesReducedTriggeredEffectContext>.BuildEffectRequests(
+        StatusChargesReducedTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface IStatusChargesReducedTriggeredEffectAmountProvider
@@ -599,12 +603,8 @@ public sealed class StatusChargesReducedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }
 
@@ -616,9 +616,7 @@ public sealed class StatusExpiredTriggeredEffectDefinition : ITriggeredEffectDef
 
     public List<IStatusExpiredTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<IStatusExpiredTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<StatusExpiredTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<StatusExpiredTriggeredEffectContext>> Steps { get; } = new();
 
     public StatusExpiredTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -639,8 +637,14 @@ public interface IStatusExpiredTriggeredEffectFilter
 }
 
 public interface IStatusExpiredTriggeredEffectAction
+    : ICombatEffectRecipe<StatusExpiredTriggeredEffectContext>
 {
     IReadOnlyCollection<IEffectRequest> BuildEffectRequests(StatusExpiredTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<StatusExpiredTriggeredEffectContext>.BuildEffectRequests(
+        StatusExpiredTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface IStatusExpiredTriggeredEffectAmountProvider
@@ -981,12 +985,8 @@ public sealed class StatusExpiredTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }
 
@@ -998,9 +998,7 @@ public sealed class StatusMergedTriggeredEffectDefinition : ITriggeredEffectDefi
 
     public List<IStatusMergedTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<IStatusMergedTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<StatusMergedTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<StatusMergedTriggeredEffectContext>> Steps { get; } = new();
 
     public StatusMergedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -1021,8 +1019,14 @@ public interface IStatusMergedTriggeredEffectFilter
 }
 
 public interface IStatusMergedTriggeredEffectAction
+    : ICombatEffectRecipe<StatusMergedTriggeredEffectContext>
 {
     IReadOnlyCollection<IEffectRequest> BuildEffectRequests(StatusMergedTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<StatusMergedTriggeredEffectContext>.BuildEffectRequests(
+        StatusMergedTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface IStatusMergedTriggeredEffectAmountProvider
@@ -1424,11 +1428,7 @@ public sealed class StatusMergedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }

@@ -8,9 +8,7 @@ public sealed class StatusApplicationBlockedTriggeredEffectDefinition : ITrigger
 
     public List<IStatusApplicationBlockedTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<IStatusApplicationBlockedTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<StatusApplicationBlockedTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<StatusApplicationBlockedTriggeredEffectContext>> Steps { get; } = new();
 
     public StatusApplicationBlockedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -30,8 +28,14 @@ public interface IStatusApplicationBlockedTriggeredEffectFilter
 }
 
 public interface IStatusApplicationBlockedTriggeredEffectAction
+    : ICombatEffectRecipe<StatusApplicationBlockedTriggeredEffectContext>
 {
     IReadOnlyCollection<IEffectRequest> BuildEffectRequests(StatusApplicationBlockedTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<StatusApplicationBlockedTriggeredEffectContext>.BuildEffectRequests(
+        StatusApplicationBlockedTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface IStatusApplicationBlockedTriggeredEffectAmountProvider
@@ -183,11 +187,7 @@ public sealed class StatusApplicationBlockedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }

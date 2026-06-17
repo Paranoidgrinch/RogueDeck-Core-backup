@@ -36,7 +36,7 @@ public class StatusApplicationBlockedTriggeredEffectTests
         definition.Filters.Add(
             new StatusApplicationBlockedBlockedStatusTriggerFilter(StandardCombatIds.WeakStatus));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusApplicationBlockedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusApplicationBlockedTriggeredEffectAmount(4)));
@@ -78,7 +78,7 @@ public class StatusApplicationBlockedTriggeredEffectTests
         definition.Filters.Add(
             new StatusApplicationBlockedBlockedStatusTriggerFilter(StandardCombatIds.PoisonStatus));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusApplicationBlockedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusApplicationBlockedTriggeredEffectAmount(7)));
@@ -116,7 +116,7 @@ public class StatusApplicationBlockedTriggeredEffectTests
         matching.Filters.Add(
             new StatusApplicationBlockedBlockingStatusTriggerFilter(StandardCombatIds.ArtifactStatus));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnStatusApplicationBlockedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusApplicationBlockedTriggeredEffectAmount(3)));
@@ -127,7 +127,7 @@ public class StatusApplicationBlockedTriggeredEffectTests
         nonMatching.Filters.Add(
             new StatusApplicationBlockedBlockingStatusTriggerFilter(StandardCombatIds.StrengthStatus));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnStatusApplicationBlockedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusApplicationBlockedTriggeredEffectAmount(9)));
@@ -163,7 +163,7 @@ public class StatusApplicationBlockedTriggeredEffectTests
         var definition = new StatusApplicationBlockedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.status_application_blocked_source_selector"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusApplicationBlockedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedStatusApplicationBlockedTriggeredEffectAmount(5)));

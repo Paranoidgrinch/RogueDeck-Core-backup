@@ -8,9 +8,7 @@ public sealed class RoundEndedTriggeredEffectDefinition : ITriggeredEffectDefini
 
     public List<IRoundEndedTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<IRoundEndedTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<RoundEndedTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<RoundEndedTriggeredEffectContext>> Steps { get; } = new();
 
     public RoundEndedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -30,9 +28,14 @@ public interface IRoundEndedTriggeredEffectFilter
 }
 
 public interface IRoundEndedTriggeredEffectAction
+    : ICombatEffectRecipe<RoundEndedTriggeredEffectContext>
 {
-    IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
-        RoundEndedTriggeredEffectContext context);
+    IReadOnlyCollection<IEffectRequest> BuildEffectRequests(RoundEndedTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<RoundEndedTriggeredEffectContext>.BuildEffectRequests(
+        RoundEndedTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface IRoundEndedTriggeredEffectAmountProvider
@@ -235,11 +238,7 @@ public sealed class RoundEndedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }

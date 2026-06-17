@@ -254,7 +254,7 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
                 StandardCombatIds.SkillCardTag,
                 interval: 3));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DrawCardsOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new CardPlayedSourceStatusStacksAmount(StandardCombatIds.SkillComboDrawStatus)));
@@ -272,7 +272,7 @@ registry.RegisterCombatEventHandler(new ConsumeFreeNextCardOnCardPlayedHandler()
         definition.Filters.Add(
             new CardPlayedSourceHasStatusTriggerFilter(StandardCombatIds.RageStatus));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardPlayedTriggeredEffectAction(
                 CardPlayedTriggeredEffectTarget.Source,
                 new CardPlayedSourceStatusStacksAmount(StandardCombatIds.RageStatus)));

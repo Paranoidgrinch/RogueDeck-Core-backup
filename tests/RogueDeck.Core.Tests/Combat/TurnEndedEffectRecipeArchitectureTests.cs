@@ -24,15 +24,12 @@ public class TurnEndedEffectRecipeArchitectureTests
         Assert.True(handlerStart >= 0);
 
         var handlerSource = source[handlerStart..];
-        var actionsIndex = handlerSource.IndexOf(
-            "definition.Actions",
-            StringComparison.Ordinal);
-        var effectsIndex = handlerSource.IndexOf(
-            "definition.Effects",
+        var stepsIndex = handlerSource.IndexOf(
+            "definition.Steps",
             StringComparison.Ordinal);
 
         Assert.Contains(
-            "List<ICombatEffectRecipe<TurnEndedTriggeredEffectContext>> Effects",
+            "List<ICombatEffectRecipe<TurnEndedTriggeredEffectContext>> Steps",
             source);
         Assert.Contains(
             "TriggeredEffectDefinitionRunner.EnqueueEffectRequests",
@@ -40,8 +37,7 @@ public class TurnEndedEffectRecipeArchitectureTests
         Assert.Contains(
             "var actionBuildContext =",
             handlerSource);
-        Assert.True(actionsIndex >= 0);
-        Assert.True(effectsIndex > actionsIndex);
+        Assert.True(stepsIndex >= 0);
         Assert.DoesNotContain(
             "foreach (var definition in definitions)",
             handlerSource);

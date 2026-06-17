@@ -29,7 +29,7 @@ public class StatusApplicationBlockedEffectRecipeMigrationTests
             new StatusApplicationBlockedBlockedStatusTriggerFilter(
                 StandardCombatIds.WeakStatus));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusApplicationBlockedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -71,22 +71,22 @@ public class StatusApplicationBlockedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_application_blocked_recipe_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingBlockedAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingBlockedAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingBlockedRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingBlockedRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -133,7 +133,7 @@ public class StatusApplicationBlockedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_application_blocked_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         ApplyStatus(
@@ -183,7 +183,7 @@ public class StatusApplicationBlockedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_application_blocked_self_reentry"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new ApplyBlockedStatusRecipe(
                 StandardCombatIds.WeakStatus,
                 durationTurns: 1));
@@ -229,7 +229,7 @@ public class StatusApplicationBlockedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_application_blocked_chain_apply"));
 
-        firstDefinition.Effects.Add(
+        firstDefinition.Steps.Add(
             new ApplyBlockedStatusRecipe(
                 StandardCombatIds.PoisonStatus,
                 stacks: 1));
@@ -243,7 +243,7 @@ public class StatusApplicationBlockedEffectRecipeMigrationTests
             new StatusApplicationBlockedBlockedStatusTriggerFilter(
                 StandardCombatIds.PoisonStatus));
 
-        secondDefinition.Effects.Add(
+        secondDefinition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusApplicationBlockedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -301,7 +301,7 @@ public class StatusApplicationBlockedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_application_blocked_recipe_heal"));
 
-        blockedDefinition.Effects.Add(
+        blockedDefinition.Steps.Add(
             new HealEffectRecipe<
                 StatusApplicationBlockedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -312,7 +312,7 @@ public class StatusApplicationBlockedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_application_blocked_healed_follow_up"));
 
-        healedDefinition.Actions.Add(
+        healedDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));

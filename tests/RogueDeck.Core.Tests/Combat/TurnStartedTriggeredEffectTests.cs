@@ -28,7 +28,7 @@ public class TurnStartedTriggeredEffectTests
         var definition = new TurnStartedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.turn_start_damage_all_enemies"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnTurnStartedTriggeredEffectAction(
                 TurnStartedTriggeredEffectTarget.AllEnemies,
                 new FixedTurnStartedTriggeredEffectAmount(3)));
@@ -69,7 +69,7 @@ public class TurnStartedTriggeredEffectTests
         var definition = new TurnStartedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.turn_start_apply_status_to_all_allies"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnTurnStartedTriggeredEffectAction(
                 TurnStartedTriggeredEffectTarget.AllAllies,
                 statusId,
@@ -123,7 +123,7 @@ public class TurnStartedTriggeredEffectTests
         definition.Filters.Add(
             new TurnStartedCombatantHasStatusTriggerFilter(counterStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnTurnStartedTriggeredEffectAction(
                 TurnStartedTriggeredEffectTarget.AllEnemies,
                 new TurnStartedCombatantStatusStacksAmount(counterStatusId)));
@@ -165,7 +165,7 @@ public class TurnStartedTriggeredEffectTests
         definition.Filters.Add(
             new TurnStartedCombatantHasStatusTriggerFilter(requiredStatusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnTurnStartedTriggeredEffectAction(
                 TurnStartedTriggeredEffectTarget.AllEnemies,
                 new FixedTurnStartedTriggeredEffectAmount(3)));
@@ -194,7 +194,7 @@ public class TurnStartedTriggeredEffectTests
         var definition = new TurnStartedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.turn_start_zero_damage"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnTurnStartedTriggeredEffectAction(
                 TurnStartedTriggeredEffectTarget.AllEnemies,
                 new FixedTurnStartedTriggeredEffectAmount(0)));
@@ -227,7 +227,7 @@ public class TurnStartedTriggeredEffectTests
         var definition = new TurnStartedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.turn_start_heal_turn_combatant"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new HealOnTurnStartedTriggeredEffectAction(
                 TurnStartedTriggeredEffectTarget.TurnCombatant,
                 new FixedTurnStartedTriggeredEffectAmount(3)));
@@ -266,7 +266,7 @@ public class TurnStartedTriggeredEffectTests
         var definition = new TurnStartedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.turn_start_heal_all_allies"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new HealOnTurnStartedTriggeredEffectAction(
                 TurnStartedTriggeredEffectTarget.AllAllies,
                 new FixedTurnStartedTriggeredEffectAmount(2)));

@@ -26,7 +26,7 @@ public class CardInstanceCreatedTriggeredEffectTests
         var definition = new CardInstanceCreatedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_instance_created_gain_block"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardInstanceCreatedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCardInstanceCreatedTriggeredEffectAmount(4)));
@@ -62,7 +62,7 @@ public class CardInstanceCreatedTriggeredEffectTests
         matching.Filters.Add(
             new CardInstanceCreatedCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnCardInstanceCreatedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCardInstanceCreatedTriggeredEffectAmount(2)));
@@ -73,7 +73,7 @@ public class CardInstanceCreatedTriggeredEffectTests
         nonMatching.Filters.Add(
             new CardInstanceCreatedCardDefinitionTriggerFilter(StandardCombatIds.DefendCard));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnCardInstanceCreatedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCardInstanceCreatedTriggeredEffectAmount(7)));
@@ -106,7 +106,7 @@ public class CardInstanceCreatedTriggeredEffectTests
         matching.Filters.Add(
             new CardInstanceCreatedToZoneTriggerFilter(CardZone.DrawPile));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnCardInstanceCreatedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCardInstanceCreatedTriggeredEffectAmount(3)));
@@ -117,7 +117,7 @@ public class CardInstanceCreatedTriggeredEffectTests
         nonMatching.Filters.Add(
             new CardInstanceCreatedToZoneTriggerFilter(CardZone.Hand));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnCardInstanceCreatedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCardInstanceCreatedTriggeredEffectAmount(9)));
@@ -150,7 +150,7 @@ public class CardInstanceCreatedTriggeredEffectTests
         definition.Filters.Add(
             new CardInstanceCreatedMinimumCountTriggerFilter(MinimumCount: 3));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardInstanceCreatedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCardInstanceCreatedTriggeredEffectAmount(5)));
@@ -179,7 +179,7 @@ public class CardInstanceCreatedTriggeredEffectTests
         var definition = new CardInstanceCreatedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_instance_created_count_amount"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardInstanceCreatedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new CardInstanceCreatedCount()));
@@ -208,7 +208,7 @@ public class CardInstanceCreatedTriggeredEffectTests
         var definition = new CardInstanceCreatedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_instance_created_source_selector"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardInstanceCreatedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardInstanceCreatedTriggeredEffectAmount(6)));

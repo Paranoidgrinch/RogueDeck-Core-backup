@@ -33,7 +33,7 @@ public class RageStatusTests
             filter => filter is CardPlayedSourceHasStatusTriggerFilter);
 
         Assert.Contains(
-            triggeredEffect.Actions,
+            triggeredEffect.Steps,
             action => action is GainBlockOnCardPlayedTriggeredEffectAction);
 
 

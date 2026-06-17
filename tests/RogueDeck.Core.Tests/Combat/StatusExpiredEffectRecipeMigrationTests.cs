@@ -35,18 +35,18 @@ public class StatusExpiredEffectRecipeMigrationTests
             new StatusExpiredStatusDefinitionTriggerFilter(
                 StandardCombatIds.WeakStatus));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<StatusExpiredTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusExpiredTriggeredEffectAmount(2)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<StatusExpiredTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new StatusExpiredTargetStatusStacksAmount(
                     StandardCombatIds.RageStatus)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<StatusExpiredTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new StatusExpiredSourceStatusStacksAmount(
@@ -84,22 +84,22 @@ public class StatusExpiredEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_expired_recipe_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingStatusExpiredAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingStatusExpiredAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingStatusExpiredRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingStatusExpiredRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -148,7 +148,7 @@ public class StatusExpiredEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_expired_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         ExpireStatusByDefinition(
@@ -189,7 +189,7 @@ public class StatusExpiredEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_expired_source_fallback"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<StatusExpiredTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedStatusExpiredTriggeredEffectAmount(4)));
@@ -239,7 +239,7 @@ public class StatusExpiredEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_expired_self_reentry"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         ExpireStatusByDefinition(
@@ -295,7 +295,7 @@ public class StatusExpiredEffectRecipeMigrationTests
             new StatusExpiredStatusDefinitionTriggerFilter(
                 StandardCombatIds.WeakStatus));
 
-        expiringDefinition.Effects.Add(
+        expiringDefinition.Steps.Add(
             new DecreaseKnownStatusDurationRecipe(
                 HeroId,
                 vulnerableStatus.Id));
@@ -309,7 +309,7 @@ public class StatusExpiredEffectRecipeMigrationTests
             new StatusExpiredStatusDefinitionTriggerFilter(
                 StandardCombatIds.VulnerableStatus));
 
-        observingDefinition.Effects.Add(
+        observingDefinition.Steps.Add(
             new GainBlockEffectRecipe<StatusExpiredTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusExpiredTriggeredEffectAmount(4)));
@@ -356,7 +356,7 @@ public class StatusExpiredEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_expired_recipe_heal"));
 
-        expiredDefinition.Effects.Add(
+        expiredDefinition.Steps.Add(
             new HealEffectRecipe<StatusExpiredTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusExpiredTriggeredEffectAmount(2)));
@@ -366,7 +366,7 @@ public class StatusExpiredEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_expired_healed_follow_up"));
 
-        healedDefinition.Actions.Add(
+        healedDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -411,7 +411,7 @@ public class StatusExpiredEffectRecipeMigrationTests
             new StatusExpiredStatusDefinitionTriggerFilter(
                 StandardCombatIds.WeakStatus));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<StatusExpiredTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusExpiredTriggeredEffectAmount(3)));

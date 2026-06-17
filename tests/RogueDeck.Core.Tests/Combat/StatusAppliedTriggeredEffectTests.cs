@@ -29,7 +29,7 @@ public class StatusAppliedTriggeredEffectTests
         definition.Filters.Add(
             new StatusAppliedStatusDefinitionTriggerFilter(StandardCombatIds.PoisonStatus));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusAppliedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new StatusAppliedStacksAmount()));
@@ -60,7 +60,7 @@ public class StatusAppliedTriggeredEffectTests
         definition.Filters.Add(
             new StatusAppliedStatusDefinitionTriggerFilter(StandardCombatIds.PoisonStatus));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusAppliedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusAppliedTriggeredEffectAmount(2)));
@@ -101,7 +101,7 @@ public class StatusAppliedTriggeredEffectTests
         definition.Filters.Add(
             new StatusAppliedTargetHasStatusTriggerFilter(StandardCombatIds.StrengthStatus));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnStatusAppliedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 StandardCombatIds.RageStatus,
@@ -146,7 +146,7 @@ public class StatusAppliedTriggeredEffectTests
 
         definition.Filters.Add(new StatusAppliedHasSourceTriggerFilter());
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusAppliedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new StatusAppliedSourceStatusStacksAmount(StandardCombatIds.StrengthStatus)));
@@ -177,7 +177,7 @@ public class StatusAppliedTriggeredEffectTests
 
         definition.Filters.Add(new StatusAppliedHasSourceTriggerFilter());
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnStatusAppliedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedStatusAppliedTriggeredEffectAmount(3)));

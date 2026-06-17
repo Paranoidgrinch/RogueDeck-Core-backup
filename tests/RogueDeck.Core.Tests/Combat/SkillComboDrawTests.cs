@@ -36,7 +36,7 @@ public class SkillComboDrawTests
             filter => filter is CardPlayedEveryNthCardWithTagThisTurnFilter);
 
         Assert.Contains(
-            triggeredEffect.Actions,
+            triggeredEffect.Steps,
             action => action is DrawCardsOnCardPlayedTriggeredEffectAction);
     }
 

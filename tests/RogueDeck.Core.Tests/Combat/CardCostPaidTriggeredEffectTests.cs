@@ -29,7 +29,7 @@ public class CardCostPaidTriggeredEffectTests
         var definition = new CardCostPaidTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_cost_paid_block"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardCostPaidTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardCostPaidTriggeredEffectAmount(3)));
@@ -56,7 +56,7 @@ public class CardCostPaidTriggeredEffectTests
         var definition = new CardCostPaidTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_cost_paid_free_card"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardCostPaidTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardCostPaidTriggeredEffectAmount(5)));
@@ -84,7 +84,7 @@ public class CardCostPaidTriggeredEffectTests
         matching.Filters.Add(
             new CardCostPaidCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnCardCostPaidTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardCostPaidTriggeredEffectAmount(2)));
@@ -95,7 +95,7 @@ public class CardCostPaidTriggeredEffectTests
         nonMatching.Filters.Add(
             new CardCostPaidCardDefinitionTriggerFilter(StandardCombatIds.DefendCard));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnCardCostPaidTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardCostPaidTriggeredEffectAmount(7)));
@@ -124,7 +124,7 @@ public class CardCostPaidTriggeredEffectTests
         matching.Filters.Add(
             new CardCostPaidResourceIdTriggerFilter(StandardCombatIds.EnergyResource));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnCardCostPaidTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardCostPaidTriggeredEffectAmount(2)));
@@ -135,7 +135,7 @@ public class CardCostPaidTriggeredEffectTests
         nonMatching.Filters.Add(
             new CardCostPaidResourceIdTriggerFilter(FuryResourceId));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnCardCostPaidTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardCostPaidTriggeredEffectAmount(7)));
@@ -164,7 +164,7 @@ public class CardCostPaidTriggeredEffectTests
         definition.Filters.Add(
             new CardCostPaidMinimumTotalAmountTriggerFilter(MinimumTotalAmount: 2));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardCostPaidTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardCostPaidTriggeredEffectAmount(4)));
@@ -189,7 +189,7 @@ public class CardCostPaidTriggeredEffectTests
         var definition = new CardCostPaidTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_cost_paid_total_amount"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardCostPaidTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new CardCostPaidTotalAmount()));
@@ -214,7 +214,7 @@ public class CardCostPaidTriggeredEffectTests
         var definition = new CardCostPaidTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_cost_paid_event_target"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardCostPaidTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCardCostPaidTriggeredEffectAmount(4)));
@@ -247,7 +247,7 @@ public class CardCostPaidTriggeredEffectTests
             new TriggeredEffectDefinitionId(
                 "test.card_cost_paid_generic_gain_block"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardCostPaidTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new FixedCombatValue<int>(4)));
@@ -284,7 +284,7 @@ public class CardCostPaidTriggeredEffectTests
             new TriggeredEffectDefinitionId(
                 "test.card_cost_paid_generic_heal"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new HealEffectRecipe<CardCostPaidTriggeredEffectContext>(
                 CombatantTargetSelectors.EventTarget,
                 new CardCostPaidTotalAmount()));
@@ -315,22 +315,22 @@ public class CardCostPaidTriggeredEffectTests
             new TriggeredEffectDefinitionId(
                 "test.card_cost_paid_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingCardCostPaidAction(
                 order,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingCardCostPaidAction(
                 order,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingCardCostPaidRecipe(
                 order,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingCardCostPaidRecipe(
                 order,
                 "recipe-b"));

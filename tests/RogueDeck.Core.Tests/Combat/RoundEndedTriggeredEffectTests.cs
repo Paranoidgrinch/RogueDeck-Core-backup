@@ -27,7 +27,7 @@ public class RoundEndedTriggeredEffectTests
         var definition = new RoundEndedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.round_ended_gain_block"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnRoundEndedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundEndedTriggeredEffectAmount(4)));
@@ -57,7 +57,7 @@ public class RoundEndedTriggeredEffectTests
         var definition = new RoundEndedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.round_ended_source_allies"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnRoundEndedTriggeredEffectAction(
                 CombatantTargetSelectors.AllAlliesOfSource,
                 new FixedRoundEndedTriggeredEffectAmount(3)));
@@ -94,7 +94,7 @@ public class RoundEndedTriggeredEffectTests
         matching.Filters.Add(
             new RoundEndedMinimumRoundTriggerFilter(MinimumRound: 1));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnRoundEndedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundEndedTriggeredEffectAmount(2)));
@@ -105,7 +105,7 @@ public class RoundEndedTriggeredEffectTests
         nonMatching.Filters.Add(
             new RoundEndedMinimumRoundTriggerFilter(MinimumRound: 2));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnRoundEndedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundEndedTriggeredEffectAmount(7)));
@@ -132,7 +132,7 @@ public class RoundEndedTriggeredEffectTests
         matching.Filters.Add(
             new RoundEndedEveryNthRoundTriggerFilter(Interval: 1));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnRoundEndedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundEndedTriggeredEffectAmount(3)));
@@ -143,7 +143,7 @@ public class RoundEndedTriggeredEffectTests
         nonMatching.Filters.Add(
             new RoundEndedEveryNthRoundTriggerFilter(Interval: 2));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnRoundEndedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundEndedTriggeredEffectAmount(8)));
@@ -167,7 +167,7 @@ public class RoundEndedTriggeredEffectTests
         var definition = new RoundEndedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.round_ended_completed_round_amount"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnRoundEndedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new RoundEndedCompletedRoundAmount()));
@@ -190,7 +190,7 @@ public class RoundEndedTriggeredEffectTests
         var definition = new RoundEndedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.round_ended_missing_source"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnRoundEndedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundEndedTriggeredEffectAmount(9)));
@@ -229,7 +229,7 @@ public class RoundEndedTriggeredEffectTests
         var definition = new RoundEndedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.round_ended_heal_last_active"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new HealOnRoundEndedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedRoundEndedTriggeredEffectAmount(3)));
@@ -269,7 +269,7 @@ public class RoundEndedTriggeredEffectTests
         var definition = new RoundEndedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.round_ended_heal_source_allies"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new HealOnRoundEndedTriggeredEffectAction(
                 CombatantTargetSelectors.AllAlliesOfSource,
                 new FixedRoundEndedTriggeredEffectAmount(2)));

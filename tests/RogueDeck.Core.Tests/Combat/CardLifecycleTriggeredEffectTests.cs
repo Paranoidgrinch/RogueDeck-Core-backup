@@ -39,7 +39,7 @@ public class CardLifecycleTriggeredEffectTests
 
         var definition = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_block"));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardsDrawnTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardsDrawnTriggeredEffectAmount(3)));
@@ -64,7 +64,7 @@ public class CardLifecycleTriggeredEffectTests
         var matching = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_strike_block"));
         matching.Filters.Add(new CardsDrawnCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnCardsDrawnTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardsDrawnTriggeredEffectAmount(2)));
@@ -72,7 +72,7 @@ public class CardLifecycleTriggeredEffectTests
         var nonMatching = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_defend_block"));
         nonMatching.Filters.Add(new CardsDrawnCardDefinitionTriggerFilter(StandardCombatIds.DefendCard));
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnCardsDrawnTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardsDrawnTriggeredEffectAmount(5)));
@@ -98,7 +98,7 @@ public class CardLifecycleTriggeredEffectTests
         var matching = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_attack_block"));
         matching.Filters.Add(new CardsDrawnCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnCardsDrawnTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardsDrawnTriggeredEffectAmount(2)));
@@ -106,7 +106,7 @@ public class CardLifecycleTriggeredEffectTests
         var nonMatching = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_skill_block"));
         nonMatching.Filters.Add(new CardsDrawnCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnCardsDrawnTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardsDrawnTriggeredEffectAmount(5)));
@@ -131,7 +131,7 @@ public class CardLifecycleTriggeredEffectTests
 
         var definition = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_source_block"));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardsDrawnTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardsDrawnTriggeredEffectAmount(4)));
@@ -155,7 +155,7 @@ public class CardLifecycleTriggeredEffectTests
         var definition = new CardsDrawnTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.cards_drawn_missing_card"));
         definition.Filters.Add(new CardsDrawnCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardsDrawnTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardsDrawnTriggeredEffectAmount(3)));
@@ -181,7 +181,7 @@ public class CardLifecycleTriggeredEffectTests
 
         var definition = new DiscardPileShuffledTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.discard_shuffle_block"));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedDiscardPileShuffledTriggeredEffectAmount(3)));
@@ -205,7 +205,7 @@ public class CardLifecycleTriggeredEffectTests
 
         var definition = new DiscardPileShuffledTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.discard_shuffle_source_block"));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedDiscardPileShuffledTriggeredEffectAmount(4)));
@@ -231,7 +231,7 @@ public class CardLifecycleTriggeredEffectTests
 
         var definition = new DiscardPileShuffledTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.discard_shuffle_count_block"));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new DiscardPileShuffledCardCountAmount()));
@@ -256,7 +256,7 @@ public class CardLifecycleTriggeredEffectTests
         var matching = new DiscardPileShuffledTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.discard_shuffle_strike_block"));
         matching.Filters.Add(new DiscardPileShuffledCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedDiscardPileShuffledTriggeredEffectAmount(2)));
@@ -264,7 +264,7 @@ public class CardLifecycleTriggeredEffectTests
         var nonMatching = new DiscardPileShuffledTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.discard_shuffle_defend_block"));
         nonMatching.Filters.Add(new DiscardPileShuffledCardDefinitionTriggerFilter(StandardCombatIds.DefendCard));
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedDiscardPileShuffledTriggeredEffectAmount(5)));
@@ -290,7 +290,7 @@ public class CardLifecycleTriggeredEffectTests
         var matching = new DiscardPileShuffledTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.discard_shuffle_skill_block"));
         matching.Filters.Add(new DiscardPileShuffledCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedDiscardPileShuffledTriggeredEffectAmount(2)));
@@ -298,7 +298,7 @@ public class CardLifecycleTriggeredEffectTests
         var nonMatching = new DiscardPileShuffledTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.discard_shuffle_attack_block"));
         nonMatching.Filters.Add(new DiscardPileShuffledCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedDiscardPileShuffledTriggeredEffectAmount(5)));
@@ -321,7 +321,7 @@ public class CardLifecycleTriggeredEffectTests
 
         var definition = new DiscardPileShuffledTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.discard_shuffle_empty"));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new DiscardPileShuffledCardCountAmount()));
@@ -347,7 +347,7 @@ public class CardLifecycleTriggeredEffectTests
 
         var definition = new HandDiscardedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.hand_discarded_block"));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnHandDiscardedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedHandDiscardedTriggeredEffectAmount(3)));
@@ -372,7 +372,7 @@ public class CardLifecycleTriggeredEffectTests
         var matching = new HandDiscardedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.hand_discarded_defend_block"));
         matching.Filters.Add(new HandDiscardedCardDefinitionTriggerFilter(StandardCombatIds.DefendCard));
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnHandDiscardedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedHandDiscardedTriggeredEffectAmount(2)));
@@ -380,7 +380,7 @@ public class CardLifecycleTriggeredEffectTests
         var nonMatching = new HandDiscardedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.hand_discarded_strike_block"));
         nonMatching.Filters.Add(new HandDiscardedCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnHandDiscardedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedHandDiscardedTriggeredEffectAmount(5)));
@@ -406,7 +406,7 @@ public class CardLifecycleTriggeredEffectTests
         var matching = new HandDiscardedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.hand_discarded_skill_block"));
         matching.Filters.Add(new HandDiscardedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnHandDiscardedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedHandDiscardedTriggeredEffectAmount(2)));
@@ -414,7 +414,7 @@ public class CardLifecycleTriggeredEffectTests
         var nonMatching = new HandDiscardedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.hand_discarded_attack_block"));
         nonMatching.Filters.Add(new HandDiscardedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnHandDiscardedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedHandDiscardedTriggeredEffectAmount(5)));
@@ -439,7 +439,7 @@ public class CardLifecycleTriggeredEffectTests
 
         var definition = new HandDiscardedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.hand_discarded_source_block"));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnHandDiscardedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedHandDiscardedTriggeredEffectAmount(4)));
@@ -463,7 +463,7 @@ public class CardLifecycleTriggeredEffectTests
         var definition = new HandDiscardedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.hand_discarded_missing_card"));
         definition.Filters.Add(new HandDiscardedCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnHandDiscardedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedHandDiscardedTriggeredEffectAmount(3)));
@@ -488,7 +488,7 @@ public class CardLifecycleTriggeredEffectTests
 
         var definition = new CardExhaustedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_exhausted_block"));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardExhaustedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardExhaustedTriggeredEffectAmount(3)));
@@ -512,7 +512,7 @@ public class CardLifecycleTriggeredEffectTests
         var matching = new CardExhaustedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_exhausted_strike_block"));
         matching.Filters.Add(new CardExhaustedCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnCardExhaustedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardExhaustedTriggeredEffectAmount(2)));
@@ -520,7 +520,7 @@ public class CardLifecycleTriggeredEffectTests
         var nonMatching = new CardExhaustedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_exhausted_defend_block"));
         nonMatching.Filters.Add(new CardExhaustedCardDefinitionTriggerFilter(StandardCombatIds.DefendCard));
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnCardExhaustedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardExhaustedTriggeredEffectAmount(5)));
@@ -545,7 +545,7 @@ public class CardLifecycleTriggeredEffectTests
         var matching = new CardExhaustedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_exhausted_attack_block"));
         matching.Filters.Add(new CardExhaustedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnCardExhaustedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardExhaustedTriggeredEffectAmount(2)));
@@ -553,7 +553,7 @@ public class CardLifecycleTriggeredEffectTests
         var nonMatching = new CardExhaustedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_exhausted_skill_block"));
         nonMatching.Filters.Add(new CardExhaustedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnCardExhaustedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardExhaustedTriggeredEffectAmount(5)));
@@ -577,7 +577,7 @@ public class CardLifecycleTriggeredEffectTests
 
         var definition = new CardExhaustedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_exhausted_source_block"));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardExhaustedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardExhaustedTriggeredEffectAmount(4)));
@@ -601,7 +601,7 @@ public class CardLifecycleTriggeredEffectTests
         var definition = new CardExhaustedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_exhausted_missing_card"));
         definition.Filters.Add(new CardExhaustedCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardExhaustedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardExhaustedTriggeredEffectAmount(3)));
@@ -628,7 +628,7 @@ public class CardLifecycleTriggeredEffectTests
 
         var definition = new CardBanishedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_banished_block"));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardBanishedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardBanishedTriggeredEffectAmount(3)));
@@ -652,7 +652,7 @@ public class CardLifecycleTriggeredEffectTests
         var matching = new CardBanishedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_banished_defend_block"));
         matching.Filters.Add(new CardBanishedCardDefinitionTriggerFilter(StandardCombatIds.DefendCard));
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnCardBanishedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardBanishedTriggeredEffectAmount(2)));
@@ -660,7 +660,7 @@ public class CardLifecycleTriggeredEffectTests
         var nonMatching = new CardBanishedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_banished_strike_block"));
         nonMatching.Filters.Add(new CardBanishedCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnCardBanishedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardBanishedTriggeredEffectAmount(5)));
@@ -685,7 +685,7 @@ public class CardLifecycleTriggeredEffectTests
         var matching = new CardBanishedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_banished_skill_block"));
         matching.Filters.Add(new CardBanishedCardHasTagTriggerFilter(StandardCombatIds.SkillCardTag));
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnCardBanishedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardBanishedTriggeredEffectAmount(2)));
@@ -693,7 +693,7 @@ public class CardLifecycleTriggeredEffectTests
         var nonMatching = new CardBanishedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_banished_attack_block"));
         nonMatching.Filters.Add(new CardBanishedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnCardBanishedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardBanishedTriggeredEffectAmount(5)));
@@ -717,7 +717,7 @@ public class CardLifecycleTriggeredEffectTests
 
         var definition = new CardBanishedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_banished_source_block"));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardBanishedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardBanishedTriggeredEffectAmount(4)));
@@ -741,7 +741,7 @@ public class CardLifecycleTriggeredEffectTests
         var definition = new CardBanishedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_banished_missing_card"));
         definition.Filters.Add(new CardBanishedCardDefinitionTriggerFilter(StandardCombatIds.StrikeCard));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnCardBanishedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedCardBanishedTriggeredEffectAmount(3)));

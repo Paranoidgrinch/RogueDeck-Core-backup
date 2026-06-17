@@ -79,38 +79,38 @@ public class StatusMergedEffectRecipeMigrationTests
             new StatusMergedStatusDefinitionTriggerFilter(
                 mergedStatusId));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusMergedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
                     new FixedStatusMergedTriggeredEffectAmount(1)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusMergedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
                     new StatusMergedStacksAmount()));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusMergedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
                     new StatusMergedDurationTurnsAmount()));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusMergedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
                     new StatusMergedChargesAmount()));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusMergedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
                     new StatusMergedTargetStatusStacksAmount(
                         targetStatusId)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusMergedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -167,22 +167,22 @@ public class StatusMergedEffectRecipeMigrationTests
             new StatusMergedStatusDefinitionTriggerFilter(
                 statusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingStatusMergedAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingStatusMergedAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingStatusMergedRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingStatusMergedRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -249,7 +249,7 @@ public class StatusMergedEffectRecipeMigrationTests
             new StatusMergedStatusDefinitionTriggerFilter(
                 statusId));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         ApplyStatus(
@@ -321,7 +321,7 @@ public class StatusMergedEffectRecipeMigrationTests
             new StatusMergedStatusDefinitionTriggerFilter(
                 statusId));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         ApplyStatus(
@@ -373,7 +373,7 @@ public class StatusMergedEffectRecipeMigrationTests
             new StatusMergedStatusDefinitionTriggerFilter(
                 statusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnStatusMergedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 statusId,
@@ -436,7 +436,7 @@ public class StatusMergedEffectRecipeMigrationTests
         mergeAgain.Filters.Add(
             new ExactMergedStacksFilter(2));
 
-        mergeAgain.Actions.Add(
+        mergeAgain.Steps.Add(
             new ApplyStatusOnStatusMergedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 statusId,
@@ -452,7 +452,7 @@ public class StatusMergedEffectRecipeMigrationTests
         gainBlock.Filters.Add(
             new ExactMergedStacksFilter(3));
 
-        gainBlock.Effects.Add(
+        gainBlock.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusMergedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -519,7 +519,7 @@ public class StatusMergedEffectRecipeMigrationTests
             new StatusMergedStatusDefinitionTriggerFilter(
                 statusId));
 
-        mergedDefinition.Effects.Add(
+        mergedDefinition.Steps.Add(
             new HealEffectRecipe<
                 StatusMergedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -530,7 +530,7 @@ public class StatusMergedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_merged_recipe_healed_follow_up"));
 
-        healedDefinition.Actions.Add(
+        healedDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -588,7 +588,7 @@ public class StatusMergedEffectRecipeMigrationTests
             new StatusMergedStatusDefinitionTriggerFilter(
                 statusId));
 
-        mergedDefinition.Actions.Add(
+        mergedDefinition.Steps.Add(
             new DealDamageOnStatusMergedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusMergedTriggeredEffectAmount(1)));
@@ -598,7 +598,7 @@ public class StatusMergedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_merged_damage_merge_damage"));
 
-        damageDefinition.Actions.Add(
+        damageDefinition.Steps.Add(
             new ApplyStatusOnDamageDealtTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 statusId,

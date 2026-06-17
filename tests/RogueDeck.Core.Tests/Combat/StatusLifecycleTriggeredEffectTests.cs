@@ -48,7 +48,7 @@ public class StatusLifecycleTriggeredEffectTests
         definition.Filters.Add(
             new StatusRemovedStatusDefinitionTriggerFilter(StandardCombatIds.WeakStatus));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusRemovedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new StatusRemovedCountAmount()));
@@ -85,7 +85,7 @@ public class StatusLifecycleTriggeredEffectTests
         definition.Filters.Add(
             new StatusRemovedStatusDefinitionTriggerFilter(StandardCombatIds.WeakStatus));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnStatusRemovedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedStatusRemovedTriggeredEffectAmount(3)));
@@ -121,7 +121,7 @@ public class StatusLifecycleTriggeredEffectTests
         var definition = new StatusChargesReducedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.status_charges_reduced_gain_block"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusChargesReducedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusChargesReducedTriggeredEffectAmount(4)));
@@ -157,7 +157,7 @@ public class StatusLifecycleTriggeredEffectTests
         matching.Filters.Add(
             new StatusChargesReducedStatusDefinitionTriggerFilter(StandardCombatIds.WeakStatus));
 
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnStatusChargesReducedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusChargesReducedTriggeredEffectAmount(2)));
@@ -168,7 +168,7 @@ public class StatusLifecycleTriggeredEffectTests
         nonMatching.Filters.Add(
             new StatusChargesReducedStatusDefinitionTriggerFilter(StandardCombatIds.PoisonStatus));
 
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnStatusChargesReducedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusChargesReducedTriggeredEffectAmount(5)));
@@ -202,7 +202,7 @@ public class StatusLifecycleTriggeredEffectTests
         var definition = new StatusChargesReducedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.status_charges_reduced_amount"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusChargesReducedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new StatusChargesReducedChargeCountAmount()));
@@ -236,7 +236,7 @@ public class StatusLifecycleTriggeredEffectTests
         var definition = new StatusChargesReducedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.status_charges_reduced_missing_source"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusChargesReducedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedStatusChargesReducedTriggeredEffectAmount(3)));
@@ -272,7 +272,7 @@ public class StatusLifecycleTriggeredEffectTests
         definition.Filters.Add(
             new StatusExpiredStatusDefinitionTriggerFilter(StandardCombatIds.WeakStatus));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnStatusExpiredTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 StandardCombatIds.RageStatus,
@@ -313,7 +313,7 @@ public class StatusLifecycleTriggeredEffectTests
         definition.Filters.Add(
             new StatusExpiredStatusDefinitionTriggerFilter(StandardCombatIds.WeakStatus));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnStatusExpiredTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedStatusExpiredTriggeredEffectAmount(3)));
@@ -352,7 +352,7 @@ public class StatusLifecycleTriggeredEffectTests
         definition.Filters.Add(
             new StatusMergedStatusDefinitionTriggerFilter(StandardCombatIds.PoisonStatus));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusMergedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new StatusMergedStacksAmount()));
@@ -394,7 +394,7 @@ public class StatusLifecycleTriggeredEffectTests
 
         definition.Filters.Add(new StatusMergedHasSourceTriggerFilter());
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnStatusMergedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedStatusMergedTriggeredEffectAmount(2)));
@@ -433,7 +433,7 @@ public class StatusLifecycleTriggeredEffectTests
         definition.Filters.Add(
             new StatusMergedStatusDefinitionTriggerFilter(StandardCombatIds.PoisonStatus));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new DealDamageOnStatusMergedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedStatusMergedTriggeredEffectAmount(3)));

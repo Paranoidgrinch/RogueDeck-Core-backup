@@ -114,7 +114,7 @@ public class CombatEffectChainTests
         var definition = new CardCostPaidTriggeredEffectDefinition(
             definitionId);
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new CaptureTriggeredChainRecipe());
 
         registry.RegisterTriggeredEffectDefinition(definition);

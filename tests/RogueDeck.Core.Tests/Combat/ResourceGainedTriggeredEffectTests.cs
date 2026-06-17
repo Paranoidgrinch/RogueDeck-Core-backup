@@ -27,7 +27,7 @@ public class ResourceGainedTriggeredEffectTests
         var definition = new ResourceGainedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.resource_gained_block"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnResourceGainedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedResourceGainedTriggeredEffectAmount(3)));
@@ -56,7 +56,7 @@ public class ResourceGainedTriggeredEffectTests
             new TriggeredEffectDefinitionId("test.resource_gained_matching"));
 
         matching.Filters.Add(new ResourceGainedResourceIdTriggerFilter(StandardCombatIds.EnergyResource));
-        matching.Actions.Add(
+        matching.Steps.Add(
             new GainBlockOnResourceGainedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedResourceGainedTriggeredEffectAmount(2)));
@@ -65,7 +65,7 @@ public class ResourceGainedTriggeredEffectTests
             new TriggeredEffectDefinitionId("test.resource_gained_non_matching"));
 
         nonMatching.Filters.Add(new ResourceGainedResourceIdTriggerFilter(FuryResourceId));
-        nonMatching.Actions.Add(
+        nonMatching.Steps.Add(
             new GainBlockOnResourceGainedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedResourceGainedTriggeredEffectAmount(5)));
@@ -95,7 +95,7 @@ public class ResourceGainedTriggeredEffectTests
             new TriggeredEffectDefinitionId("test.resource_gained_minimum"));
 
         definition.Filters.Add(new ResourceGainedMinimumAmountTriggerFilter(MinimumGainedAmount: 3));
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnResourceGainedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedResourceGainedTriggeredEffectAmount(4)));
@@ -128,7 +128,7 @@ public class ResourceGainedTriggeredEffectTests
         var definition = new ResourceGainedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.resource_gained_amount"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnResourceGainedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new ResourceGainedAmount()));
@@ -156,7 +156,7 @@ public class ResourceGainedTriggeredEffectTests
         var definition = new ResourceGainedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.resource_gained_new_current"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnResourceGainedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new ResourceGainedNewCurrentAmount()));
@@ -184,7 +184,7 @@ public class ResourceGainedTriggeredEffectTests
         var definition = new ResourceGainedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.resource_gained_event_target"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnResourceGainedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedResourceGainedTriggeredEffectAmount(4)));
@@ -221,7 +221,7 @@ public class ResourceGainedTriggeredEffectTests
             new TriggeredEffectDefinitionId("test.resource_gained_reached_max"));
 
         definition.Filters.Add(new ResourceGainedReachedMaxTriggerFilter());
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnResourceGainedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedResourceGainedTriggeredEffectAmount(3)));
@@ -250,7 +250,7 @@ public class ResourceGainedTriggeredEffectTests
             new TriggeredEffectDefinitionId("test.resource_gained_null_max"));
 
         definition.Filters.Add(new ResourceGainedReachedMaxTriggerFilter());
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnResourceGainedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedResourceGainedTriggeredEffectAmount(3)));
@@ -285,7 +285,7 @@ public class ResourceGainedTriggeredEffectTests
         definition.Filters.Add(
             new ResourceGainedResourceIdTriggerFilter(StandardCombatIds.EnergyResource));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnResourceGainedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedResourceGainedTriggeredEffectAmount(5)));
@@ -315,7 +315,7 @@ public class ResourceGainedTriggeredEffectTests
         definition.Filters.Add(
             new ResourceGainedResourceIdTriggerFilter(FuryResourceId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new GainBlockOnResourceGainedTriggeredEffectAction(
                 CombatantTargetSelectors.Source,
                 new FixedResourceGainedTriggeredEffectAmount(6)));

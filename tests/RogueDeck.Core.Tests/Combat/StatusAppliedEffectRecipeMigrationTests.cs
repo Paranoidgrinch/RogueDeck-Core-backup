@@ -64,38 +64,38 @@ public class StatusAppliedEffectRecipeMigrationTests
             new StatusAppliedStatusDefinitionTriggerFilter(
                 appliedStatusId));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusAppliedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
                     new FixedStatusAppliedTriggeredEffectAmount(4)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusAppliedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
                     new StatusAppliedStacksAmount()));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusAppliedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
                     new StatusAppliedDurationTurnsAmount()));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusAppliedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
                     new StatusAppliedChargesAmount()));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusAppliedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
                     new StatusAppliedTargetStatusStacksAmount(
                         targetStatusId)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusAppliedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -145,22 +145,22 @@ public class StatusAppliedEffectRecipeMigrationTests
             new StatusAppliedStatusDefinitionTriggerFilter(
                 statusId));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingStatusAppliedAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingStatusAppliedAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingStatusAppliedRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingStatusAppliedRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -212,7 +212,7 @@ public class StatusAppliedEffectRecipeMigrationTests
             new StatusAppliedStatusDefinitionTriggerFilter(
                 statusId));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
 
         registry.RegisterTriggeredEffectDefinition(definition);
 
@@ -275,7 +275,7 @@ public class StatusAppliedEffectRecipeMigrationTests
             new StatusAppliedStatusDefinitionTriggerFilter(
                 statusId));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
 
         registry.RegisterTriggeredEffectDefinition(definition);
 
@@ -324,7 +324,7 @@ public class StatusAppliedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_applied_self_reentry"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new ApplyStatusOnStatusAppliedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 recursiveStatusId,
@@ -391,7 +391,7 @@ public class StatusAppliedEffectRecipeMigrationTests
             new StatusAppliedStatusDefinitionTriggerFilter(
                 firstStatusId));
 
-        firstDefinition.Actions.Add(
+        firstDefinition.Steps.Add(
             new ApplyStatusOnStatusAppliedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 secondStatusId,
@@ -408,7 +408,7 @@ public class StatusAppliedEffectRecipeMigrationTests
             new StatusAppliedStatusDefinitionTriggerFilter(
                 secondStatusId));
 
-        secondDefinition.Effects.Add(
+        secondDefinition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusAppliedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -472,7 +472,7 @@ public class StatusAppliedEffectRecipeMigrationTests
             new StatusAppliedStatusDefinitionTriggerFilter(
                 statusId));
 
-        statusDefinition.Effects.Add(
+        statusDefinition.Steps.Add(
             new HealEffectRecipe<
                 StatusAppliedTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -483,7 +483,7 @@ public class StatusAppliedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.status_applied_recipe_healed_follow_up"));
 
-        healedDefinition.Actions.Add(
+        healedDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -534,7 +534,7 @@ public class StatusAppliedEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.damage_status_damage_chain_damage"));
 
-        damageDefinition.Actions.Add(
+        damageDefinition.Steps.Add(
             new ApplyStatusOnDamageDealtTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 statusId,
@@ -551,7 +551,7 @@ public class StatusAppliedEffectRecipeMigrationTests
             new StatusAppliedStatusDefinitionTriggerFilter(
                 statusId));
 
-        statusDefinition.Actions.Add(
+        statusDefinition.Steps.Add(
             new DealDamageOnStatusAppliedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedStatusAppliedTriggeredEffectAmount(1)));

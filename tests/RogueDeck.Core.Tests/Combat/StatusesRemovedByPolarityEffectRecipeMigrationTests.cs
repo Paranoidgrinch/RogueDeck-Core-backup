@@ -32,13 +32,13 @@ public class StatusesRemovedByPolarityEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.statuses_removed_by_polarity_recipe_amounts"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusesRemovedByPolarityTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
                     new FixedStatusesRemovedByPolarityTriggeredEffectAmount(3)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusesRemovedByPolarityTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -152,22 +152,22 @@ public class StatusesRemovedByPolarityEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.statuses_removed_by_polarity_recipe_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingStatusesRemovedByPolarityAction(
                 executionOrder,
                 "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingStatusesRemovedByPolarityAction(
                 executionOrder,
                 "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingStatusesRemovedByPolarityRecipe(
                 executionOrder,
                 "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingStatusesRemovedByPolarityRecipe(
                 executionOrder,
                 "recipe-b"));
@@ -234,7 +234,7 @@ public class StatusesRemovedByPolarityEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.statuses_removed_by_polarity_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         RemoveStatuses(
@@ -277,7 +277,7 @@ public class StatusesRemovedByPolarityEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.statuses_removed_by_polarity_source_fallback"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusesRemovedByPolarityTriggeredEffectContext>(
                     CombatantTargetSelectors.Source,
@@ -316,7 +316,7 @@ public class StatusesRemovedByPolarityEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.statuses_removed_by_polarity_self_reentry"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         RemoveStatuses(
@@ -364,7 +364,7 @@ public class StatusesRemovedByPolarityEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.statuses_removed_by_polarity_chain_reapply"));
 
-        recursiveDefinition.Effects.Add(
+        recursiveDefinition.Steps.Add(
             new ReapplyAndRemoveDebuffRecipe());
 
         var observingDefinition =
@@ -375,7 +375,7 @@ public class StatusesRemovedByPolarityEffectRecipeMigrationTests
         observingDefinition.Filters.Add(
             new ExactRemovedStatusCountFilter(1));
 
-        observingDefinition.Effects.Add(
+        observingDefinition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusesRemovedByPolarityTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -423,7 +423,7 @@ public class StatusesRemovedByPolarityEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.statuses_removed_by_polarity_recipe_heal"));
 
-        removalDefinition.Effects.Add(
+        removalDefinition.Steps.Add(
             new HealEffectRecipe<
                 StatusesRemovedByPolarityTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,
@@ -434,7 +434,7 @@ public class StatusesRemovedByPolarityEffectRecipeMigrationTests
                 new TriggeredEffectDefinitionId(
                     "test.statuses_removed_by_polarity_healed_follow_up"));
 
-        healedDefinition.Actions.Add(
+        healedDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -466,7 +466,7 @@ public class StatusesRemovedByPolarityEffectRecipeMigrationTests
             new StatusesRemovedByPolarityTriggeredEffectDefinition(
                 new TriggeredEffectDefinitionId(id));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<
                 StatusesRemovedByPolarityTriggeredEffectContext>(
                     CombatantTargetSelectors.EventTarget,

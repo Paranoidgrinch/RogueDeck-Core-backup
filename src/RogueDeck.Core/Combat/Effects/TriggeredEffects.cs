@@ -31,9 +31,7 @@ public sealed class CardPlayedTriggeredEffectDefinition : ITriggeredEffectDefini
 
     public List<ICardPlayedTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<ICardPlayedTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<CardPlayedTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<CardPlayedTriggeredEffectContext>> Steps { get; } = new();
 
     public CardPlayedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -54,8 +52,14 @@ public interface ICardPlayedTriggeredEffectFilter
 }
 
 public interface ICardPlayedTriggeredEffectAction
+    : ICombatEffectRecipe<CardPlayedTriggeredEffectContext>
 {
     IReadOnlyCollection<IEffectRequest> BuildEffectRequests(CardPlayedTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<CardPlayedTriggeredEffectContext>.BuildEffectRequests(
+        CardPlayedTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface ICardPlayedTriggeredEffectAmountProvider
@@ -480,12 +484,8 @@ public sealed class CardPlayedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }
 

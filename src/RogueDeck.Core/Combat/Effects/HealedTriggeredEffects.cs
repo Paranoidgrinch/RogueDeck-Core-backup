@@ -8,9 +8,7 @@ public sealed class HealedTriggeredEffectDefinition : ITriggeredEffectDefinition
 
     public List<IHealedTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<IHealedTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<HealedTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<HealedTriggeredEffectContext>> Steps { get; } = new();
 
     public HealedTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -31,8 +29,14 @@ public interface IHealedTriggeredEffectFilter
 }
 
 public interface IHealedTriggeredEffectAction
+    : ICombatEffectRecipe<HealedTriggeredEffectContext>
 {
     IReadOnlyCollection<IEffectRequest> BuildEffectRequests(HealedTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<HealedTriggeredEffectContext>.BuildEffectRequests(
+        HealedTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface IHealedTriggeredEffectAmountProvider
@@ -246,11 +250,7 @@ public sealed class HealedTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }

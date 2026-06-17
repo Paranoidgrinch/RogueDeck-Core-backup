@@ -8,9 +8,7 @@ public sealed class StatusesRemovedByPolarityTriggeredEffectDefinition : ITrigge
 
     public List<IStatusesRemovedByPolarityTriggeredEffectFilter> Filters { get; } = new();
 
-    public List<IStatusesRemovedByPolarityTriggeredEffectAction> Actions { get; } = new();
-
-    public List<ICombatEffectRecipe<StatusesRemovedByPolarityTriggeredEffectContext>> Effects { get; } = new();
+    public List<ICombatEffectRecipe<StatusesRemovedByPolarityTriggeredEffectContext>> Steps { get; } = new();
 
     public StatusesRemovedByPolarityTriggeredEffectDefinition(TriggeredEffectDefinitionId id)
     {
@@ -30,9 +28,14 @@ public interface IStatusesRemovedByPolarityTriggeredEffectFilter
 }
 
 public interface IStatusesRemovedByPolarityTriggeredEffectAction
+    : ICombatEffectRecipe<StatusesRemovedByPolarityTriggeredEffectContext>
 {
-    IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
-        StatusesRemovedByPolarityTriggeredEffectContext context);
+    IReadOnlyCollection<IEffectRequest> BuildEffectRequests(StatusesRemovedByPolarityTriggeredEffectContext context);
+
+    IReadOnlyCollection<IEffectRequest> ICombatEffectRecipe<StatusesRemovedByPolarityTriggeredEffectContext>.BuildEffectRequests(
+        StatusesRemovedByPolarityTriggeredEffectContext context,
+        TriggeredEffectActionBuildContext buildContext)
+        => BuildEffectRequests(context);
 }
 
 public interface IStatusesRemovedByPolarityTriggeredEffectAmountProvider
@@ -209,11 +212,7 @@ public sealed class StatusesRemovedByPolarityTriggeredEffectHandler
             combat,
             definitions,
             definition => definition.Filters.All(filter => filter.Matches(context)),
-            definition => definition.Actions
-                .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
-                        context,
-                        actionBuildContext))));
+            definition => definition.Steps
+                .SelectMany(step => step.BuildEffectRequests(context, actionBuildContext)));
     }
 }

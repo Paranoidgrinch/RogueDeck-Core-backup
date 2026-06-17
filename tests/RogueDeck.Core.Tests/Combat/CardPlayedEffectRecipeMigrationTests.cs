@@ -27,12 +27,12 @@ public class CardPlayedEffectRecipeMigrationTests
         definition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardPlayedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedCardPlayedTriggeredEffectAmount(2)));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardPlayedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new CardPlayedSourceStatusStacksAmount(stackStatusId)));
@@ -92,16 +92,16 @@ public class CardPlayedEffectRecipeMigrationTests
         var definition = new CardPlayedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_played_recipe_order"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingCardPlayedAction(executionOrder, "legacy-a"));
 
-        definition.Actions.Add(
+        definition.Steps.Add(
             new RecordingCardPlayedAction(executionOrder, "legacy-b"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingCardPlayedRecipe(executionOrder, "recipe-a"));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new RecordingCardPlayedRecipe(executionOrder, "recipe-b"));
 
         registry.RegisterTriggeredEffectDefinition(definition);
@@ -132,19 +132,19 @@ public class CardPlayedEffectRecipeMigrationTests
         var firstDefinition = new CardPlayedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_played_definition_order_first"));
 
-        firstDefinition.Actions.Add(
+        firstDefinition.Steps.Add(
             new RecordingCardPlayedAction(executionOrder, "first-legacy"));
 
-        firstDefinition.Effects.Add(
+        firstDefinition.Steps.Add(
             new RecordingCardPlayedRecipe(executionOrder, "first-recipe"));
 
         var secondDefinition = new CardPlayedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_played_definition_order_second"));
 
-        secondDefinition.Actions.Add(
+        secondDefinition.Steps.Add(
             new RecordingCardPlayedAction(executionOrder, "second-legacy"));
 
-        secondDefinition.Effects.Add(
+        secondDefinition.Steps.Add(
             new RecordingCardPlayedRecipe(executionOrder, "second-recipe"));
 
         registry.RegisterTriggeredEffectDefinition(firstDefinition);
@@ -176,7 +176,7 @@ public class CardPlayedEffectRecipeMigrationTests
         var definition = new CardPlayedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_played_recipe_context"));
 
-        definition.Effects.Add(recipe);
+        definition.Steps.Add(recipe);
         registry.RegisterTriggeredEffectDefinition(definition);
 
         PlayCard(combat, registry, attackCardId, GoblinId);
@@ -212,7 +212,7 @@ public class CardPlayedEffectRecipeMigrationTests
         playedDefinition.Filters.Add(
             new CardPlayedCardHasTagTriggerFilter(StandardCombatIds.AttackCardTag));
 
-        playedDefinition.Effects.Add(
+        playedDefinition.Steps.Add(
             new HealEffectRecipe<CardPlayedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedCardPlayedTriggeredEffectAmount(2)));
@@ -220,7 +220,7 @@ public class CardPlayedEffectRecipeMigrationTests
         var healedDefinition = new HealedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId("test.card_played_healed_follow_up"));
 
-        healedDefinition.Actions.Add(
+        healedDefinition.Steps.Add(
             new GainBlockOnHealedTriggeredEffectAction(
                 CombatantTargetSelectors.EventTarget,
                 new FixedHealedTriggeredEffectAmount(3)));
@@ -250,7 +250,7 @@ public class CardPlayedEffectRecipeMigrationTests
         var definition = new CardPlayedTriggeredEffectDefinition(
             new TriggeredEffectDefinitionId(id));
 
-        definition.Effects.Add(
+        definition.Steps.Add(
             new GainBlockEffectRecipe<CardPlayedTriggeredEffectContext>(
                 CombatantTargetSelectors.Source,
                 new FixedCardPlayedTriggeredEffectAmount(amount)));
