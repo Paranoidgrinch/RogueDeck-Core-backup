@@ -583,14 +583,19 @@ The `CardPlayed` migration was not purely additive: `CardPlayedTriggeredEffectHa
 
 The card-lifecycle migration (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`) completed the trigger-definition backlog. It surfaced one inconsistency: `DiscardPileShuffled`'s legacy action built its own build context inline and omitted `EventTargetId`. This has been fixed — `GainBlockOnDiscardPileShuffledTriggeredEffectAction` now uses the shared `CardLifecycleTriggeredEffectSupport.CreateActionBuildContext` helper, aligning it with every other card-lifecycle action. See [Combat Effect Recipes](combat-effect-recipes.md) for detail.
 
+## Source-free target selection and definition freeze (completed 2026-06-17)
+
+`CombatantTargetSelectionContext.Source` is now nullable (`CombatantState?`). Source-based selectors (`SourceCombatantTargetSelector`, `AllAlliesOfSourceCombatantTargetSelector`, `AllEnemiesOfSourceCombatantTargetSelector`) return empty when `Source` is null, so sourceless triggers produce no requests without any guard at the handler level. The three status-lifecycle trigger handlers that previously fell back to the target combatant when source was null now pass `Source: context.SourceCombatant` directly; the selector behavior replaces the `ShouldSuppressMissingSourceTarget` path for new recipe-based effects.
+
+`CombatDefinitionRegistry.RegisterTriggeredEffectDefinition` now validates that the definition ID is non-empty and calls `definition.Freeze()` before registering. `ITriggeredEffectDefinition` has a default no-op `Freeze()` method (C# 8 default interface member) for backward compatibility; concrete definitions can override it in future work.
+
 ## Next bounded runtime block
 
-The trigger-definition migration backlog and both post-migration inconsistency fixes are complete. The remaining deferred items are all broader architectural efforts. The two most contained next steps are:
+The trigger-definition migration backlog, both post-migration inconsistency fixes, source-free target selection, and definition freeze are all complete. The remaining deferred items are broader architectural efforts requiring dedicated planning passes:
 
-1. **Source-free target selection** — add an explicit way for a recipe to produce no requests when it has no meaningful target, rather than relying on the `ShouldSuppressMissingSourceTarget` guard. Focused addition to the targeting contract.
-
-2. **Definition build, validation, and freeze phases** — add a validation pass that runs when a definition is registered or frozen, catching misconfigured selectors, missing filters, or invalid combinations before they reach runtime. Bounded infrastructure addition that complements the recipe system.
-
-The larger items (card-effect-definition migration, enemy-command migration, legacy-wrapper removal) each warrant their own dedicated planning pass.
+- **Card-effect-definition migration** — bring `CardDefinition` effect definitions onto the recipe system.
+- **Enemy-command migration** — bring enemy AI commands onto the same recipe/runner infrastructure.
+- **Legacy-wrapper removal** — remove `ShouldSuppressMissingSourceTarget` guards and other legacy shims made redundant by the source-free selector behavior.
+- **Arbitrary interleaving of actions and recipes** — allow mixed ordering of legacy actions and recipes within a single definition.
 
 The older phase sections above record the engine's incremental development and are not an exhaustive inventory of every currently implemented subsystem.
