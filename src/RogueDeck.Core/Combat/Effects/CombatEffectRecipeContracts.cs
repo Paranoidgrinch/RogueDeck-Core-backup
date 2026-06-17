@@ -9,6 +9,8 @@ public interface ICombatValueProvider<in TContext, out TValue>
 public interface ICombatEffectRecipe<in TContext>
     where TContext : class
 {
+    ICombatantTargetSelector? TargetSelector => null;
+
     IReadOnlyCollection<IEffectRequest> BuildEffectRequests(
         TContext context,
         TriggeredEffectActionBuildContext buildContext);

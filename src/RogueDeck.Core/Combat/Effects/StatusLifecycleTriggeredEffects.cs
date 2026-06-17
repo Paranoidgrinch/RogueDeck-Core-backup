@@ -193,7 +193,7 @@ public static class StatusRemovedTriggeredEffectTargetResolver
 
     public static bool ShouldSuppressMissingSourceTarget(
         StatusRemovedTriggeredEffectContext context,
-        ICombatantTargetSelector targetSelector)
+        ICombatantTargetSelector? targetSelector)
     {
         ArgumentNullException.ThrowIfNull(context);
 
@@ -392,8 +392,10 @@ public sealed class StatusRemovedTriggeredEffectHandler
             definition => definition.Filters.All(filter => filter.Matches(context)),
             definition => definition.Actions
                 .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
+                .Concat(definition.Effects
+                    .Where(effect => !StatusRemovedTriggeredEffectTargetResolver
+                        .ShouldSuppressMissingSourceTarget(context, effect.TargetSelector))
+                    .SelectMany(effect => effect.BuildEffectRequests(
                         context,
                         actionBuildContext))));
     }
@@ -517,7 +519,7 @@ public static class StatusChargesReducedTriggeredEffectTargetResolver
 
     public static bool ShouldSuppressMissingSourceTarget(
         StatusChargesReducedTriggeredEffectContext context,
-        ICombatantTargetSelector targetSelector)
+        ICombatantTargetSelector? targetSelector)
     {
         ArgumentNullException.ThrowIfNull(context);
 
@@ -601,8 +603,10 @@ public sealed class StatusChargesReducedTriggeredEffectHandler
             definition => definition.Filters.All(filter => filter.Matches(context)),
             definition => definition.Actions
                 .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
+                .Concat(definition.Effects
+                    .Where(effect => !StatusChargesReducedTriggeredEffectTargetResolver
+                        .ShouldSuppressMissingSourceTarget(context, effect.TargetSelector))
+                    .SelectMany(effect => effect.BuildEffectRequests(
                         context,
                         actionBuildContext))));
     }
@@ -784,7 +788,7 @@ public static class StatusExpiredTriggeredEffectTargetResolver
 
     public static bool ShouldSuppressMissingSourceTarget(
         StatusExpiredTriggeredEffectContext context,
-        ICombatantTargetSelector targetSelector)
+        ICombatantTargetSelector? targetSelector)
     {
         ArgumentNullException.ThrowIfNull(context);
 
@@ -983,8 +987,10 @@ public sealed class StatusExpiredTriggeredEffectHandler
             definition => definition.Filters.All(filter => filter.Matches(context)),
             definition => definition.Actions
                 .SelectMany(action => action.BuildEffectRequests(context))
-                .Concat(definition.Effects.SelectMany(
-                    effect => effect.BuildEffectRequests(
+                .Concat(definition.Effects
+                    .Where(effect => !StatusExpiredTriggeredEffectTargetResolver
+                        .ShouldSuppressMissingSourceTarget(context, effect.TargetSelector))
+                    .SelectMany(effect => effect.BuildEffectRequests(
                         context,
                         actionBuildContext))));
     }

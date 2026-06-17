@@ -269,23 +269,15 @@ public class CardLifecycleEffectRecipeMigrationTests
     }
 
     [Fact]
-    public void DiscardPileShuffledLegacyActionAndGenericRecipeDisagreeOnEventTargetAttribution()
+    public void DiscardPileShuffledLegacyActionAndGenericRecipeAgreeOnEventTargetAttribution()
     {
-        // GainBlockOnDiscardPileShuffledTriggeredEffectAction builds its own
-        // TriggeredEffectActionBuildContext inline without EventTargetId, unlike
-        // every other card-lifecycle action (which goes through
-        // CardLifecycleTriggeredEffectSupport.CreateActionBuildContext). The new
-        // generic Effects path always uses the shared helper, so EventTarget
-        // resolves for recipes but not for this trigger's legacy action. This
-        // test pins that pre-existing discrepancy so it isn't silently "fixed"
-        // or reintroduced by accident.
         var registry = CombatTestFactory.CreateStandardRegistry();
         var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
 
         AddCardToZone(combat, HeroId, StandardCombatIds.StrikeCard, CardZone.DiscardPile);
 
         var definition = new DiscardPileShuffledTriggeredEffectDefinition(
-            new TriggeredEffectDefinitionId("test.discard_shuffled_event_target_mismatch"));
+            new TriggeredEffectDefinitionId("test.discard_shuffled_event_target_agreement"));
 
         definition.Actions.Add(
             new GainBlockOnDiscardPileShuffledTriggeredEffectAction(
@@ -302,9 +294,8 @@ public class CardLifecycleEffectRecipeMigrationTests
         combat.EnqueueEffect(new DrawCardsEffectRequest(HeroId, Count: 1));
         new CombatQueueProcessor().ResolvePendingQueues(combat, registry);
 
-        // Only the recipe's block lands: the legacy action's EventTarget selector
-        // resolves to nothing because its inline build context has no EventTargetId.
-        Assert.Equal(5, GetBlockOrZero(combat, HeroId));
+        // Both the legacy action and the recipe now resolve EventTarget to HeroId.
+        Assert.Equal(8, GetBlockOrZero(combat, HeroId));
     }
 
     // HandDiscarded

@@ -162,7 +162,7 @@ public class StatusChargesReducedEffectRecipeMigrationTests
     }
 
     [Fact]
-    public void GenericSourceSelectorUsesTargetingFallbackWithoutEffectAttribution()
+    public void GenericSourceSelectorProducesNoRequestsBecauseSourceIsAlwaysNull()
     {
         var registry = CombatTestFactory.CreateStandardRegistry();
         var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
@@ -192,9 +192,7 @@ public class StatusChargesReducedEffectRecipeMigrationTests
             registry,
             HeroId);
 
-        Assert.Equal(
-            4,
-            GetBlockOrZero(combat, HeroId));
+        Assert.Equal(0, GetBlockOrZero(combat, HeroId));
     }
 
     [Fact]
@@ -423,6 +421,7 @@ public class StatusChargesReducedEffectRecipeMigrationTests
             status =>
                 status.DefinitionId == StandardCombatIds.WeakStatus);
     }
+
 
     private static void ApplyStatus(
         CombatState combat,

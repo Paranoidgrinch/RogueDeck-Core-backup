@@ -352,11 +352,7 @@ public sealed record GainBlockOnDiscardPileShuffledTriggeredEffectAction
         ArgumentNullException.ThrowIfNull(context);
 
         return TriggeredEffectActionBuilder.BuildGainBlockRequests(
-            new TriggeredEffectActionBuildContext(
-                new CombatantTargetSelectionContext(
-                    Combat: context.Combat,
-                    Source: context.Source),
-                new TriggeredEffectActionSource(SourceCombatantId: context.Source.Id)),
+            CardLifecycleTriggeredEffectSupport.CreateActionBuildContext(context.Combat, context.Source),
             TargetSelector,
             AmountProvider.ResolveAmount(context));
     }

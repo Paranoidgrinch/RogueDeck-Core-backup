@@ -262,7 +262,7 @@ public class StatusRemovedEffectRecipeMigrationTests
     }
 
     [Fact]
-    public void GenericSourceSelectorUsesTargetingFallbackWithoutEffectAttribution()
+    public void GenericSourceSelectorProducesNoRequestsBecauseSourceIsAlwaysNull()
     {
         var registry = CombatTestFactory.CreateStandardRegistry();
         var combat = CombatTestFactory.CreateCombatWithHeroAndGoblin();
@@ -292,9 +292,7 @@ public class StatusRemovedEffectRecipeMigrationTests
             HeroId,
             StandardCombatIds.WeakStatus);
 
-        Assert.Equal(
-            4,
-            GetBlockOrZero(combat, HeroId));
+        Assert.Equal(0, GetBlockOrZero(combat, HeroId));
     }
 
     [Fact]
