@@ -29,19 +29,17 @@ Every `ITriggeredEffectDefinition` now supports generic `Effects` alongside lega
 
 ## Next bounded work block
 
-Two small, low-risk inconsistency fixes are the natural next step:
+The trigger-definition migration and both post-migration inconsistency fixes are complete. The two most contained next steps are:
 
-1. **Guard parity gap** — `StatusRemoved`, `StatusChargesReduced`, `StatusExpired`: the generic `Effects` recipe path does not yet apply the `ShouldSuppressMissingSourceTarget` guard that the legacy `Actions` path applies. A recipe using `SourceCombatantTargetSelector` on these three triggers silently targets the affected combatant instead of producing no requests. Fix: add the same guard to the recipe execution path.
+1. **Source-free target selection** — add an explicit way for a recipe to produce no requests when it has no meaningful target, rather than relying on the `ShouldSuppressMissingSourceTarget` guard.
 
-2. **`DiscardPileShuffled` `EventTargetId` mismatch** — `GainBlockOnDiscardPileShuffledTriggeredEffectAction` builds its own `TriggeredEffectActionBuildContext` inline and omits `EventTargetId`, while the shared helper (and all generic recipes) set it. A pinning test exists: `DiscardPileShuffledLegacyActionAndGenericRecipeDisagreeOnEventTargetAttribution`. Fix: align the legacy action to use the shared helper, then delete the pinning test.
+2. **Definition build, validation, and freeze phases** — add a validation pass that runs when a definition is registered or frozen, catching misconfigured selectors, missing filters, or invalid combinations before they reach runtime.
 
 ## Deferred larger work (each needs its own planning pass)
 
 - Broad card-effect-definition migration
 - Enemy-command migration
 - Legacy-wrapper removal
-- Source-free target selection
-- Definition build, validation, and freeze phases
 - Arbitrary interleaving of actions and recipes
 - Broader per-chain activation budgets beyond trigger depth
 

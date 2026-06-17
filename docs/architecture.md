@@ -575,16 +575,22 @@ Across all of it:
 - no central recipe switch or effect-kind enum was introduced.
 - no broad legacy-wrapper removal was performed.
 
-One known gap surfaced during the status migration: `StatusRemoved`, `StatusChargesReduced`, and `StatusExpired` carry no source-combatant data, so their targeting source always falls back to the affected combatant. The legacy `Actions` path guards against a `SourceCombatantTargetSelector` silently targeting that fallback; the generic `Effects` recipe path does not yet apply the same guard. See the "Known gap" note in [Combat Effect Recipes](combat-effect-recipes.md) for detail.
+One known gap surfaced during the status migration: `StatusRemoved`, `StatusChargesReduced`, and `StatusExpired` carry no source-combatant data, so their targeting source always falls back to the affected combatant. The generic `Effects` recipe path now applies the same `ShouldSuppressMissingSourceTarget` guard as the legacy `Actions` path — a `SourceCombatantTargetSelector` recipe on these triggers produces no requests. `ICombatEffectRecipe<TContext>` gained an optional `TargetSelector` default member to make this checkable without breaking existing implementations. See [Combat Effect Recipes](combat-effect-recipes.md) for detail.
 
 The `CombatantDowned` migration surfaced a separate, pre-existing interaction rather than a new gap: downing the last living combatant on a side changes `CombatResult` away from `Ongoing` in the same processing pass, and the queue processor stops once the result is no longer `Ongoing`. A `CombatantDowned` effect chain only runs to completion when the trigger fires for a non-last combatant on its side. See the "Known interaction" note in [Combat Effect Recipes](combat-effect-recipes.md).
 
 The `CardPlayed` migration was not purely additive: `CardPlayedTriggeredEffectHandler` previously enqueued its legacy actions' effect requests directly, bypassing `TriggeredEffectDefinitionRunner` and therefore the reentry-suppression and trigger-depth-limit infrastructure every other trigger family already had. The migration switched it onto the shared runner, closing that gap as a side effect of adding `Effects` recipe support. See [Combat Effect Recipes](combat-effect-recipes.md) for detail.
 
-The card-lifecycle migration (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`) completed the trigger-definition backlog. It surfaced one more known inconsistency: `DiscardPileShuffled`'s legacy action builds its own build context inline and omits `EventTargetId`, while its new `Effects` path (and every sibling definition) uses the shared `CardLifecycleTriggeredEffectSupport` helper, which sets it. See [Combat Effect Recipes](combat-effect-recipes.md) for detail.
+The card-lifecycle migration (`CardsDrawn`, `DiscardPileShuffled`, `HandDiscarded`, `CardExhausted`, `CardBanished`) completed the trigger-definition backlog. It surfaced one inconsistency: `DiscardPileShuffled`'s legacy action built its own build context inline and omitted `EventTargetId`. This has been fixed — `GainBlockOnDiscardPileShuffledTriggeredEffectAction` now uses the shared `CardLifecycleTriggeredEffectSupport.CreateActionBuildContext` helper, aligning it with every other card-lifecycle action. See [Combat Effect Recipes](combat-effect-recipes.md) for detail.
 
 ## Next bounded runtime block
 
-Every currently implemented trigger-definition family supports generic `Effects` recipes; there is no remaining trigger-migration backlog. The next block should address one of the smaller deferred items in [Combat Effect Recipes](combat-effect-recipes.md) — the `StatusRemoved`/`StatusChargesReduced`/`StatusExpired` guard-parity gap or the `DiscardPileShuffled` `EventTargetId` mismatch are both narrowly scoped fixes. The larger deferred items (broad card-effect-definition migration, enemy-command migration, legacy-wrapper removal) are separate architectural efforts and warrant their own planning pass.
+The trigger-definition migration backlog and both post-migration inconsistency fixes are complete. The remaining deferred items are all broader architectural efforts. The two most contained next steps are:
+
+1. **Source-free target selection** — add an explicit way for a recipe to produce no requests when it has no meaningful target, rather than relying on the `ShouldSuppressMissingSourceTarget` guard. Focused addition to the targeting contract.
+
+2. **Definition build, validation, and freeze phases** — add a validation pass that runs when a definition is registered or frozen, catching misconfigured selectors, missing filters, or invalid combinations before they reach runtime. Bounded infrastructure addition that complements the recipe system.
+
+The larger items (card-effect-definition migration, enemy-command migration, legacy-wrapper removal) each warrant their own dedicated planning pass.
 
 The older phase sections above record the engine's incremental development and are not an exhaustive inventory of every currently implemented subsystem.

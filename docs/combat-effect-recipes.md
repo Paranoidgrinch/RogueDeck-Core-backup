@@ -289,7 +289,7 @@ Recipes reuse the existing target resolver of each trigger family.
 - the targeting source therefore always falls back to the affected combatant
 - effect attribution uses an empty `TriggeredEffectActionSource`
 
-**Known gap:** because the targeting source always falls back to the affected combatant for these three triggers, a `SourceCombatantTargetSelector` recipe would resolve to the affected combatant rather than to nothing. The legacy `Actions` path guards against this explicitly (`ShouldSuppressMissingSourceTarget`, suppressing the action when there is no real source and the selector is `SourceCombatantTargetSelector`). The generic `Effects` recipe path does **not** apply this guard yet — a recipe using `SourceCombatantTargetSelector` on one of these three triggers will silently target the affected combatant instead of producing no requests. This parity gap is unresolved and tracked under deferred work.
+The generic `Effects` path now applies the same `ShouldSuppressMissingSourceTarget` guard as the legacy `Actions` path. A recipe using `SourceCombatantTargetSelector` on one of these three triggers produces no requests, matching the legacy behaviour. `ICombatEffectRecipe<TContext>` exposes an optional `TargetSelector` default member (`null`) so the handler can read the selector without breaking existing implementations that do not declare one.
 
 ### CardInstanceCreated
 
@@ -320,7 +320,7 @@ All five share `CardLifecycleTriggeredEffectSupport`, an internal helper that re
 - effect attribution uses the card-owning combatant as source combatant; no source card is invented
 - `CardExhausted` and `CardBanished` share the same underlying event (`CardMovedToZoneCombatEvent`), filtered by `ToZone` (`ExhaustPile` / `BanishedPile` respectively) in each handler; their `Card`/`CardDefinition` context fields are nullable and `null` when the moved card's data can no longer be resolved
 
-**Known inconsistency:** `GainBlockOnDiscardPileShuffledTriggeredEffectAction` builds its own `TriggeredEffectActionBuildContext` inline instead of calling `CardLifecycleTriggeredEffectSupport.CreateActionBuildContext`, and its inline version omits `EventTargetId`. The other four definitions' legacy actions all go through the shared helper and do set `EventTargetId`. The new `DiscardPileShuffled` `Effects` path always uses the shared helper (for consistency with its own siblings and with every other migrated trigger family), so a recipe using `CombatantTargetSelectors.EventTarget` on `DiscardPileShuffled` resolves a target while the equivalent legacy action does not. This pre-existing inconsistency was found, not introduced, during this migration; `CardLifecycleEffectRecipeMigrationTests.DiscardPileShuffledLegacyActionAndGenericRecipeDisagreeOnEventTargetAttribution` pins the current behavior.
+`GainBlockOnDiscardPileShuffledTriggeredEffectAction` now uses `CardLifecycleTriggeredEffectSupport.CreateActionBuildContext`, aligning its `EventTargetId` behaviour with every other card-lifecycle legacy action and with the generic `Effects` path. The pinning test `DiscardPileShuffledLegacyActionAndGenericRecipeDisagreeOnEventTargetAttribution` was replaced by `DiscardPileShuffledLegacyActionAndGenericRecipeAgreeOnEventTargetAttribution`.
 
 ## Completed milestones
 
@@ -438,8 +438,6 @@ With this migration, every currently implemented trigger-definition family suppo
 
 The following work remains deferred:
 
-- missing-source-target guard parity between legacy `Actions` and generic `Effects` for `StatusRemoved`, `StatusChargesReduced`, and `StatusExpired`
-- `EventTargetId` parity between `DiscardPileShuffled`'s legacy action and its generic recipes
 - source-free target selection
 - definition build, validation, and freeze phases
 - broad card-effect-definition migration
@@ -450,4 +448,10 @@ The following work remains deferred:
 
 ## Next bounded runtime block
 
-All trigger-definition migrations are complete. The next block should pick one of the deferred items above — most likely starting with the two small, low-risk inconsistency fixes (`StatusRemoved`/`StatusChargesReduced`/`StatusExpired` guard parity, and the `DiscardPileShuffled` `EventTargetId` mismatch), since those are narrowly scoped bug fixes rather than new migrations. The larger items (card-effect-definition migration, enemy-command migration, legacy-wrapper removal) are broader architectural work and should get their own dedicated planning pass rather than being treated as "the next bounded block."
+The two small inconsistency fixes (guard parity and `DiscardPileShuffled` `EventTargetId`) are resolved. The remaining deferred items are all broader architectural efforts. The two most contained next steps are:
+
+1. **Source-free target selection** — add an explicit way for a recipe to produce no requests when it has no meaningful target, rather than relying on the `ShouldSuppressMissingSourceTarget` guard. This is a focused addition to the targeting contract.
+
+2. **Definition build, validation, and freeze phases** — add a validation pass that runs when a definition is registered or frozen, catching misconfigured selectors, missing filters, or invalid combinations before they reach runtime. This is a bounded infrastructure addition that complements the recipe system.
+
+The larger items (card-effect-definition migration, enemy-command migration, legacy-wrapper removal) each warrant their own dedicated planning pass.
