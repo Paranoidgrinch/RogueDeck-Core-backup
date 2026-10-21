@@ -130,7 +130,11 @@ public sealed record CombatCardSpec(
                                          // pot"). Null offers the whole zone; kept out of the wire format when unset.
     [property: System.Text.Json.Serialization.JsonIgnore(
         Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
-    string? ExcludeTag = null)
+    string? ExcludeTag = null,
+    // chosen only: offer only the first this-many cards of the zone — "look at the top 3 of your draw pile".
+    [property: System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    int? Top = null)
 {
     // iterated reads the loop's current card and has no zone of its own; the others select from a zone.
     public bool UsesZone => Kind is "inZone" or "chosen" or "random";
@@ -242,7 +246,15 @@ public sealed record CombatNodeModel(
     // player. Empty / "" canonically for every other kind so build<->classify round-trips exactly. How many
     // options the player takes rides in Amount, like every other count.
     IReadOnlyList<string>? OptionLabels = null,
-    string Purpose = "")
+    string Purpose = "",
+    // wand: which wand move (WandAction by name) and whether it is taken without paying its Focus. Amount is the
+    // move's number where it has one. "" / false canonically for every other kind.
+    string WandMove = "",
+    bool Free = false,
+    // forEachCardInZone: only the cards carrying this per-instance MARK ("" = any). "" canonically for other kinds.
+    string MarkFilter = "",
+    // createCardCopy: the copy is a Temporary one (it Exhausts when played). false canonically for other kinds.
+    bool Temporary = false)
 {
     public CombatAmountSpec AmountOrDefault => Amount ?? CombatAmountSpec.FromConst(3);
     // The primary / secondary target selectors assembled from their key + parameterization.
@@ -277,9 +289,9 @@ public sealed record CombatNodeModel(
     // for each card in the owner's zone (optional definition filter in ToDefinition, optional tag filter in
     // ToTag, optional first-N limit in TakeFirst) → run the body once per card.
     public static CombatNodeModel ForEachCard(string selectorKey, CardZone zone, CombatNodeModel body,
-        string filter = "", string tag = "", int? takeFirst = null) =>
+        string filter = "", string tag = "", int? takeFirst = null, string mark = "") =>
         new("forEachCardInZone", SelectorKey: selectorKey, Children: new[] { body }, FromZone: zone,
-            ToDefinition: filter, ToTag: tag, TakeFirst: takeFirst);
+            ToDefinition: filter, ToTag: tag, TakeFirst: takeFirst, MarkFilter: mark);
 
     public static CombatNodeModel Repeat(CombatAmountSpec count, CombatNodeModel body) =>
         new("repeat", Amount: count, Children: new[] { body });
@@ -760,6 +772,7 @@ public static class CombatProgramModel
         ("eventTarget", CombatantTargetSelectors.EventTarget),
         ("source", CombatantTargetSelectors.Source),
         ("allEnemies", CombatantTargetSelectors.AllEnemiesOfSource),
+        ("otherEnemies", CombatantTargetSelectors.OtherEnemiesOfSource),
         ("allAllies", CombatantTargetSelectors.AllAlliesOfSource),
         ("lowestHealthEnemy", CombatantTargetSelectors.LowestHealthEnemyOfSource),
         ("highestHealthEnemy", CombatantTargetSelectors.HighestHealthEnemyOfSource),
@@ -913,6 +926,8 @@ public static class CombatProgramModel
                 SelectorFor(spec.ReadSelector ?? new CombatSelectorSpec("source")),
                 SelectorFor(spec.ReadSelector2OrDefault)),
             "cardCost" => new CardCostExpression<TContext>(BuildCard<TContext>(spec.ReadCardOrDefault), new ResourceId(spec.ReadId)),
+            // The wand of the program's source (WandValueExpression); ReadId names the field.
+            "wandValue" => new WandValueExpression<TContext>(Enum.Parse<WandField>(spec.ReadId)),
             _ => new ConstantExpression<TContext>(spec.Const),
         };
     }
@@ -996,6 +1011,7 @@ public static class CombatProgramModel
                 new CombatAmountSpec("gridDistance", ReadSelector: gf, ReadSelector2: gt),
             CardCostExpression<TContext> e => ClassifyCard(e.Card) is { } cc
                 ? new CombatAmountSpec("cardCost", ReadId: e.Resource.value, ReadCard: cc) : CombatAmountSpec.Advanced,
+            WandValueExpression<TContext> e => new CombatAmountSpec("wandValue", ReadId: e.Field.ToString()),
             _ => CombatAmountSpec.Advanced,
         };
 
@@ -1112,7 +1128,8 @@ public static class CombatProgramModel
                     SelectorFor(model.PrimarySelector), model.FromZone, BuildBody<TContext>(model),
                     definitionFilter: string.IsNullOrEmpty(model.ToDefinition) ? null : new CardDefinitionId(model.ToDefinition),
                     tagFilter: string.IsNullOrEmpty(model.ToTag) ? null : new TagId(model.ToTag),
-                    takeFirst: model.TakeFirst);
+                    takeFirst: model.TakeFirst,
+                    markFilter: string.IsNullOrEmpty(model.MarkFilter) ? null : new TagId(model.MarkFilter));
             case "repeat":
                 return new RepeatEffectNode<TContext>(BuildAmount<TContext>(model.AmountOrDefault), BuildBody<TContext>(model));
             case "repeatUntil":
@@ -1169,6 +1186,8 @@ public static class CombatProgramModel
             "modifyStatusDuration" => new ModifyStatusDurationNode<TContext>(selector, new StatusDefinitionId(model.StatusId), amount),
             "modifyStatusCharges" => new ModifyStatusChargesNode<TContext>(selector, new StatusDefinitionId(model.StatusId), amount),
             "setCombatantCounter" => new SetCombatantCounterNode<TContext>(selector, new CounterId(model.CounterId), amount, model.Relative),
+            "wand" => new WandNode<TContext>(Enum.Parse<WandAction>(model.WandMove),
+                model.Amount is null ? null : amount, model.Free),
             "removeSelectedStatus" => new RemoveSelectedStatusNode<TContext>(selector, model.SelectionOrDefault),
             "modifySelectedStatusStacks" => new ModifySelectedStatusStacksNode<TContext>(selector, model.SelectionOrDefault, amount),
             "stealSelectedStatus" => new StealSelectedStatusNode<TContext>(selector, model.SelectionOrDefault, SelectorFor(model.SecondarySelector)),
@@ -1176,7 +1195,8 @@ public static class CombatProgramModel
             "moveCardToZone" => new MoveCardToZoneNode<TContext>(selector, BuildCard<TContext>(model.CardOrDefault), model.ToZone, placement: model.Placement),
             "transformCard" => new TransformCardNode<TContext>(selector, BuildCard<TContext>(model.CardOrDefault), new CardDefinitionId(model.ToDefinition)),
             "createCardInstance" => new CreateCardInstanceNode<TContext>(selector, new CardDefinitionId(model.ToDefinition), model.ToZone, amount),
-            "createCardCopy" => new CreateCardCopyNode<TContext>(selector, BuildCard<TContext>(model.CardOrDefault), model.ToZone, amount),
+            "createCardCopy" => new CreateCardCopyNode<TContext>(selector, BuildCard<TContext>(model.CardOrDefault), model.ToZone, amount,
+                temporary: model.Temporary),
             "playCard" => new PlayCardNode<TContext>(selector, BuildCard<TContext>(model.CardOrDefault),
                 model.HasCardTarget ? SelectorFor(model.SecondarySelector) : null),
             "replayCardProgram" => new ReplayCardProgramNode<TContext>(BuildCard<TContext>(model.CardOrDefault), selector),
@@ -1211,7 +1231,7 @@ public static class CombatProgramModel
         where TContext : class => spec.Kind switch
         {
             "chosen" => new ChosenCardInZoneExpression<TContext>(spec.Zone, spec.Purpose,
-                spec.ExcludeTag is { Length: > 0 } excluded ? new TagId(excluded) : null),
+                spec.ExcludeTag is { Length: > 0 } excluded ? new TagId(excluded) : null, spec.Top),
             "random" => new RandomCardInZoneExpression<TContext>(spec.Zone),
             "iterated" => new IteratedCardExpression<TContext>(),
             _ => new CardInZoneExpression<TContext>(spec.Zone, spec.Index), // "inZone"
@@ -1293,6 +1313,11 @@ public static class CombatProgramModel
                 return scAmount.IsAdvanced
                     ? null
                     : WithSelector(n.TargetSelector, new CombatNodeModel("setCombatantCounter", "source", scAmount, CounterId: n.CounterId.value, Relative: n.Relative));
+            case WandNode<TContext> n:
+                var wandAmount = n.Amount is null ? null : ClassifyAmount(n.Amount);
+                return wandAmount is { IsAdvanced: true }
+                    ? null
+                    : new CombatNodeModel("wand", "source", wandAmount, WandMove: n.Action.ToString(), Free: n.Free);
             case RemoveSelectedStatusNode<TContext> n:
                 return WithSelector(n.TargetSelector, new CombatNodeModel("removeSelectedStatus", "source", Selection: n.Selection));
             case ModifySelectedStatusStacksNode<TContext> n:
@@ -1357,7 +1382,8 @@ public static class CombatProgramModel
                 var cccCount = ClassifyAmount(n.Count);
                 return cccCount.IsAdvanced
                     ? null
-                    : WithSelector(n.TargetSelector, new CombatNodeModel("createCardCopy", "source", cccCount, Card: cccCard, ToZone: n.ToZone));
+                    : WithSelector(n.TargetSelector, new CombatNodeModel("createCardCopy", "source", cccCount, Card: cccCard, ToZone: n.ToZone,
+                        Temporary: n.Temporary));
             case PlayCardNode<TContext> { ResultKey: null } n:
                 if (ClassifyCard(n.CardExpression) is not { } pcCard)
                     return null;
@@ -1411,7 +1437,7 @@ public static class CombatProgramModel
                 when fc.MaxIterations == ForEachCardInZoneNode<TContext>.DefaultMaxIterations:
                 return ClassifyNode<TContext>(fc.Body) is { } fcBody
                     ? WithSelector(fc.OwnerSelector, CombatNodeModel.ForEachCard("source", fc.Zone, fcBody,
-                        fc.DefinitionFilter?.value ?? "", fc.TagFilter?.value ?? "", fc.TakeFirst))
+                        fc.DefinitionFilter?.value ?? "", fc.TagFilter?.value ?? "", fc.TakeFirst, fc.MarkFilter?.value ?? ""))
                     : null;
             case RepeatEffectNode<TContext> r
                 when r.MaxCount == RepeatEffectNode<TContext>.DefaultMaxCount:
@@ -1506,7 +1532,7 @@ public static class CombatProgramModel
         {
             CardInZoneExpression<TContext> e => new CombatCardSpec("inZone", e.Zone, e.Index),
             ChosenCardInZoneExpression<TContext> e => new CombatCardSpec("chosen", e.Zone, Purpose: e.Purpose,
-                ExcludeTag: e.ExcludeTag?.value),
+                ExcludeTag: e.ExcludeTag?.value, Top: e.Top),
             RandomCardInZoneExpression<TContext> e => new CombatCardSpec("random", e.Zone),
             IteratedCardExpression<TContext> => new CombatCardSpec("iterated"),
             _ => null,

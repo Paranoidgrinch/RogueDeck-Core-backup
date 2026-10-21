@@ -81,6 +81,7 @@ public sealed class EffectNodeExecutorRegistry
         r.RegisterOpenGeneric(typeof(ModifySelectedResourceNode<>), new ModifySelectedResourceNodeExecutor());
         r.RegisterOpenGeneric(typeof(StealSelectedStatusNode<>), new StealSelectedStatusNodeExecutor());
         r.RegisterOpenGeneric(typeof(SetCombatantCounterNode<>), new SetCombatantCounterNodeExecutor());
+        r.RegisterOpenGeneric(typeof(WandNode<>), new WandNodeExecutor());
         r.RegisterOpenGeneric(typeof(AnnounceRuleNode<>), new AnnounceRuleNodeExecutor());
         r.RegisterOpenGeneric(typeof(MarkCardInstanceNode<>), new MarkCardInstanceNodeExecutor());
         r.RegisterOpenGeneric(typeof(SetCardInstanceMarkCounterNode<>), new SetCardInstanceMarkCounterNodeExecutor());
@@ -1527,7 +1528,8 @@ internal sealed class CreateCardCopyNodeExecutor : IEffectNodeExecutor
                 CardDefinitionId: sourceDefinitionId!.Value,
                 ToZone: typed.ToZone,
                 Count: count,
-                OutcomeSlot: slots?[i]));
+                OutcomeSlot: slots?[i],
+                Marks: typed.Temporary ? [StandardCombatIds.TemporaryCopyMark] : null));
 
         if (typed.ResultKey is { } key)
         {

@@ -93,6 +93,12 @@ public sealed record RunBlueprint(
     // unweighted map is unaffected. Round-trips via RunJson; old documents deserialize with the empty default.
     public BalanceManifest Balance { get; init; } = new();
 
+    // The rules of the wand (WandRules) — the Sorcerer's Apprentice's spell program — when this game has one.
+    // Absent from the JSON when null, so a game without wands writes no line about them.
+    [System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public WandRules? Wand { get; init; }
+
     // The rules a run's map is generated from, per run, at run start (RuleBasedMapGenerator). Null (the default) ⇒
     // no procedural generation: the authored Map above is used as-is, exactly as before. When set, CreateInitialRun
     // builds the map from these rules + the run seed + the starting loadout strength (see Balance), guaranteeing the
@@ -162,6 +168,38 @@ public sealed record RunBlueprint(
         ArgumentNullException.ThrowIfNull(start);
         var fighter = Characters.FirstOrDefault(c => c.Id == characterId) ?? Characters.FirstOrDefault();
         return this with { Start = start, Characters = fighter is null ? [] : [fighter with { Start = start }] };
+    }
+
+    // A PARTY OF ROSTER CHARACTERS, one per seat (multiplayer): the first seat's start, with every further seat
+    // joined as a member carrying its own character's deck, health, gold, relics, consumables, moves and rules.
+    // The same character may sit in two seats. One seat, or none, is that character's own start unchanged.
+    public RunStart PartyStart(IReadOnlyList<string> characterIds)
+    {
+        ArgumentNullException.ThrowIfNull(characterIds);
+        var lead = ResolveStart(characterIds.Count > 0 ? characterIds[0] : null);
+        if (characterIds.Count <= 1)
+            return lead;
+        return lead with
+        {
+            StartingParty = [.. characterIds.Skip(1).Select(id =>
+            {
+                var start = ResolveStart(id);
+                return new RunMemberData
+                {
+                    DefinitionId = id,
+                    DisplayNameKey = start.HeroName,
+                    MaxHealth = start.MaxHealth,
+                    StartingHealth = start.StartingHealth == start.MaxHealth ? null : start.StartingHealth,
+                    Deck = [.. (start.Deck.Count > 0 ? start.Deck : Deck).Select(card => card.value)],
+                    Resources = start.Resources,
+                    StartingRelics = start.StartingRelics,
+                    StartingConsumables = start.StartingConsumables,
+                    CharacterId = Characters.Any(c => c.Id == id) ? id : null,
+                    CombatActions = start.CombatActions,
+                    CombatStatuses = start.CombatStatuses,
+                };
+            })],
+        };
     }
 
     public RunStart ResolveStart(string? characterId = null)
@@ -261,4 +299,23 @@ public sealed record RunMemberData
     // the runner once content is attached (unknown ids skipped), exactly like the hero's RunStart.Starting* lists.
     public IReadOnlyList<string> StartingRelics { get; init; } = [];
     public IReadOnlyList<string> StartingConsumables { get; init; } = [];
+
+    // A member who IS a roster character (RunBlueprint.PartyStart): its id, and the moves and standing rules it
+    // brings into every fight. All absent for a member authored by hand, so those documents read as they were.
+    [System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? CharacterId { get; init; }
+
+    [System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<CardDefinitionId>? CombatActions { get; init; }
+
+    [System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<StartingStatusSpec>? CombatStatuses { get; init; }
+
+    // Health the member starts on, when it is not its maximum. Null ⇒ full, as a hand-authored member always was.
+    [System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public int? StartingHealth { get; init; }
 }

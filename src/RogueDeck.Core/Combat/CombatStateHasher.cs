@@ -33,6 +33,15 @@ public static class CombatStateHasher
         sb.Append("turn=").Append(s.CurrentTurn).Append('\n');
         sb.Append("phase=").Append((int)s.TurnPhase).Append('\n');
         sb.Append("active=").Append(s.ActiveCombatantId?.value ?? "").Append('\n');
+        // Only a party fight has a team phase; leaving the line out otherwise keeps every solo hash as it was.
+        if (s.PhaseTeam is { } phaseTeam)
+        {
+            sb.Append("phase_team=").Append(phaseTeam.value).Append('\n');
+            sb.Append("ended=");
+            foreach (var id in s.EndedThisPhase.IsDefault ? [] : s.EndedThisPhase)
+                sb.Append(id.value).Append(',');
+            sb.Append('\n');
+        }
         sb.Append("status_num=").Append(s.NextStatusInstanceNumber).Append('\n');
         sb.Append("card_num=").Append(s.NextCardInstanceNumber).Append('\n');
         sb.Append("chain_num=").Append(s.NextEffectChainNumber).Append('\n');
@@ -57,6 +66,11 @@ public static class CombatStateHasher
             sb.Append("cz=").Append(combatantId.value).Append('\n');
             AppendCardZones(sb, zones);
         }
+
+        // Only a wand bearer's fight writes these lines, so every other hash keeps its value.
+        if (!s.Wands.IsDefaultOrEmpty)
+            foreach (var wand in s.Wands)
+                AppendWand(sb, wand);
 
         foreach (var rule in s.TemporaryRules)
             sb.Append("tr=").Append(rule.Id)
@@ -132,6 +146,43 @@ public static class CombatStateHasher
         // Same rule for the set-aside cards: absent when empty, so no existing hash moves.
         if (!zones.SetAsidePile.IsDefaultOrEmpty)
             AppendCards(sb, "aside", zones.SetAsidePile);
+        if (!zones.WandPile.IsDefaultOrEmpty)
+            AppendCards(sb, "wand", zones.WandPile);
+    }
+
+    private static void AppendWand(StringBuilder sb, WandSnapshot w)
+    {
+        sb.Append("wand=").Append(w.Owner.value).Append(" slots=");
+        foreach (var slot in w.Slots)
+            sb.Append(slot ?? "_").Append(',');
+        sb.Append(" focus=").Append(w.Focus)
+            .Append(" exh=").Append(w.Exhaustion).Append('/').Append(w.ExhaustionCap)
+            .Append(" casts=").Append(w.CastsThisTurn)
+            .Append(" ins=").Append(w.InscribedThisTurn).Append('/').Append(w.InscribedSinceCast)
+            .Append(" burnout=").Append(w.BurnOutUsedThisTurn ? 1 : 0)
+            .Append(" gust=").Append(w.GustResolvedThisTurn)
+            .Append(" free=").Append(w.FreeInscriptionUsed ? 1 : 0)
+            .Append(" burned=").Append(w.WandCardsExhausted)
+            .Append(" credit=").Append(w.GroundCredit)
+            .Append(" el=").Append(w.ElementsThisTurn);
+        // Written only once a wand has cast, so a fight that never casts hashes as it did before these existed.
+        if (w.CastsThisCombat > 0 || w.SpeaksThisCombat > 0)
+            sb.Append(" combat=").Append(w.CastsThisCombat).Append('/').Append(w.SpeaksThisCombat);
+        if (w.StoredSpell is { } stored)
+        {
+            sb.Append(" stored=").Append((int)stored.Trigger).Append(':').Append(stored.SourceCard?.value ?? "");
+            foreach (var effect in stored.Effects)
+                sb.Append(' ').Append((int)effect.Kind).Append('/').Append(effect.Amount).Append('x').Append(effect.Hits)
+                    .Append('@').Append((int)effect.Targeting).Append(effect.Status?.value ?? "")
+                    .Append(effect.Alternate ? "~" : "");
+        }
+        if (!w.AshTraces.IsDefaultOrEmpty)
+            sb.Append(" ash=").Append(string.Join(',', w.AshTraces));
+        if (!w.TurnLatches.IsDefaultOrEmpty)
+            sb.Append(" tl=").Append(string.Join(',', w.TurnLatches));
+        if (!w.CombatLatches.IsDefaultOrEmpty)
+            sb.Append(" cl=").Append(string.Join(',', w.CombatLatches));
+        sb.Append('\n');
     }
 
     private static void AppendCards(

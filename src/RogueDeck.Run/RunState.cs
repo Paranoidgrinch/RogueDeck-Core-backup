@@ -46,6 +46,9 @@ public sealed class RunState
     // Retarget the single-hero accessors at `member` for the duration of the returned scope; disposing restores
     // the previous target. ForMemberRunEffect wraps each selected member in one of these, then resolves ordinary
     // effects inline so they mutate that member. Scopes nest (restore is stacked, not reset-to-primary).
+    // Whether a member scope is open — the run is answering for one member, not for the party.
+    public bool IsMemberScoped => _activeMember is not null;
+
     public MemberScope PushActiveMember(PartyMember member)
     {
         ArgumentNullException.ThrowIfNull(member);
@@ -119,6 +122,27 @@ public sealed class RunState
     // The statuses the hero brings into every fight (RunStart.CombatStatuses), persisted for the same reason.
     public IReadOnlyList<Scenario.Authoring.StartingStatusSpec> CombatStatuses { get; private set; } = [];
     public void SetCombatStatuses(IReadOnlyList<Scenario.Authoring.StartingStatusSpec>? statuses) => CombatStatuses = statuses ?? [];
+
+    // THE SAME THREE, ASKED OF ONE MEMBER. Member 0 is the run's own character; every other member carries its
+    // own, and a member authored without a character (a blueprint party from before the roster built parties)
+    // counts as the run's character with no moves or rules of its own — which is what it always was.
+    public string? CharacterOf(PartyMember member)
+    {
+        ArgumentNullException.ThrowIfNull(member);
+        return ReferenceEquals(member, Primary) ? CharacterId : member.CharacterId ?? CharacterId;
+    }
+
+    public IReadOnlyList<CardDefinitionId> CombatActionsOf(PartyMember member)
+    {
+        ArgumentNullException.ThrowIfNull(member);
+        return ReferenceEquals(member, Primary) ? CombatActions : member.CombatActions;
+    }
+
+    public IReadOnlyList<Scenario.Authoring.StartingStatusSpec> CombatStatusesOf(PartyMember member)
+    {
+        ArgumentNullException.ThrowIfNull(member);
+        return ReferenceEquals(member, Primary) ? CombatStatuses : member.CombatStatuses;
+    }
 
     // Branching-map traversal (B1). CurrentNodeId is the node being/just walked; the visited set records every node
     // already walked so a graph walk never re-enters one. Both are unused by a linear map (which tracks Position).
@@ -414,7 +438,7 @@ public sealed class RunState
         _pendingCombatModifiers.Clear();
         // An opening promised for several fights stays in the queue for the next one, a fight fewer.
         foreach (var opening in taken.OfType<HeroOpeningRuleModifier>().Where(o => o.Combats > 1))
-            _pendingCombatModifiers.Add(new HeroOpeningRuleModifier(opening.Rule, opening.Combats - 1));
+            _pendingCombatModifiers.Add(new HeroOpeningRuleModifier(opening.Rule, opening.Combats - 1, opening.Member));
         return taken;
     }
 
@@ -586,6 +610,10 @@ public sealed class RunState
                 : null,
             // Parallel to PendingOpenings, and written only when some opening has more than one fight left — a
             // plain list of ints, never a tuple (System.Text.Json drops tuple fields).
+            // …and whose they are, written only when some opening is not the hero's (a party member's).
+            PendingOpeningMembers = _pendingCombatModifiers.Cast<HeroOpeningRuleModifier>().Any(m => m.Member is not null)
+                ? _pendingCombatModifiers.Cast<HeroOpeningRuleModifier>().Select(m => m.Member?.Value).ToList()
+                : null,
             PendingOpeningCombats = _pendingCombatModifiers.Cast<HeroOpeningRuleModifier>().Any(m => m.Combats > 1)
                 ? _pendingCombatModifiers.Cast<HeroOpeningRuleModifier>().Select(m => m.Combats).ToList()
                 : null,
@@ -628,7 +656,12 @@ public sealed class RunState
         { Composition = c.Composition }).ToArray(),
         Relics: member.Relics.Select(r => new RunRelicSaveData(r.Id.Value, r.Enabled)).ToArray(),
         Consumables: member.Consumables.Select(c => c.DefinitionId.Value).ToArray())
-    { Shreds = member.Shreds.ToDictionary(kv => kv.Key, kv => kv.Value) };
+    {
+        Shreds = member.Shreds.ToDictionary(kv => kv.Key, kv => kv.Value),
+        CharacterId = member.CharacterId,
+        CombatActions = member.CombatActions.Count == 0 ? null : [.. member.CombatActions.Select(a => a.value)],
+        CombatStatuses = member.CombatStatuses.Count == 0 ? null : member.CombatStatuses,
+    };
 
     // Rebuild a run from a save. The map is authored content (supplied by the caller, as in the constructor); the
     // content catalog rehydrates relics/consumables by id. Requires at least the primary member.
@@ -670,6 +703,10 @@ public sealed class RunState
             var member = run.AddPartyMember(
                 new HealthState(saved.CurrentHealth, saved.MaxHealth),
                 saved.DisplayNameKey, new CombatantDefinitionId(saved.DefinitionId));
+            member.SetCharacter(
+                saved.CharacterId,
+                [.. (saved.CombatActions ?? []).Select(a => new CardDefinitionId(a))],
+                saved.CombatStatuses);
             RestoreMember(run, member, saved, content);
         }
 
@@ -692,7 +729,8 @@ public sealed class RunState
         var openings = data.PendingOpenings ?? [];
         for (var index = 0; index < openings.Count; index++)
             run.AddPendingCombatModifier(new HeroOpeningRuleModifier(
-                openings[index], data.PendingOpeningCombats?.ElementAtOrDefault(index) ?? 1));
+                openings[index], data.PendingOpeningCombats?.ElementAtOrDefault(index) ?? 1,
+                data.PendingOpeningMembers?.ElementAtOrDefault(index) is { } member ? new RunMemberId(member) : null));
         foreach (var removed in data.RemovedCards ?? [])
             run.RememberRemovedCard(new RemovedCardRecord(
                 new CardDefinitionId(removed.DefinitionId), removed.UpgradeLevel,
@@ -856,8 +894,58 @@ public sealed class RunState
         if (maxExclusive <= 0)
             throw new ArgumentOutOfRangeException(nameof(maxExclusive));
 
+        if (_stream is { } stream)
+        {
+            _stream = stream with { Step = stream.Step + 1 };
+            return CombatRandom.CreateShuffledIndexes(maxExclusive, stream.Seed, stream.Step)[0];
+        }
         var indexes = CombatRandom.CreateShuffledIndexes(maxExclusive, RandomSeed, _randomStep++);
         return indexes[0];
+    }
+
+    // ── ONE MEMBER'S OWN DICE (party rooms, multiplayer M2) ──────────────────────────────────────────────
+    // A room every member resolves for itself must not let one member's draws move another's: four players in
+    // one shop see their own shelves whoever buys first. So while a room resolves for a member, the run draws
+    // from a stream of that member's own — seeded from the run's seed, where the run stood when the room was
+    // entered, and the member's seat — and when the room is done the run's own stream moves on by one draw.
+    // Never open across a save: the room loop opens and closes it inside a single node.
+    private (int Seed, int Step)? _stream;
+    private int _streamBase = -1;
+
+    public void BeginMemberStreams()
+    {
+        if (_streamBase >= 0)
+            throw new InvalidOperationException("Member streams are already open.");
+        _streamBase = _randomStep;
+    }
+
+    public void UseMemberStream(int seat)
+    {
+        if (_streamBase < 0)
+            throw new InvalidOperationException("No member streams are open.");
+        unchecked
+        {
+            var seed = (RandomSeed * 486187739) ^ (_streamBase * 16777619) ^ ((seat + 1) * -1640531535);
+            _stream = (seed, 0);
+        }
+    }
+
+    public void EndMemberStreams()
+    {
+        if (_streamBase < 0)
+            return;
+        _stream = null;
+        _randomStep = _streamBase + 1;
+        _streamBase = -1;
+    }
+
+    // Drop whatever a member's room left queued when it parked mid-way. The member's room is unfinished in this
+    // pass and will be resolved again, effects and all, by the replay that carries its answer; what it queued
+    // must not be resolved in the NEXT member's scope and land on them.
+    public void DiscardPendingWork()
+    {
+        _effects.Clear();
+        _undispatched.Clear();
     }
 
     // ── Effect queue + event bus ───────────────────────────────────────────────────

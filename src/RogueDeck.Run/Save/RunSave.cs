@@ -36,6 +36,20 @@ public sealed record RunMemberSaveData(
 {
     // The member's shred inventory (Shred Engine): kind id → count. Defaulted so pre-shred saves load.
     public IReadOnlyDictionary<string, int> Shreds { get; init; } = new Dictionary<string, int>();
+
+    // Which character this member is, and what it brings into every fight (PartyMember.SetCharacter). Absent for
+    // member 0, whose own are on the run, and in every save made before parties came from the roster.
+    [System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? CharacterId { get; init; }
+
+    [System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<string>? CombatActions { get; init; }
+
+    [System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<Scenario.Authoring.StartingStatusSpec>? CombatStatuses { get; init; }
 }
 
 // One persistent board unit (P5c) with its LIVE state (current HP, position, statuses) — RunUnitData is authoring
@@ -109,6 +123,12 @@ public sealed record RunSaveData(
     [System.Text.Json.Serialization.JsonIgnore(
         Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyList<int>? PendingOpeningCombats { get; init; }
+
+    // Parallel to PendingOpenings: the party member each opening belongs to, null for the hero. Absent unless some
+    // opening is a party member's.
+    [System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<string?>? PendingOpeningMembers { get; init; }
 
     // What the run has removed from the deck and could still give back (RemovedCardRecord). Null (the default)
     // when nothing has been removed, so a save taken before anything left the deck round-trips byte-identically.

@@ -10,7 +10,7 @@ namespace RogueDeck.Scenario.Scripting;
 // same NarrativeLogRenderer renders a live log. Like the rest of the harness it only sequences engine
 // calls — no new combat semantics. The caller chooses which enemy action fires each round through the
 // supplied enemyIntent selector (combatant id + 1-based round → action id, or null to pass).
-public sealed class InteractiveCombat
+public sealed class InteractiveCombat : ICombatView
 {
     private readonly CombatState _combat;
     private readonly CombatDefinitionRegistry _registry;
@@ -135,6 +135,9 @@ public sealed class InteractiveCombat
     // What the hero is currently allowed to see beyond the ordinary view (B&B's Article of Full Disclosure and
     // anything like it): granted by statuses in force on them.
     public DisclosureSpec HeroDisclosure => DisclosureSpec.For(_combat, _registry, _heroId);
+
+    // The fight's definitions — what a host needs to compile a wand's plan for its preview (WandCompiler).
+    public CombatDefinitionRegistry Registry => _registry;
 
     // The top of the hero's own draw pile, as far as their sight reaches. Empty without a disclosure.
     public IReadOnlyList<CardInstance> RevealedDrawPile
@@ -434,6 +437,9 @@ public sealed class InteractiveCombat
         fork._combat.TraceListener = null;
         return fork;
     }
+
+    // A fight with one hero: every enemy means that hero.
+    public CombatantId? IntendedTarget(CombatantId enemy) => IsOver || enemy == _heroId ? null : _heroId;
 
     public int HeroHealth => _combat.TryGetCombatant(_heroId, out var hero) && hero is not null
         ? hero.Health.Current

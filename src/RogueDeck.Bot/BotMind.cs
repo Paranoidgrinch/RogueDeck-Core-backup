@@ -63,6 +63,10 @@ internal sealed class BotMind
     public int Healed;
     public double Seconds => _clock.Elapsed.TotalSeconds;
     public readonly List<string> Rooms = [];
+    public readonly BenchTally Bench = new();
+
+    // The wand's Exhaustion when this turn was first seen, so its end can say what the turn's casts added.
+    private int? _exhaustionAtTurnStart;
 
     // Every room entered as "<act>:<node id>", in order. Rooms says what KIND of room each one was, which is
     // what a report reads; this says WHICH ROOM, which is what the map oracle needs to find the walk again on
@@ -96,6 +100,7 @@ internal sealed class BotMind
 
     private void NewTurn()
     {
+        _exhaustionAtTurnStart = null;
         _playsThisTurn = 0;
         _lastPlayed = null;
         _refused.Clear();
@@ -132,7 +137,7 @@ internal sealed class BotMind
             _log.Line($"    | {narration[_loggedNarration].Message}");
     }
 
-    public void Observe(RunState run, InteractiveCombat? combat)
+    public void Observe(RunState run, bool fighting)
     {
         ArgumentNullException.ThrowIfNull(run);
 
@@ -166,9 +171,13 @@ internal sealed class BotMind
                 + $"deck={run.Deck.Count} relics={run.Relics.Count}");
         }
 
-        if (combat is null && _inFight)
+        if (!fighting && _inFight)
         {
             _inFight = false;
+            Bench.FightsEnded++;
+            Bench.FightTurns += _turn + 1;
+            if (run.Health.Current > 0)
+                Bench.FightsWon++;
             _log.Line($"  fight ends: hp={run.Health.Current}/{run.Health.Max} after {_turn} turns");
             _turn = 0;
             NewTurn();
@@ -232,6 +241,7 @@ internal sealed class BotMind
         }
 
         var hero = combat.State.GetCombatant(combat.HeroId);
+        _exhaustionAtTurnStart ??= combat.State.GetWand(combat.HeroId)?.Exhaustion;
         var playable = combat.Hand
             .Where(c => !_refused.Contains(c.Id) && !_barren.Contains(c.DefinitionId.value)
                 && RunBot.CanPay(_play, hero, c.DefinitionId.value))
@@ -279,6 +289,8 @@ internal sealed class BotMind
         }
         if (RunBot.Refused(combat, play.StepsBefore))
             _refused.Add(play.Card.Id);
+        else
+            Bench.CardsPlayed++;
         if (++_playsThisTurn >= RunBot.PlaysInATurnNobodyMakes)
         {
             Reason = $"a turn at {RunBot.Where(run)} played {_playsThisTurn} cards without ending — "
@@ -287,10 +299,35 @@ internal sealed class BotMind
         }
     }
 
+    // One of the hero's own actions was taken (a wand's, a cauldron's) — by either seat, with no draw of the dice.
+    public void AfterAction() => Bench.ActionsUsed++;
+
     public void EndingTurn(InteractiveCombat combat)
     {
         ArgumentNullException.ThrowIfNull(combat);
         var hero = combat.State.GetCombatant(combat.HeroId);
+        Bench.HeroTurns++;
+        if (combat.State.GetWand(combat.HeroId) is { } wand)
+        {
+            Bench.WandTurns++;
+            Bench.Casts += wand.CastsThisTurn;
+            Bench.Inscriptions += wand.InscribedThisTurn;
+            if (wand.BurnOutUsedThisTurn)
+                Bench.BurnOuts++;
+            if (wand.CastsThisTurn == 0 && wand.Occupied > 0)
+                Bench.IdleWandTurns++;
+            Bench.FocusLeft += wand.Focus;
+            Bench.SlotsFilled += wand.Occupied;
+            Bench.SlotsHeld += wand.Capacity;
+            if (wand.Capacity >= 5)
+            {
+                Bench.BigWandTurns++;
+                Bench.BigWandSlotsFilled += wand.Occupied;
+                Bench.BigWandSlotsHeld += wand.Capacity;
+            }
+            if (wand.CastsThisTurn > 0 && _exhaustionAtTurnStart is { } before)
+                Bench.ExhaustionGained += wand.Exhaustion - before;
+        }
         _log.Line($"    end turn {_turn + 1} (hp {hero.Health.Current}, hand {combat.Hand.Count})");
     }
 
@@ -308,6 +345,82 @@ internal sealed class BotMind
     {
         Reason = $"the fight at {RunBot.Where(run)} parked on the enemy's turn";
         Stopped = true;
+    }
+
+    // ── A PARTY FIGHT ────────────────────────────────────────────────────────────────────────────────────
+    // The same dice for every member of a simultaneous phase: the replay seat walks the members in roster
+    // order, each plays what it draws until it draws nothing, then ends. A party fight has no step trace, so a
+    // play that moved nothing on that member's table counts as barren — that covers the refusals too.
+    private CombatantId? _lastPlayedBy;
+
+    public void PartyFightStarts(RunState run, PartyCombat combat)
+    {
+        ArgumentNullException.ThrowIfNull(combat);
+        if (_inFight)
+            return;
+        _inFight = true;
+        Fights++;
+        var enemies = combat.State.Combatants
+            .Where(c => c.TeamId == StandardCombatIds.EnemyTeam)
+            .Select(c => $"{c.Id.value}({c.Health.Current})");
+        _log.Line($"  FIGHT {RunBot.Where(run)} party of {combat.ActiveMembers().Count} "
+            + $"vs {string.Join(" ", enemies)}");
+    }
+
+    public CardPlay? ChoosePartyPlay(PartyCombat combat, CombatantId member)
+    {
+        ArgumentNullException.ThrowIfNull(combat);
+
+        if (_lastPlayed is { } finished && _lastPlayedBy is { } by)
+        {
+            if (RunBot.TableState(combat, by) == _tableBeforeThePlay)
+                _barren.Add($"{by.value}/{finished}");
+            _lastPlayed = null;
+            _lastPlayedBy = null;
+        }
+
+        var payer = combat.State.GetCombatant(member);
+        var hand = combat.HandOf(member);
+        var playable = hand
+            .Where(c => !_barren.Contains($"{member.value}/{c.DefinitionId.value}")
+                && RunBot.CanPay(_play, payer, c.DefinitionId.value))
+            .ToList();
+        var living = combat.State.Combatants
+            .Where(c => c.IsAlive && c.TeamId == StandardCombatIds.EnemyTeam)
+            .ToList();
+        var card = playable.Count > 0 && _rng.NextDouble() > 0.12
+            ? playable[_rng.Next(playable.Count)]
+            : null;
+        if (card is null)
+            return null;
+
+        var target = living.Count == 0 ? (CombatantId?)null : living[_rng.Next(living.Count)].Id;
+        _tableBeforeThePlay = RunBot.TableState(combat, member);
+        _lastPlayed = card.DefinitionId.value;
+        _lastPlayedBy = member;
+        _log.Line($"    {member.value} play {card.DefinitionId.value} -> {target?.value ?? "—"} "
+            + $"(hp {payer.Health.Current}, hand {hand.Count})");
+        return new CardPlay(card, target, 0);
+    }
+
+    // The phase's ceiling is the solo turn's, once per member: four heroes may play four turns' worth.
+    public void AfterPartyPlay(RunState run, PartyCombat combat, CardPlay play)
+    {
+        ArgumentNullException.ThrowIfNull(play);
+        var members = Math.Max(1, combat.State.GetLivingCombatantsOnTeam(StandardCombatIds.PlayerTeam).Count);
+        if (++_playsThisTurn >= RunBot.PlaysInATurnNobodyMakes * members)
+        {
+            Reason = $"a party phase at {RunBot.Where(run)} played {_playsThisTurn} cards without ending — "
+                + $"last '{play.Card.DefinitionId.value}'";
+            Stopped = true;
+        }
+    }
+
+    public void EndingMemberTurn(PartyCombat combat, CombatantId member)
+    {
+        ArgumentNullException.ThrowIfNull(combat);
+        var payer = combat.State.GetCombatant(member);
+        _log.Line($"    {member.value} ends turn {_turn + 1} (hp {payer.Health.Current}, hand {combat.HandOf(member).Count})");
     }
 
     public Node Fork(IReadOnlyList<Node> forks)
@@ -356,8 +469,23 @@ internal sealed class BotMind
         _log.Line($"!! CRASH {Crash}");
     }
 
-    public BotResult Finish(RunState? run, string? error, bool complete) => new()
+    public BotResult Finish(RunState? run, string? error, bool complete)
     {
+        // The fight the run ended in never saw its end observed: it is counted here, as the one it was lost in
+        // (or, for a walk called off, the one it stood in).
+        if (_inFight)
+        {
+            _inFight = false;
+            Bench.FightsEnded++;
+            Bench.FightTurns += _turn + 1;
+        }
+        return Result(run, error, complete);
+    }
+
+    private BotResult Result(RunState? run, string? error, bool complete) => new()
+    {
+        Character = _options.Character,
+        Bench = Bench,
         Seed = _options.Seed,
         Maps = _options.Maps,
         Result = run?.Result.ToString() ?? "",

@@ -72,7 +72,11 @@ public sealed record CombatantCardZonesSnapshot(
     ImmutableArray<CardInstanceSnapshot> QueuePile = default,
     // The cards set aside (CardZone.SetAsidePile) — captured from the day the zone exists, so a fight saved with
     // ingredients waiting comes back with them (the Queue's lesson). Defaulted for every older save: empty.
-    ImmutableArray<CardInstanceSnapshot> SetAsidePile = default
+    ImmutableArray<CardInstanceSnapshot> SetAsidePile = default,
+    // The cards inscribed into a wand (CardZone.Wand). Their slots are in CombatStateSnapshot.Wands.
+    [property: System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    ImmutableArray<CardInstanceSnapshot> WandPile = default
 );
 
 // Immutable capture of a single combatant at a point in time.
@@ -144,7 +148,23 @@ public sealed record CombatStateSnapshot(
     // having fired. Written only when there is something to write; absent is an empty count.
     [property: System.Text.Json.Serialization.JsonIgnore(
         Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
-    ImmutableArray<TriggerActivitySnapshot> TriggerActivity = default
+    ImmutableArray<TriggerActivitySnapshot> TriggerActivity = default,
+
+    // THE SIMULTANEOUS TEAM PHASE (party fights): whose phase it is and which of its members have already
+    // ended. A solo fight never opens one, so both stay absent and the snapshot reads as it always did; a
+    // party fight restored without them came back with nobody able to act.
+    [property: System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    TeamId? PhaseTeam = null,
+    [property: System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    ImmutableArray<CombatantId> EndedThisPhase = default,
+
+    // THE WANDS (WandState), in TurnOrder. Only a wand bearer's fight has any, so every other snapshot reads and
+    // hashes as it always did.
+    [property: System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    ImmutableArray<WandSnapshot> Wands = default
 );
 
 // One trigger's count. A named record, not a tuple — see the warning below.

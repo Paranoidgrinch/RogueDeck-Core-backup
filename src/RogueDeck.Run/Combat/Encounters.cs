@@ -54,6 +54,9 @@ public sealed class CombatContentLibrary
     public IReadOnlyList<ResourceSpec> HeroResources { get; }
     public IReadOnlyList<ResourceRefillSpec> HeroResourceRefills { get; }
 
+    // The wand rules every fight is built with; null ⇒ no wands in this game.
+    public WandRules? Wand { get; init; }
+
     public CombatContentLibrary(
         IReadOnlyList<CardBlueprint>? cards = null,
         IReadOnlyList<EnemyActionBlueprint>? enemyActions = null,
@@ -149,11 +152,16 @@ public sealed class EncounterCatalog
     private readonly Dictionary<int, CompiledCombatLibrary> _compiledLibraries = new();
     private readonly object _compileGate = new();
 
+    // How a party's fights scale (BalanceManifest.PartyEnemyHealthPerExtraMember); null leaves them as authored.
+    private readonly BalanceManifest? _balance;
+
     public EncounterCatalog(
         CombatContentLibrary library,
         IEnumerable<EncounterDefinition> encounters,
-        IReadOnlyDictionary<EncounterId, IReadOnlyList<ITriggeredEffectDefinition>>? encounterTriggers = null)
+        IReadOnlyDictionary<EncounterId, IReadOnlyList<ITriggeredEffectDefinition>>? encounterTriggers = null,
+        BalanceManifest? balance = null)
     {
+        _balance = balance;
         ArgumentNullException.ThrowIfNull(library);
         ArgumentNullException.ThrowIfNull(encounters);
         _library = library;
@@ -177,6 +185,9 @@ public sealed class EncounterCatalog
             throw new InvalidOperationException($"No encounter registered with id '{id}'.");
 
         var blueprint = new ScenarioBlueprint();
+        if (_balance?.PartyEnemyTargeting is { } aim
+            && Enum.TryParse<PartyEnemyTargeting>(aim, ignoreCase: true, out var targeting))
+            blueprint.PartyTargeting = targeting;
         // The encounter's authored per-turn draw count (null keeps the blueprint's engine default).
         if (encounter.CardsDrawnPerTurn is { } cardsDrawnPerTurn)
             blueprint.CardsDrawnPerTurn = cardsDrawnPerTurn;
@@ -210,7 +221,8 @@ public sealed class EncounterCatalog
 
         foreach (var spec in encounter.Enemies)
         {
-            var enemy = new EnemyBlueprint(spec.Id) { MaxHealth = spec.MaxHealth, Position = spec.Position };
+            var health = _balance?.PartyEnemyHealth(spec.MaxHealth, run.Party.Count) ?? spec.MaxHealth;
+            var enemy = new EnemyBlueprint(spec.Id) { MaxHealth = health, Position = spec.Position };
             foreach (var action in spec.Actions) enemy.Actions.Add(action);
             if (spec.StartingStatuses is { } statuses)
                 foreach (var status in statuses) enemy.StartingStatuses.Add(status);
@@ -240,7 +252,8 @@ public sealed class EncounterCatalog
                 triggeredPrograms: _library.TriggeredPrograms,
                 preDownInterceptors: _library.PreDownInterceptors,
                 statusApplicationInterceptors: _library.StatusApplicationInterceptors,
-                turnStartResourceRefills: _library.HeroResourceRefills);
+                turnStartResourceRefills: _library.HeroResourceRefills,
+                wand: _library.Wand);
             _compiledLibraries[cardsDrawnPerTurn] = compiled;
             return compiled;
         }

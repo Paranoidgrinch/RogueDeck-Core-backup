@@ -161,6 +161,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterCombatEventHandler(TriggeredProgramContextAdapters.StatusApplicationBlocked.CreateHandler());
         registry.RegisterCombatEventHandler(TriggeredProgramContextAdapters.StatusApplicationAmplified.CreateHandler());
         registry.RegisterCombatEventHandler(TriggeredProgramContextAdapters.ActionResolved.CreateHandler());
+        registry.RegisterCombatEventHandler(TriggeredProgramContextAdapters.WandCast.CreateHandler());
         registry.RegisterCombatEventHandler(TriggeredProgramContextAdapters.ActionStarting.CreateHandler());
         registry.RegisterCombatEventHandler(TriggeredProgramContextAdapters.StatusesRemovedByPolarity.CreateHandler());
         registry.RegisterCombatEventHandler(TriggeredProgramContextAdapters.StatusRemoved.CreateHandler());
@@ -189,6 +190,13 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterCombatEventHandler(TriggeredProgramContextAdapters.EnemyActionExecuted.CreateHandler());
         registry.RegisterCombatEventHandler(TriggeredProgramContextAdapters.CombatantMoved.CreateHandler());
 
+        // The wand (WandRules): silent in every game that has none.
+        registry.RegisterCombatEventHandler(new WandTurnStartedHandler());
+        registry.RegisterCombatEventHandler(new WandFocusOnCardPlayedHandler());
+        registry.RegisterCombatEventHandler(new WandElementsOnStatusAppliedHandler());
+        registry.RegisterDamageAmountModifier(new WandSingeDamageModifier());
+        registry.RegisterDamageAmountModifier(new WandGritDamageModifier());
+
         // Effect node executors — registered here so production execution uses the
         // combat registry instead of EffectNodeExecutorRegistry.Default.
         registry.RegisterEffectNodeExecutorOpenGeneric(typeof(SequenceEffectNode<>), new SequenceNodeExecutor());
@@ -198,6 +206,7 @@ public sealed class StandardCombatPackage : ICombatPackage
         registry.RegisterEffectNodeExecutorOpenGeneric(typeof(SideEffectNode<>), new SideEffectNodeExecutor());
         registry.RegisterEffectNodeExecutorOpenGeneric(typeof(DealDamageNode<>), new DealDamageNodeExecutor());
         registry.RegisterEffectNodeExecutorOpenGeneric(typeof(HealNode<>), new HealNodeExecutor());
+        registry.RegisterEffectNodeExecutorOpenGeneric(typeof(WandNode<>), new WandNodeExecutor());
         registry.RegisterEffectNodeExecutorOpenGeneric(typeof(ModifyMaxHealthNode<>), new ModifyMaxHealthNodeExecutor());
         registry.RegisterEffectNodeExecutorOpenGeneric(typeof(SetHealthNode<>), new SetHealthNodeExecutor());
         registry.RegisterEffectNodeExecutorOpenGeneric(typeof(GainBlockNode<>), new GainBlockNodeExecutor());

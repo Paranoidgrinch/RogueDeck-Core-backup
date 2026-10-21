@@ -8,7 +8,8 @@ namespace RogueDeck.Sandbox.Run;
 // initial state up to the first unanswered prompt, where ReplayParkedException unwinds the runner and the UI
 // renders the parked RunState. Everything happens on the caller's thread: Start() and every answer method run
 // the replay synchronously and raise Changed once at the end.
-public sealed class InteractiveRunSession : IRunChoiceProvider, IRunEntityChooser, IRunInterlude, IDisposable
+public sealed class InteractiveRunSession
+    : IRunChoiceProvider, IRunEntityChooser, IRunInterlude, IRunMemberSeat, IDisposable
 {
     private Func<RunState> _makeRun;
     private readonly RunDefinitionRegistry _registry;
@@ -52,6 +53,24 @@ public sealed class InteractiveRunSession : IRunChoiceProvider, IRunEntityChoose
     public bool PendingInterlude { get; private set; }
     public bool IsAwaitingInterlude => PendingInterlude;
     public string? Error { get; private set; }
+
+    // ── ONE QUESTION PER MEMBER (party rooms, multiplayer M2) ─────────────────────────────────────────────
+    // In a party run a room asks every member for themselves, and the run parks with each waiting member's
+    // question standing at once: PendingSeats holds them by member id, in seat order. The single Pending*
+    // properties above show ONE of them — the first waiting seat, named by PendingSeat — so a screen or a bot
+    // that knows nothing of seats answers the party one member at a time and is still right. A solo run never
+    // has seats: PendingSeat stays null and every answer is recorded exactly as it always was.
+    private readonly Dictionary<string, SeatPrompt> _seats = new(StringComparer.Ordinal);
+    private readonly List<string> _seatOrder = new();
+    public IReadOnlyList<SeatPrompt> PendingSeats => [.. _seatOrder.Select(id => _seats[id])];
+    public string? PendingSeat { get; private set; }
+    public SeatPrompt? PendingFor(string seat) => _seats.GetValueOrDefault(seat);
+
+    // WHOSE QUESTION THE SINGLE Pending* PROPERTIES SHOW. Null (the default) shows the first waiting seat. A
+    // machine at a multiplayer table sets its own member here, so its screen shows its own question — and,
+    // while only the others are still choosing, none at all: IsWaitingOnOthers says so.
+    public string? ViewSeat { get; set; }
+    public bool IsWaitingOnOthers => _seatOrder.Count > 0 && PendingSituation is null && PendingEntities is null;
 
     // Raised once after every replay (an answer was applied, or the run finished); the UI re-renders on it.
     public event Action? Changed;
@@ -100,6 +119,9 @@ public sealed class InteractiveRunSession : IRunChoiceProvider, IRunEntityChoose
         PendingShopShelf = null;
         PendingNodeChoices = Array.Empty<Node>();
         PendingInterlude = false;
+        PendingSeat = null;
+        _seats.Clear();
+        _seatOrder.Clear();
         Error = null;
         IsComplete = false;
         foreach (var resettable in _resettables)
@@ -183,21 +205,75 @@ public sealed class InteractiveRunSession : IRunChoiceProvider, IRunEntityChoose
         }
     }
 
-    // Called by the UI when the player clicks a choice; records it and replays.
+    // Called by the UI when the player clicks a choice; records it and replays. In a party room it answers the
+    // seat the single Pending* properties show; PickFor answers a named one.
     public void Pick(string choiceId)
     {
         if (PendingSituation is null || PendingChoices.Count == 0)
             return;
-        _script.Advance(new EventPickEntry(choiceId));
+        _script.Advance(new EventPickEntry(choiceId) { Seat = PendingSeat });
+    }
+
+    public void PickFor(string seat, string choiceId)
+    {
+        if (PendingFor(seat) is not { Situation: not null })
+            return;
+        _script.Advance(new EventPickEntry(choiceId) { Seat = seat });
     }
 
     // Called by the UI while parked at a choice or an interlude to spend a held consumable; the replay applies it
-    // at the park point and re-parks the same prompt with the consumable spent.
+    // at the park point and re-parks the same prompt with the consumable spent. Inside a party room it is spent
+    // by — and from the bag of — the seat being answered.
     public void UseConsumable(ConsumableInstanceId instance)
     {
         if (PendingSituation is null && !PendingInterlude)
             return;
-        _script.Advance(new ParkConsumableEntry(instance));
+        _script.Advance(new ParkConsumableEntry(instance) { Seat = PendingInterlude ? null : PendingSeat });
+    }
+
+    public void UseConsumableFor(string seat, ConsumableInstanceId instance)
+    {
+        if (PendingFor(seat) is not { Situation: not null } && !PendingInterlude)
+            return;
+        _script.Advance(new ParkConsumableEntry(instance) { Seat = seat });
+    }
+
+    // IRunMemberSeat — a party room resolving for one member at a time (PartyRooms).
+    public void BeginMember(PartyMember member)
+    {
+        ArgumentNullException.ThrowIfNull(member);
+        _script.Seat = member.Id.Value;
+    }
+
+    public void EndMember() => _script.Seat = null;
+
+    public void MemberParked(PartyMember member)
+    {
+        ArgumentNullException.ThrowIfNull(member);
+        var seat = member.Id.Value;
+        if (!_seats.ContainsKey(seat))
+            _seatOrder.Add(seat);
+        _seats[seat] = new SeatPrompt(seat, PendingSituation, PendingChoices, PendingShopShelf, PendingEntities);
+        PendingSituation = null;
+        PendingChoices = Array.Empty<EventChoice>();
+        PendingShopShelf = null;
+        PendingEntities = null;
+    }
+
+    public void ParkMembers()
+    {
+        if (ViewSeat is { } viewer && !_seats.ContainsKey(viewer))
+            throw new ReplayParkedException(); // this machine's member is through; the others are still asked
+        if (_seatOrder.Count > 0)
+        {
+            var first = _seats[ViewSeat ?? _seatOrder[0]];
+            PendingSeat = first.Seat;
+            PendingSituation = first.Situation;
+            PendingChoices = first.Choices;
+            PendingShopShelf = first.ShopShelf;
+            PendingEntities = first.Entities;
+        }
+        throw new ReplayParkedException();
     }
 
     // Called by the UI while a fight is parked to spend a held consumable's combat use; the combat driver applies
@@ -214,6 +290,15 @@ public sealed class InteractiveRunSession : IRunChoiceProvider, IRunEntityChoose
             if (_script.TryTake<ParkConsumableEntry>(out var use))
             {
                 run.EnqueueEffect(new UseConsumableRunEffect(use.Instance));
+                _processor.ResolvePending(run, _registry);
+                continue;
+            }
+            // A party member drinking from their own bag between rooms: spent from — and on — that member.
+            if (_script.TryTakeSeated<ParkConsumableEntry>(out var own)
+                && run.Party.FirstOrDefault(m => m.Id.Value == own.Seat) is { } member)
+            {
+                using var scope = run.PushActiveMember(member);
+                run.EnqueueEffect(new UseConsumableRunEffect(own.Instance));
                 _processor.ResolvePending(run, _registry);
                 continue;
             }
@@ -324,7 +409,14 @@ public sealed class InteractiveRunSession : IRunChoiceProvider, IRunEntityChoose
     {
         if (PendingEntities is null)
             return;
-        _script.Advance(new EntityPicksEntry(indices));
+        _script.Advance(new EntityPicksEntry(indices) { Seat = PendingSeat });
+    }
+
+    public void PickEntitiesFor(string seat, IReadOnlyList<int> indices)
+    {
+        if (PendingFor(seat) is not { Entities: not null })
+            return;
+        _script.Advance(new EntityPicksEntry(indices) { Seat = seat });
     }
 
     // Readable name for a picked entity — RunEntityLabeler.Display owns the spelling, because the direct
@@ -337,6 +429,15 @@ public sealed class InteractiveRunSession : IRunChoiceProvider, IRunEntityChoose
         _script.OnAdvance = null;
     }
 }
+
+// One member's open question in a party room: an event or shop situation with its choices (and the shelf, for
+// a shop), or a selection among entities. Exactly one of Situation / Entities is set.
+public sealed record SeatPrompt(
+    string Seat,
+    EventSituation? Situation,
+    IReadOnlyList<EventChoice> Choices,
+    ShopShelf? ShopShelf,
+    EntitySelectionRequest? Entities);
 
 // A pending entity selection surfaced to the UI: what for, how many to pick, the display names, a parallel
 // list of ability/rules descriptions (empty string when an option has none) so a reward pick can show WHAT

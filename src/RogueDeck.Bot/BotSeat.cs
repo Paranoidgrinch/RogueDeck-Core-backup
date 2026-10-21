@@ -32,6 +32,8 @@ internal sealed class BotSeat(RunPlayback play, BotOptions options, IBotLog log)
     private readonly RunPlayback _play = play ?? throw new ArgumentNullException(nameof(play));
     private RunState? _run;
     private InteractiveCombat? _current;
+    private (int Round, int Turn) _actionsTurn = (-1, -1);
+    private int _actionsUsed;
 
     // Handed the run before RunRunner is let loose on it, so the log opens with who is walking and with what.
     public void BeforeTheFirstQuestion(RunState run)
@@ -49,7 +51,7 @@ internal sealed class BotSeat(RunPlayback play, BotOptions options, IBotLog log)
         var run = _run ?? throw new InvalidOperationException("The seat was asked before the run was handed over.");
         _mind.CheckBudget(run);
         _mind.Narrate(run);
-        _mind.Observe(run, _current);
+        _mind.Observe(run, _current is not null);
     }
 
     // …and everything after it: the answer is spent, and a guard that tripped while giving it ends the walk.
@@ -162,6 +164,14 @@ internal sealed class BotSeat(RunPlayback play, BotOptions options, IBotLog log)
             {
                 combat.PlayCard(chosen.Card.Id, chosen.Target);
                 _mind.AfterPlay(_run!, combat, chosen);
+            }
+            // The hero's own actions (a wand's, a cauldron's) before the turn is given up — the same rule, the same
+            // budget and the same order the replay seat keeps (RunBot), or the two seats play different games.
+            else if (RunBot.UsableAction(combat, ref _actionsTurn, ref _actionsUsed) is { } action)
+            {
+                _actionsUsed++;
+                combat.UseAction(action, RunBot.FirstEnemy(combat));
+                _mind.AfterAction();
             }
             else
             {

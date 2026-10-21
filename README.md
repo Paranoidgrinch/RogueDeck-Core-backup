@@ -1,1 +1,1 @@
-Backup of [RogueDeck-Core](https://github.com/Paranoidgrinch/RogueDeck-Core), made on 2026-10-18 at commit `1793046`. Find the original repository here: https://github.com/Paranoidgrinch/RogueDeck-Core
+Backup of [RogueDeck-Core](https://github.com/Paranoidgrinch/RogueDeck-Core), made on 2026-10-21 at commit `4ebf14a`. Find the original repository here: https://github.com/Paranoidgrinch/RogueDeck-Core
